@@ -7,7 +7,6 @@ import '../config/app_config.dart'; // Configuration for API URL
 class WeekdayService {
   String apiUrl = Config().apiUrl;
 
-  // Set weekdays for a user
   Future<void> setWeekdays(String accessToken, List<int> days) async {
     try {
       // Ensure the days are valid integers between 0 and 6
@@ -16,16 +15,16 @@ class WeekdayService {
             'Days must be integers between 0 (Sunday) and 6 (Saturday).');
       }
 
-      // Convert the list of days to a comma-separated string
-      String daysQuery = jsonEncode(days);
+      // Convert the list of days to a JSON-encoded string
+      String daysBody = jsonEncode({'days': days});
 
       final response = await http.post(
-        Uri.parse(
-            '$apiUrl/api/weekdays?days=$daysQuery'), // Add days as query parameters
+        Uri.parse('$apiUrl/api/weekdays'),
         headers: {
           'Authorization': 'Bearer $accessToken',
           'Content-Type': 'application/json',
         },
+        body: daysBody,
       );
 
       if (response.statusCode != 201) {

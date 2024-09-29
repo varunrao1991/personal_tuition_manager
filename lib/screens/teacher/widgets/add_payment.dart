@@ -25,8 +25,7 @@ class _PaymentProcessWidgetState extends State<PaymentProcessWidget> {
   int _currentStep = 0;
   Student? _selectedStudent;
   final TextEditingController _amountController = TextEditingController();
-  final TextEditingController _searchController =
-      TextEditingController(text: "Select student");
+  final TextEditingController _searchController = TextEditingController();
 
   DateTime _paymentDate = DateTime.now();
   String? _selectedName; // Use a string to hold the selected name

@@ -1,17 +1,19 @@
-import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:padmayoga/providers/holiday_provider.dart';
 import 'package:padmayoga/providers/weekday_provider.dart'; // Import the weekday provider
 import 'package:padmayoga/widgets/custom_snackbar.dart';
+import 'package:padmayoga/widgets/custom_swipe_card.dart';
+import 'package:padmayoga/widgets/show_custom_center_modal.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../models/holiday.dart';
+import '../../widgets/confirmation_modal.dart';
 import '../../widgets/custom_card.dart';
 import '../../widgets/custom_fab.dart';
 import '../../widgets/show_custom_bottom_modal.dart';
-import 'weekday_edit.dart';
-import 'widgets/add_holiday.dart';
+import 'widgets/weekday_edit.dart';
+import 'widgets/holiday_form.dart';
 
 class HolidayScreen extends StatefulWidget {
   const HolidayScreen({super.key});
@@ -50,11 +52,8 @@ class _HolidayScreenState extends State<HolidayScreen> {
         _holidays = holidayProvider.holidays;
       });
     } catch (error) {
-      log('Error fetching holidays: $error');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text('Failed to fetch holiday data: ${error.toString()}')),
-      );
+      showCustomSnackBar(
+          context, 'Failed to fetch holiday data: ${error.toString()}');
     } finally {
       _setLoading(false);
     }
@@ -70,11 +69,8 @@ class _HolidayScreenState extends State<HolidayScreen> {
             7, (index) => weekdayProvider.weekdays.contains(index));
       });
     } catch (error) {
-      log('Error fetching weekdays: $error');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text('Failed to fetch weekdays: ${error.toString()}')),
-      );
+      showCustomSnackBar(
+          context, 'Failed to fetch weekdays: ${error.toString()}');
     }
   }
 
@@ -105,20 +101,16 @@ class _HolidayScreenState extends State<HolidayScreen> {
   }
 
   void _editWeekdays() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return WeekdayEditorDialog(
+    showCustomModalBottomSheet(
+        context: context,
+        child: WeekdayEditorDialog(
           isSelected: _isWeekdaySelected, // Pass the selected weekdays
-        );
-      },
-    ).then((selected) {
+        )).then((selected) {
       if (selected != null) {
         setState(() {
-          _isWeekdaySelected = selected; // Update the local selection
+          _isWeekdaySelected = selected;
         });
 
-        // Process selected weekdays for backend update
         final weekdayProvider =
             Provider.of<WeekdayProvider>(context, listen: false);
         List<int> selectedWeekdays = [];
@@ -161,11 +153,11 @@ class _HolidayScreenState extends State<HolidayScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.all(16.0),
               child: Column(
                 children: [
                   SizedBox(
-                    height: 400,
+                    height: 350,
                     child: TableCalendar(
                       focusedDay: _focusedDate,
                       firstDay: DateTime.utc(2020, 1, 1),
@@ -205,14 +197,14 @@ class _HolidayScreenState extends State<HolidayScreen> {
                         todayBuilder: (context, date, _) =>
                             _buildDayContainer(date, isToday: true),
                         defaultBuilder: (context, date, _) =>
-                            _buildDayContainer(
-                                date,
-                                isWeekday:
-                                    _isWeekdaySelected[date.weekday % 7]),
+                            _buildDayContainer(date,
+                                isWeekday: _isWeekdaySelected[date.weekday % 7],
+                                isHoliday: _holidays.any((holiday) =>
+                                    isSameDay(holiday.holidayDate, date))),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 8.0),
+                  const SizedBox(height: 2.0),
                   Expanded(
                     child: _buildHolidayList(),
                   )
@@ -228,7 +220,7 @@ class _HolidayScreenState extends State<HolidayScreen> {
             onPressed: () {
               showCustomModalBottomSheet(
                 context: context,
-                child: AddHolidayScreen(
+                child: HolidayForm(
                   selectedDate: _selectedDate,
                   reason: existingHoliday?.reason ?? '',
                 ),
@@ -257,25 +249,40 @@ class _HolidayScreenState extends State<HolidayScreen> {
         Provider.of<HolidayProvider>(context, listen: false);
     try {
       await holidayProvider.addHoliday(date, reason);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Holiday added successfully!')),
-      );
+      showCustomSnackBar(context, 'Holiday added successfully!');
+    } catch (error) {
+      showCustomSnackBar(context, 'Failed to add holiday: ${error.toString()}');
+    }
+  }
+
+  Future<void> _deleteHolidayFromBackend(DateTime date) async {
+    final holidayProvider =
+        Provider.of<HolidayProvider>(context, listen: false);
+    try {
+      await holidayProvider.deleteHoliday(date);
+      _fetchHolidaysForVisibleRange();
+      showCustomSnackBar(context, 'Holiday delete successfully!');
     } catch (error) {
       showCustomSnackBar(context, 'Failed to add holiday: ${error.toString()}');
     }
   }
 
   Widget _buildDayContainer(DateTime date,
-      {bool isSelected = false, bool isToday = false, bool isWeekday = false}) {
+      {bool isSelected = false,
+      bool isToday = false,
+      bool isWeekday = false,
+      bool isHoliday = false}) {
     return Container(
       decoration: BoxDecoration(
         color: isSelected
             ? Colors.redAccent
             : isToday
                 ? Colors.blueAccent
-                : isWeekday
-                    ? Colors.grey[300] // Color for selected weekdays
-                    : Colors.transparent,
+                : isHoliday
+                    ? Colors.indigoAccent.shade700
+                    : isWeekday
+                        ? Colors.grey[300] // Color for selected weekdays
+                        : Colors.transparent,
         shape: BoxShape.circle,
       ),
       alignment: Alignment.center,
@@ -283,11 +290,29 @@ class _HolidayScreenState extends State<HolidayScreen> {
         date.day.toString(),
         style: TextStyle(
           color:
-              isSelected || isToday || isWeekday ? Colors.white : Colors.black,
+              isSelected || isToday || isHoliday ? Colors.white : Colors.black,
           fontWeight: FontWeight.bold,
         ),
       ),
     );
+  }
+
+  void _showDeleteConfirmationDialog(
+      BuildContext context, DateTime holidayDate) {
+    showCustomDialog(
+      context: context,
+      child: const ConfirmationDialog(
+        message: 'Are you sure you want to delete this holiday?',
+        confirmButtonText: 'Delete',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: Colors.redAccent,
+        cancelButtonColor: Colors.grey,
+      ),
+    ).then((confirmed) {
+      if (confirmed == true) {
+        _deleteHolidayFromBackend(holidayDate);
+      }
+    });
   }
 
   Widget _buildHolidayList() {
@@ -295,29 +320,61 @@ class _HolidayScreenState extends State<HolidayScreen> {
       itemCount: _holidays.length,
       itemBuilder: (context, index) {
         final holiday = _holidays[index];
-        CustomCard(
-            child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 8),
-            Text(holiday.reason),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                const Icon(Icons.date_range, color: Colors.blueAccent),
-                const SizedBox(width: 8),
-                Text(
-                  DateFormat('EEE, d MMM y').format(holiday.holidayDate),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.black54,
+
+        return CustomSwipeCard(
+          onSwipeLeft: () {
+            _showDeleteConfirmationDialog(context, holiday.holidayDate);
+          },
+          onSwipeRight: () {
+            showCustomModalBottomSheet(
+              context: context,
+              child: HolidayForm(
+                selectedDate: holiday.holidayDate,
+                reason: holiday.reason,
+              ),
+            ).then((result) async {
+              if (result != null) {
+                DateTime selectedDate = result['date'];
+                String reason = result['reason'];
+                await _addHolidayToBackend(selectedDate, reason);
+                _fetchHolidaysForVisibleRange();
+              }
+            });
+          },
+          child: Container(
+            margin: const EdgeInsets.only(top: 4.0),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    holiday.reason,
+                    style: const TextStyle(
+                      fontSize: 18.0,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(Icons.date_range, color: Colors.blueAccent),
+                      const SizedBox(width: 8),
+                      Text(
+                        DateFormat('EEE, d MMM y').format(holiday.holidayDate),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.black54,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ],
-        ));
+          ),
+        );
       },
     );
   }

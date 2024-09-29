@@ -145,9 +145,9 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
 
     final rearrangedStudents = [...markedStudents, ...unmarkedStudents];
 
-    return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           children: <Widget>[
             const CustomSectionTitle(title: "Mark attendance"),

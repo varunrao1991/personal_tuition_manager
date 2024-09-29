@@ -4,28 +4,28 @@ import '../../../widgets/custom_form_text_field.dart';
 import '../../../widgets/custom_section_title.dart';
 import '../../../widgets/custom_form_date_field.dart';
 
-class AddHolidayScreen extends StatefulWidget {
+class HolidayForm extends StatefulWidget {
   final DateTime selectedDate;
-  final String reason; // New parameter for the reason
+  final String reason;
 
-  const AddHolidayScreen(
-      {super.key,
-      required this.selectedDate,
-      this.reason = ''}); // Default to an empty string
+  const HolidayForm({
+    super.key,
+    required this.selectedDate,
+    this.reason = '',
+  });
 
   @override
-  _AddHolidayScreenState createState() => _AddHolidayScreenState();
+  _HolidayFormState createState() => _HolidayFormState();
 }
 
-class _AddHolidayScreenState extends State<AddHolidayScreen> {
+class _HolidayFormState extends State<HolidayForm> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _reasonController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _reasonController.text =
-        widget.reason; // Populate the controller with the existing reason
+    _reasonController.text = widget.reason;
   }
 
   Future<void> _submitForm(BuildContext context) async {
@@ -54,7 +54,7 @@ class _AddHolidayScreenState extends State<AddHolidayScreen> {
                   selectedDate: widget.selectedDate,
                   onDateSelected: (date) {}, // Handle date selection if needed
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 16.0),
                 CustomFormTextField(
                   controller: _reasonController,
                   labelText: 'Reason for Holiday',
@@ -66,7 +66,7 @@ class _AddHolidayScreenState extends State<AddHolidayScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 16.0),
                 CustomElevatedButton(
                   text: 'Submit',
                   onPressed: () async {

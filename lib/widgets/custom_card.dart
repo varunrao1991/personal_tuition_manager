@@ -17,7 +17,6 @@ class CustomCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      // Use GestureDetector to handle tap events
       onTap: onTap, // Call the onTap callback if provided
       child: Card(
         elevation: elevation,
