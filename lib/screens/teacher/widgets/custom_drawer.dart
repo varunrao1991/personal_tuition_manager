@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:padmayoga/screens/teacher/holiday_screen.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../widgets/confirmation_modal.dart';
@@ -69,12 +70,15 @@ class CustomDrawer extends StatelessWidget {
             ),
           ),
           ListTile(
+            title: const Text('My Holidays'),
+            onTap: () {
+              Navigator.pushNamed(context, '/holidays');
+            },
+          ),
+          ListTile(
             title: const Text('About'),
             onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const AboutScreen()),
-              );
+              Navigator.pushNamed(context, '/about');
             },
           ),
           ListTile(

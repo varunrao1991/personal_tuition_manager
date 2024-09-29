@@ -10,6 +10,7 @@ import '../../../providers/student_provider.dart';
 import '../../../widgets/custom_card.dart';
 import '../../../widgets/custom_section_title.dart';
 import '../../../widgets/custom_snackbar.dart';
+import '../../../widgets/search_bar.dart';
 import '../../../widgets/show_custom_center_modal.dart';
 import '../../../widgets/sort_modal.dart';
 
@@ -24,8 +25,11 @@ class _PaymentProcessWidgetState extends State<PaymentProcessWidget> {
   int _currentStep = 0;
   Student? _selectedStudent;
   final TextEditingController _amountController = TextEditingController();
+  final TextEditingController _searchController =
+      TextEditingController(text: "Select student");
+
   DateTime _paymentDate = DateTime.now();
-  final TextEditingController _searchController = TextEditingController();
+  String? _selectedName; // Use a string to hold the selected name
 
   static const Map<String, String> _sortFieldLabels = {
     'name': 'Name',
@@ -35,10 +39,8 @@ class _PaymentProcessWidgetState extends State<PaymentProcessWidget> {
   };
 
   String _selectedSortField = 'name';
-  String? _selectedName;
   bool _isAscending = true;
 
-  // Form key for validation
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   void _selectStudent(Student? student) {
@@ -121,32 +123,21 @@ class _PaymentProcessWidgetState extends State<PaymentProcessWidget> {
         Row(
           children: [
             Expanded(
-              child: TextField(
+              child: GenericSearchBar(
                 controller: _searchController,
-                decoration: InputDecoration(
-                  labelText: 'Search Students',
-                  border: const OutlineInputBorder(),
-                  prefixIcon: const Icon(Icons.search),
-                  suffixIcon: _searchController.text.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear),
-                          onPressed: () async {
-                            setState(() {
-                              _selectedName = null;
-                            });
-                            _searchController.clear();
-                            await studentProvider.resetAndFetch(
-                              name: _selectedName,
-                              sort: _selectedSortField,
-                              order: _isAscending ? 'ASC' : 'DESC',
-                            );
-                          },
-                        )
-                      : null,
-                ),
                 onChanged: (value) async {
                   setState(() {
                     _selectedName = value;
+                  });
+                  await studentProvider.resetAndFetch(
+                    name: _selectedName,
+                    sort: _selectedSortField,
+                    order: _isAscending ? 'ASC' : 'DESC',
+                  );
+                },
+                onClear: () async {
+                  setState(() {
+                    _selectedName = null;
                   });
                   await studentProvider.resetAndFetch(
                     name: _selectedName,

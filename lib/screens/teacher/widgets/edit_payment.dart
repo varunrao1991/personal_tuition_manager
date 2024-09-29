@@ -40,13 +40,10 @@ class _EditPaymentWidgetState extends State<EditPaymentWidget> {
       );
 
       try {
-        await Provider.of<PaymentProvider>(context, listen: false)
-            .updatePayment(editedPayment);
-        showCustomSnackBar(context, 'Payment updated successfully!');
-        Navigator.of(context).pop(true); // Close modal after success
+        Navigator.of(context).pop(editedPayment);
       } catch (error) {
         showCustomSnackBar(context, error.toString(),
-            backgroundColor: Colors.red); // Custom error message
+            backgroundColor: Colors.red);
       }
     }
   }

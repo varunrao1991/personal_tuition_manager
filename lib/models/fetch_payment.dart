@@ -1,16 +1,16 @@
-import 'paid_by.dart';
+import 'owned_by.dart';
 
 class Payment {
   final int id;
   final int amount;
   final DateTime paymentDate;
-  final PaidBy paidBy;
+  final OwnedBy ownedBy;
 
   Payment({
     required this.id,
     required this.amount,
     required this.paymentDate,
-    required this.paidBy,
+    required this.ownedBy,
   });
 
   factory Payment.fromJson(Map<String, dynamic> json) {
@@ -19,8 +19,8 @@ class Payment {
       amount: json['amount'], // Fetch payment amount
       paymentDate:
           DateTime.parse(json['paymentDate']), // Parse the payment date
-      paidBy: PaidBy.fromJson(json[
-          'student']), // Use PaidBy factory constructor to map student object
+      ownedBy: OwnedBy.fromJson(json[
+          'student']), // Use OwnedBy factory constructor to map student object
     );
   }
 }

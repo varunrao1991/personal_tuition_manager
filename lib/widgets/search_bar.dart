@@ -3,14 +3,15 @@ import 'package:flutter/material.dart';
 class GenericSearchBar extends StatelessWidget {
   final TextEditingController controller;
   final VoidCallback onClear;
+  final String? labelText;
   final ValueChanged<String> onChanged;
 
-  const GenericSearchBar({
-    super.key,
-    required this.controller,
-    required this.onClear,
-    required this.onChanged,
-  });
+  const GenericSearchBar(
+      {super.key,
+      required this.controller,
+      required this.onClear,
+      required this.onChanged,
+      this.labelText = 'Search'});
 
   @override
   Widget build(BuildContext context) {

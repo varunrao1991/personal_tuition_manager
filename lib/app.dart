@@ -1,4 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:padmayoga/providers/attendance_provider.dart';
+import 'package:padmayoga/providers/holiday_provider.dart';
+import 'package:padmayoga/providers/month_provider.dart';
+import 'package:padmayoga/providers/weekday_provider.dart';
+import 'package:padmayoga/screens/about_screen.dart';
+import 'package:padmayoga/screens/teacher/holiday_screen.dart';
+import 'package:padmayoga/services/attendance_service.dart';
+import 'package:padmayoga/services/holiday_service.dart';
+import 'package:padmayoga/services/weekday_service.dart';
 import 'providers/payment_provider.dart';
 import 'providers/student_provider.dart';
 import 'screens/auth/forgot_password_screen.dart';
@@ -34,6 +43,19 @@ class MyApp extends StatelessWidget {
           create: (context) =>
               PaymentProvider(PaymentService(), context.read<TokenService>()),
         ),
+        ChangeNotifierProvider(
+          create: (context) =>
+              MonthlyProvider(PaymentService(), context.read<TokenService>()),
+        ),
+        ChangeNotifierProvider(
+            create: (context) => AttendanceProvider(
+                AttendanceService(), context.read<TokenService>())),
+        ChangeNotifierProvider(
+            create: (context) => HolidayProvider(
+                HolidayService(), context.read<TokenService>())),
+        ChangeNotifierProvider(
+            create: (context) =>
+                WeekdayProvider(WeekdayService(), context.read<TokenService>()))
       ],
       child: MaterialApp(
         title: 'Teacher & Student App',
@@ -45,6 +67,8 @@ class MyApp extends StatelessWidget {
           '/forgot-password': (context) => const ForgotPasswordScreen(),
           '/teacher': (context) => const TeacherHomeScreen(),
           '/student': (context) => const StudentHomeScreen(),
+          '/holidays': (context) => const HolidayScreen(),
+          '/about': (context) => const AboutScreen(),
         },
       ),
     );

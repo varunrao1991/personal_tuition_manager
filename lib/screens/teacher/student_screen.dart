@@ -4,6 +4,7 @@ import '../../models/student_model.dart';
 import '../../models/student_update.dart';
 import '../../providers/student_provider.dart';
 import '../../widgets/custom_fab.dart';
+import '../../widgets/search_bar.dart';
 import '../../widgets/show_custom_bottom_modal.dart';
 import '../../widgets/show_custom_center_modal.dart';
 import '../../widgets/sort_modal.dart';
@@ -108,29 +109,19 @@ class _StudentViewerState extends State<StudentViewer> {
             child: Row(
               children: [
                 Expanded(
-                  child: TextField(
+                  child: GenericSearchBar(
                     controller: _searchController,
-                    decoration: InputDecoration(
-                      labelText: 'Search Students',
-                      border: const OutlineInputBorder(),
-                      prefixIcon: const Icon(Icons.search),
-                      suffixIcon: _searchController.text.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear),
-                              onPressed: () async {
-                                setState(() {
-                                  _selectedName = null;
-                                });
-                                _searchController.clear();
-                                await studentProvider.resetAndFetch(
-                                  name: _selectedName,
-                                  sort: _selectedSortField,
-                                  order: _isAscending ? 'ASC' : 'DESC',
-                                );
-                              },
-                            )
-                          : null,
-                    ),
+                    onClear: () async {
+                      setState(() {
+                        _selectedName = null;
+                      });
+                      _searchController.clear();
+                      await studentProvider.resetAndFetch(
+                        name: _selectedName,
+                        sort: _selectedSortField,
+                        order: _isAscending ? 'ASC' : 'DESC',
+                      );
+                    },
                     onChanged: (value) async {
                       setState(() {
                         _selectedName = value;

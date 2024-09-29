@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:padmayoga/widgets/confirmation_modal.dart';
+import 'package:padmayoga/screens/teacher/attendance_screen.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
-import '../../widgets/show_custom_center_modal.dart';
 import 'widgets/bottom_navigation_bar.dart';
 import 'widgets/custom_drawer.dart';
 import 'student_screen.dart';
@@ -24,6 +23,19 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
     });
   }
 
+  Widget _getViewer() {
+    switch (_selectedIndex) {
+      case 2:
+        return const StudentViewer();
+      case 0:
+        return const PaymentViewer();
+      case 1:
+        return const AttendanceScreen();
+      default:
+        return const StudentViewer();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
@@ -41,7 +53,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
         title: const Text("Teacher Dashboard"),
       ),
       drawer: const CustomDrawer(),
-      body: _selectedIndex == 0 ? const StudentViewer() : const PaymentViewer(),
+      body: _getViewer(),
       bottomNavigationBar: CustomBottomNavigationBar(
         selectedIndex: _selectedIndex,
         onItemTapped: _onItemTapped,

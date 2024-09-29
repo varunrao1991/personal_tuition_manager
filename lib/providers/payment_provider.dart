@@ -1,6 +1,7 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import '../models/create_payment.dart';
+import '../models/daily_total.dart';
 import '../models/fetch_payment.dart';
 import '../services/payment_service.dart';
 import '../services/token_service.dart';
@@ -8,26 +9,35 @@ import '../exceptions/payment_exception.dart';
 
 class PaymentProvider with ChangeNotifier {
   List<Payment> _payments = [];
-  final Map<DateTime, int> _monthlyPayments = {}; // List for monthly payments
-
   bool _isLoading = false;
   final PaymentService _paymentService;
   final TokenService _tokenService;
   int _currentPage = 1;
   int _totalPages = 1;
 
+  DateTime? _cachedMonth; // Cached month
+  List<DailyTotal> _cachedDailyTotals = []; // Cached daily totals
+
+  List<DailyTotal> get dailyTotals => _cachedDailyTotals;
+
+  // Cached parameters
+  String? _cachedSort;
+  String? _cachedOrder;
+  DateTime? _cachedStartDate;
+  DateTime? _cachedEndDate;
+
   // Getters
   List<Payment> get payments => _payments;
-  Map<DateTime, int> get monthlyPayments =>
-      _monthlyPayments; // Getter for monthly payments
   bool get isLoading => _isLoading;
   int get currentPage => _currentPage;
   int get totalPages => _totalPages;
+  String? get cachedSort => _cachedSort;
+  String? get cachedOrder => _cachedOrder;
+  DateTime? get cachedStartDate => _cachedStartDate;
+  DateTime? get cachedEndDate => _cachedEndDate;
 
-  // Constructor to inject PaymentService and TokenService
   PaymentProvider(this._paymentService, this._tokenService);
 
-  // Set Loading State
   void _setLoading(bool value) {
     _isLoading = value;
     notifyListeners();
@@ -43,26 +53,30 @@ class PaymentProvider with ChangeNotifier {
   }) async {
     _setLoading(true);
 
+    // Update cached parameters if new ones are provided
+    _cachedSort = sort ?? _cachedSort;
+    _cachedOrder = order ?? _cachedOrder;
+    _cachedStartDate = startDate ?? _cachedStartDate;
+    _cachedEndDate = endDate ?? _cachedEndDate;
+
     try {
       final String? accessToken = await _tokenService.getToken();
       if (accessToken != null) {
         final PaymentResponse response = await _paymentService.getPayments(
           accessToken: accessToken,
           page: page ?? _currentPage,
-          sort: sort,
-          order: order,
-          startDate: startDate,
-          endDate: endDate,
+          sort: _cachedSort,
+          order: _cachedOrder,
+          startDate: _cachedStartDate,
+          endDate: _cachedEndDate,
         );
 
-        // Handle pagination: Reset the list for page 1, append for other pages
         if (page == 1 || page == null) {
-          _payments = response.payments; // Reset on first page load or refresh
+          _payments = response.payments;
         } else {
-          _payments.addAll(response.payments); // Append for paginated results
+          _payments.addAll(response.payments);
         }
 
-        // Update pagination details
         _currentPage = response.currentPage;
         _totalPages = response.totalPages;
         log('Payments successfully fetched.');
@@ -85,7 +99,7 @@ class PaymentProvider with ChangeNotifier {
     DateTime? startDate,
     DateTime? endDate,
   }) async {
-    _currentPage = 1; // Reset to the first page
+    _currentPage = 1;
     await fetchPayments(
       page: 1,
       sort: sort,
@@ -107,38 +121,13 @@ class PaymentProvider with ChangeNotifier {
           createPayment: createPayment,
         );
         log('Payment successfully added.');
-
-        // Refresh the payment list after adding a new payment
-        await resetAndFetch(); // Reset and fetch payments after adding
+        await resetAndFetch();
       } else {
         throw PaymentException('No access token found.');
       }
     } catch (e) {
       log('Add payment error: $e');
       throw PaymentException('Failed to add payment: $e');
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  Future<void> getTotalPayments(DateTime month) async {
-    _setLoading(true);
-    try {
-      final String? accessToken = await _tokenService.getToken();
-      DateTime startDate = DateTime(month.year, month.month, 1);
-      DateTime endDate = DateTime(month.year, month.month+1, 0);
-      if (accessToken != null) {
-        _monthlyPayments[startDate] = await _paymentService.getTotalAmountPayments(
-          accessToken: accessToken,
-          startDate: startDate,
-          endDate: endDate,
-        );
-      } else {
-        throw PaymentException('No access token found.');
-      }
-    } catch (e) {
-      log('Get total payment error: $e');
-      throw PaymentException('Failed to get total payment: $e');
     } finally {
       _setLoading(false);
     }
@@ -156,15 +145,44 @@ class PaymentProvider with ChangeNotifier {
           updatePayment: payment,
         );
         log('Payment successfully updated.');
-
-        // Refresh the payment list after updating a payment
-        await resetAndFetch(); // Reset and fetch payments after updating
+        await resetAndFetch();
       } else {
         throw PaymentException('No access token found.');
       }
     } catch (e) {
       log('Update payment error: $e');
       throw PaymentException('Failed to update payment: $e');
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  // Fetch Daily Total Payments for Month with caching
+  Future<void> fetchDailyTotalPaymentsForMonth(DateTime month) async {
+    _setLoading(true);
+    try {
+      final String? accessToken = await _tokenService.getToken();
+      if (accessToken != null) {
+        DateTime startDate = DateTime(month.year, month.month, 1);
+        DateTime endDate = DateTime(month.year, month.month + 1, 0);
+
+        final dailyTotals = await _paymentService.getDailyTotalPayments(
+          accessToken: accessToken,
+          startDate: startDate,
+          endDate: endDate,
+        );
+
+        _cachedMonth = month; // Update cached month
+        _cachedDailyTotals = dailyTotals; // Cache the daily totals
+        log('Daily payments for $month: ${_cachedDailyTotals.length}');
+        notifyListeners();
+      } else {
+        throw PaymentException('No access token found.');
+      }
+    } catch (e) {
+      log('Fetch daily total payments for month error: $e');
+      throw PaymentException(
+          'Failed to fetch daily total payments for month: $e');
     } finally {
       _setLoading(false);
     }
@@ -182,9 +200,7 @@ class PaymentProvider with ChangeNotifier {
           paymentId: paymentId,
         );
         log('Payment successfully deleted.');
-
-        // Refresh the payment list after deleting a payment
-        await resetAndFetch(); // Reset and fetch payments after deleting
+        await resetAndFetch();
       } else {
         throw PaymentException('No access token found.');
       }

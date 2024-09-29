@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:padmayoga/models/create_payment.dart';
 import 'package:padmayoga/models/fetch_payment.dart';
+import 'package:padmayoga/providers/month_provider.dart';
 import 'package:padmayoga/screens/teacher/widgets/edit_payment.dart';
 import 'package:provider/provider.dart';
 import '../../providers/payment_provider.dart';
 import '../../widgets/confirmation_modal.dart';
+import '../../widgets/custom_snackbar.dart';
 import '../../widgets/show_custom_bottom_modal.dart';
 import '../../widgets/show_custom_center_modal.dart';
-import '../../widgets/sort_modal.dart';
+import '../../widgets/total_graph.dart';
+import 'widgets/monthly_payments.dart';
 import 'widgets/payment_card.dart';
 import 'widgets/add_payment.dart';
 
@@ -20,12 +23,8 @@ class PaymentViewer extends StatefulWidget {
 
 class _PaymentViewerState extends State<PaymentViewer> {
   late ScrollController _scrollController;
-  static const Map<String, String> _sortFieldLabels = {
-    'paymentDate': 'Payment Date',
-    'amount': 'Amount'
-  };
-  String _selectedSortField = 'paymentDate';
-  bool _isAscending = true;
+  DateTime _selectedMonth =
+      DateTime(DateTime.now().year, DateTime.now().month, 1);
 
   @override
   void initState() {
@@ -40,11 +39,12 @@ class _PaymentViewerState extends State<PaymentViewer> {
   Future<void> _fetchPayments() async {
     final paymentProvider =
         Provider.of<PaymentProvider>(context, listen: false);
+    final startDate = DateTime(_selectedMonth.year, _selectedMonth.month, 1);
+    final endDate = DateTime(_selectedMonth.year, _selectedMonth.month + 1, 0);
+
     await paymentProvider.fetchPayments(
-      page: 1,
-      sort: _selectedSortField,
-      order: _isAscending ? 'ASC' : 'DESC',
-    );
+        page: 1, startDate: startDate, endDate: endDate);
+    await paymentProvider.fetchDailyTotalPaymentsForMonth(_selectedMonth);
   }
 
   void _onScroll() {
@@ -55,23 +55,27 @@ class _PaymentViewerState extends State<PaymentViewer> {
       if (!paymentProvider.isLoading &&
           paymentProvider.currentPage < paymentProvider.totalPages) {
         paymentProvider.fetchPayments(
-          page: paymentProvider.currentPage + 1,
-          sort: _selectedSortField,
-          order: _isAscending ? 'ASC' : 'DESC',
-        );
+            page: paymentProvider.currentPage + 1,
+            startDate: DateTime(_selectedMonth.year, _selectedMonth.month, 1),
+            endDate:
+                DateTime(_selectedMonth.year, _selectedMonth.month + 1, 0));
       }
     }
   }
 
-  void _editPayment(CreatePayment payment) {
-    showCustomModalBottomSheet(
-        context: context, child: EditPaymentWidget(payment: payment));
-  }
-
-  Future<void> _deletePayment(int paymentId) async {
+  Future<void> _deletePayment(Payment payment) async {
     final paymentProvider =
         Provider.of<PaymentProvider>(context, listen: false);
-    await paymentProvider.deletePayment(paymentId);
+    final monthProvider = Provider.of<MonthlyProvider>(context, listen: false);
+    await paymentProvider.deletePayment(payment.id);
+    await monthProvider.fetchTotalPaymentForMonths([payment.paymentDate]);
+    _fetchPayments();
+  }
+
+  void _onMonthChanged(DateTime newMonth) {
+    setState(() {
+      _selectedMonth = newMonth;
+    });
     _fetchPayments();
   }
 
@@ -84,25 +88,21 @@ class _PaymentViewerState extends State<PaymentViewer> {
   @override
   Widget build(BuildContext context) {
     final paymentProvider = Provider.of<PaymentProvider>(context);
-
     return Scaffold(
       body: Column(
         children: [
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Payments',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.filter_alt),
-                  onPressed: () => _openSortModal(context),
-                ),
-              ],
+            child: MonthlyPaymentsWidget(
+              onMonthChanged: _onMonthChanged,
+              selectedMonth: _selectedMonth,
             ),
+          ),
+          // Add the daily total graph below the month cards
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            height: 200, // Adjust height as necessary
+            child: TotalGraph(dailyTotals: paymentProvider.dailyTotals),
           ),
           Expanded(
             child: paymentProvider.isLoading && paymentProvider.payments.isEmpty
@@ -123,21 +123,45 @@ class _PaymentViewerState extends State<PaymentViewer> {
 
                         return PaymentCard(
                           payment: payment,
-                          onEdit: () {
-                            _editPayment(CreatePayment.fromPayment(payment));
+                          onEdit: () async {
+                            final paymentNew =
+                                await showCustomModalBottomSheet<CreatePayment>(
+                              context: context,
+                              child: EditPaymentWidget(
+                                payment: CreatePayment.fromPayment(payment),
+                              ),
+                            );
+                            if (paymentNew != null) {
+                              await Provider.of<PaymentProvider>(context,
+                                      listen: false)
+                                  .updatePayment(paymentNew);
+
+                              final monthProvider =
+                                  Provider.of<MonthlyProvider>(context,
+                                      listen: false);
+                              await monthProvider.fetchTotalPaymentForMonths([
+                                payment.paymentDate,
+                                paymentNew.paymentDate
+                              ]);
+                              await paymentProvider
+                                  .fetchDailyTotalPaymentsForMonth(
+                                      _selectedMonth);
+                              showCustomSnackBar(
+                                  context, 'Payment updated successfully!');
+                            }
                           },
                           onDelete: () async {
-                            showCustomDialog(
+                            final success = await showCustomDialog<bool>(
                               context: context,
                               child: const ConfirmationDialog(
                                 message: 'Delete this payment?',
                                 confirmButtonText: 'Delete',
                                 cancelButtonText: 'Cancel',
                               ),
-                            ).then((success) => {
-                                  if (success != null && success)
-                                    {_deletePayment(payment.id)}
-                                });
+                            );
+                            if (success != null && success) {
+                              _deletePayment(payment);
+                            }
                           },
                         );
                       },
@@ -157,33 +181,5 @@ class _PaymentViewerState extends State<PaymentViewer> {
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
-  }
-
-  void _openSortModal(BuildContext context) {
-    showCustomDialog(
-      context: context,
-      child: SortModal(
-        title: 'Sort Payments',
-        selectedSortField: _selectedSortField,
-        sortOptions: _sortFieldLabels,
-        isAscending: _isAscending,
-        onSortFieldChange: (newSortField) {
-          if (newSortField != null) {
-            setState(() {
-              _selectedSortField = newSortField;
-            });
-          }
-          Navigator.of(context).pop();
-        },
-        onSortOrderChange: (isAscending) {
-          setState(() {
-            _isAscending = isAscending;
-          });
-          Navigator.of(context).pop();
-        },
-      ),
-    ).then((value) {
-      _fetchPayments();
-    });
   }
 }

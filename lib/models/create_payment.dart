@@ -18,10 +18,10 @@ class CreatePayment {
   factory CreatePayment.fromPayment(Payment payment) {
     return CreatePayment(
       id: payment.id, // Map the ID from the Payment object
-      studentId: payment.paidBy.id, // Assuming `paidBy` has a `studentId`
+      studentId: payment.ownedBy.id, // Assuming `ownedBy` has a `studentId`
       amount: payment.amount,
       paymentDate: payment.paymentDate,
-      studentName: payment.paidBy.name,
+      studentName: payment.ownedBy.name,
     );
   }
 

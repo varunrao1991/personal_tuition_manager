@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:http/http.dart' as http;
 import '../exceptions/payment_exception.dart';
 import '../models/create_payment.dart';
+import '../models/daily_total.dart';
 import '../models/fetch_payment.dart';
 import '../config/app_config.dart';
 
@@ -121,16 +122,45 @@ class PaymentService {
       if (response.statusCode != 200) {
         throw Exception('Failed to fetch total amount: ${response.body}');
       }
-
-      final data = jsonDecode(response.body);
-      return data[
-          'totalAmount']; // Assuming the response contains a field 'totalAmount'
+      return int.parse(response.body);
     } catch (e) {
       throw Exception('Error fetching total amount: $e');
     }
   }
 
-// Helper method to format DateTime to the required string format
+  Future<List<DailyTotal>> getDailyTotalPayments({
+    required String accessToken,
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {
+    try {
+      final String formattedStartDate = _formatDate(startDate);
+      final String formattedEndDate = _formatDate(endDate);
+
+      final response = await http.get(
+        Uri.parse(
+            '$apiUrl/api/payments/daily?startDate=$formattedStartDate&endDate=$formattedEndDate'),
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to fetch total amount: ${response.body}');
+      }
+
+      final List<dynamic> data = jsonDecode(response.body);
+
+      return data.map<DailyTotal>((entry) {
+        return DailyTotal.fromJson(entry);
+      }).toList();
+    } catch (e) {
+      throw Exception('Error fetching total amount: $e');
+    }
+  }
+
+  // Helper method to format DateTime to the required string format
   String _formatDate(DateTime date) {
     return '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }

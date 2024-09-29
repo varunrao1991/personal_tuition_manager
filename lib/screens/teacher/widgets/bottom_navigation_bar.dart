@@ -15,12 +15,16 @@ class CustomBottomNavigationBar extends StatelessWidget {
     return BottomNavigationBar(
       items: const <BottomNavigationBarItem>[
         BottomNavigationBarItem(
-          icon: Icon(Icons.people),
-          label: 'Students',
-        ),
-        BottomNavigationBarItem(
           icon: Icon(Icons.payment),
           label: 'Payments',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.check),
+          label: 'Attendances',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.people),
+          label: 'Students',
         ),
       ],
       currentIndex: selectedIndex,
