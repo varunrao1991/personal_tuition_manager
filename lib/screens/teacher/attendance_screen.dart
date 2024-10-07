@@ -1,17 +1,15 @@
-import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:padmayoga/models/attendance.dart';
-import 'package:padmayoga/widgets/custom_snackbar.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../providers/attendance_provider.dart';
 import '../../providers/holiday_provider.dart';
 import '../../providers/weekday_provider.dart';
+import '../../utils/handle_errors.dart';
 import '../../widgets/custom_card.dart';
 import '../../widgets/custom_fab.dart';
-import '../../widgets/custom_swipe_card.dart';
-import '../../widgets/show_custom_bottom_modal.dart';
+import '../../utils/show_custom_bottom_modal.dart';
 import 'widgets/mark_attendance.dart';
 
 class AttendanceScreen extends StatefulWidget {
@@ -24,52 +22,55 @@ class AttendanceScreen extends StatefulWidget {
 class _AttendanceScreenState extends State<AttendanceScreen> {
   DateTime _selectedDate = DateTime.now();
   DateTime _focusedDate = DateTime.now();
-  List<Attendance> _attendanceList = [];
+  bool _loading = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _fetchForMonth();
+      DateTime startDate = DateTime(_focusedDate.year, _focusedDate.month, 1);
+      DateTime endDate = DateTime(_focusedDate.year, _focusedDate.month + 1, 0);
+      _fetchForMonth(startDate, endDate);
+      final weekDayProvider =
+          Provider.of<WeekdayProvider>(context, listen: false);
+      weekDayProvider.fetchWeekdays();
     });
   }
 
-  // Fetch attendance data for the selected month
-  void _fetchForMonth() async {
+  void _fetchForMonth(DateTime startDate, DateTime endDate) async {
+    setState(() {
+      _loading = true;
+    });
+
     final attendanceProvider =
         Provider.of<AttendanceProvider>(context, listen: false);
-    DateTime startDate = DateTime(_focusedDate.year, _focusedDate.month, 1);
-    DateTime endDate = DateTime(_focusedDate.year, _focusedDate.month + 1, 0);
-
     try {
       await attendanceProvider.fetchAttendances(
-          startDate: startDate, endDate: endDate);
-      _updateAttendanceList(attendanceProvider.attendances);
-    } catch (error) {
-      log('Error fetching attendances: $error');
-      showCustomSnackBar(
-          context, 'Failed to fetch attendance data: ${error.toString()}');
+          startDate: startDate, endDate: endDate, forceRefresh: true);
+    } catch (e) {
+      handleErrors(context, e);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+        });
+      }
     }
   }
 
-  void _updateAttendanceList(List<Attendance> attendances) {
-    setState(() {
-      _attendanceList = attendances;
-    });
-  }
-
-  // Update calendar when the page (month) is changed
   void _onPageChanged(DateTime focusedDay) {
     if (focusedDay != _focusedDate) {
+      DateTime startDate = DateTime(focusedDay.year, focusedDay.month, 1);
+      DateTime endDate = DateTime(focusedDay.year, focusedDay.month + 1, 0);
+      _fetchForMonth(startDate, endDate);
+
       setState(() {
         _focusedDate = focusedDay;
         _selectedDate = DateTime(_focusedDate.year, _focusedDate.month, 1);
       });
-      _fetchForMonth();
     }
   }
 
-  // Update selected day on the calendar
   void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
     if (selectedDay != _selectedDate || focusedDay != _focusedDate) {
       setState(() {
@@ -86,7 +87,6 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
         padding: const EdgeInsets.all(8.0),
         child: Column(
           children: [
-            // Using Consumer to listen for changes in HolidayProvider and WeekdayProvider
             Consumer2<HolidayProvider, WeekdayProvider>(
               builder: (context, holidayProvider, weekdayProvider, child) {
                 return TableCalendar(
@@ -138,7 +138,23 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
               },
             ),
             const SizedBox(height: 16.0),
-            Expanded(child: _buildAttendanceList()),
+            Consumer<AttendanceProvider>(
+              builder: (context, attendanceProvider, child) {
+                final attendancesForSelectedDate = attendanceProvider
+                    .attendances
+                    .where(
+                      (attendance) =>
+                          isSameDay(attendance.attendanceDate, _selectedDate),
+                    )
+                    .toList();
+
+                return Expanded(
+                  child: _loading
+                      ? const Center(child: CircularProgressIndicator())
+                      : _buildAttendanceList(attendancesForSelectedDate),
+                );
+              },
+            ),
           ],
         ),
       ),
@@ -148,9 +164,13 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
           showCustomModalBottomSheet(
             context: context,
             child: MarkAttendanceScreen(selectedDate: _selectedDate),
-          ).then((success) {
+          ).then((success) async {
             if (success != null && success) {
-              _fetchForMonth(); // Re-fetch attendances after marking
+              DateTime startDate =
+                  DateTime(_focusedDate.year, _focusedDate.month, 1);
+              DateTime endDate =
+                  DateTime(_focusedDate.year, _focusedDate.month + 1, 0);
+              _fetchForMonth(startDate, endDate);
             }
           });
         },
@@ -158,34 +178,26 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     );
   }
 
-  // Build day container with attendance count, holidays, and weekdays
   Widget _buildDayContainer(DateTime date,
       {bool isToday = false,
       bool isSelected = false,
       bool isWeekday = false,
       bool isHoliday = false}) {
     DateTime dateTrimmed = DateTime(date.year, date.month, date.day);
-
-    List<Attendance> attendancesForDate = _attendanceList
-        .where((attendance) =>
-            DateTime(
-                attendance.attendanceDate.year,
-                attendance.attendanceDate.month,
-                attendance.attendanceDate.day) ==
-            dateTrimmed)
-        .toList();
-
-    int attendanceCount = attendancesForDate.length;
+    final attendanceProvider =
+        Provider.of<AttendanceProvider>(context, listen: false);
+    int attendanceCount = attendanceProvider.attendances
+        .where(
+            (attendance) => isSameDay(attendance.attendanceDate, dateTrimmed))
+        .length;
 
     return Container(
       decoration: BoxDecoration(
         color: isSelected
             ? Colors.redAccent
-            : (isHoliday || isWeekday ? Colors.grey[300] : Colors.transparent),
+            : (isHoliday || !isWeekday ? Colors.grey[300] : Colors.transparent),
         shape: BoxShape.circle,
-        border: isToday
-            ? Border.all(color: Colors.black, width: 1)
-            : null, // Border for today
+        border: isToday ? Border.all(color: Colors.black, width: 1) : null,
       ),
       child: Stack(
         alignment: Alignment.bottomRight,
@@ -224,37 +236,33 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     );
   }
 
-  // Build a list of attendance records
-  Widget _buildAttendanceList() {
+  Widget _buildAttendanceList(List<Attendance> attendanceList) {
+    if (attendanceList.isEmpty) {
+      return const Center(child: Text('No attendances for the selected date.'));
+    }
+
     return ListView.builder(
-      itemCount: _attendanceList.length,
+      itemCount: attendanceList.length,
       itemBuilder: (context, index) {
-        final attendance = _attendanceList[index];
+        final attendance = attendanceList[index];
 
         return CustomCard(
-          child: Container(
-            margin: const EdgeInsets.all(8.0),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    attendance.ownedBy.name,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    DateFormat('EEE, d MMM y')
-                        .format(attendance.attendanceDate),
-                    style: const TextStyle(color: Colors.black54),
-                  ),
-                ],
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                attendance.ownedBy.name,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
+              const SizedBox(height: 4),
+              Text(
+                DateFormat('EEE, d MMM y').format(attendance.attendanceDate),
+                style: const TextStyle(color: Colors.black54),
+              ),
+            ],
           ),
         );
       },

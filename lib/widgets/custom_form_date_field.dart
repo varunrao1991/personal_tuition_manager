@@ -5,11 +5,13 @@ class CustomDateInputField extends StatelessWidget {
   final String? title;
   final DateTime selectedDate;
   final ValueChanged<DateTime> onDateSelected;
+  final bool readOnly;
 
-  CustomDateInputField({
+  const CustomDateInputField({
     required this.title,
     required this.selectedDate,
     required this.onDateSelected,
+    this.readOnly = false,
     super.key,
   });
 
@@ -51,7 +53,7 @@ class CustomDateInputField extends StatelessWidget {
               borderSide: BorderSide(color: Colors.blueAccent.withOpacity(0.5)),
             ),
           ),
-          readOnly: true, // Make the field read-only
+          readOnly: readOnly, // Make the field read-only
         ),
       ),
     );

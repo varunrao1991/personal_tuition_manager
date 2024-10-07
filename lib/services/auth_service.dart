@@ -1,46 +1,56 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'package:http/http.dart' as http;
-import '../exceptions/auth_exception.dart';
 import '../models/profile_update.dart';
 import '../models/user_model.dart';
 import '../config/app_config.dart';
+import '../utils/response_to_error.dart';
+
+class LoginResponse {
+  final User user;
+  final String accessToken;
+
+  LoginResponse({required this.user, required this.accessToken});
+}
 
 class AuthService {
-  String apiUrl = Config().apiUrl;
+  final String apiUrl = Config().apiUrl;
+  final http.Client _client;
+
+  AuthService(this._client);
 
   Future<void> requestPasswordChange(String mobile) async {
-    final response = await http.post(
+    final response = await _client.post(
       Uri.parse('$apiUrl/api/auth/request-password-change'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'mobile': mobile}),
     );
 
-    log(response.body); // TODO: remove once OTP through mobile is done
-    if (response.statusCode != 200) {
-      throw AuthException('Failed to send OTP: ${response.body}');
+    if (response.statusCode == 200) {
+      log("Password changed requested ${response.body}");
+    } else {
+      throw responseToError(response.body);
     }
   }
 
   Future<void> changePasswordWithOTP(
       String mobile, String otp, String newPassword) async {
-    final response = await http.post(
+    final response = await _client.post(
       Uri.parse('$apiUrl/api/auth/change-password-with-otp'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'mobile': mobile,
-        'otp': otp,
-        'newPassword': newPassword,
-      }),
+      body: jsonEncode(
+          {'mobile': mobile, 'otp': otp, 'newPassword': newPassword}),
     );
 
-    if (response.statusCode != 200) {
-      throw AuthException('Failed to change password: ${response.body}');
+    if (response.statusCode == 200) {
+      log("Password changed with OTP successfully");
+    } else {
+      throw responseToError(response.body);
     }
   }
 
-  Future<User?> login(String mobile, String password) async {
-    final response = await http.post(
+  Future<LoginResponse> login(String mobile, String password) async {
+    final response = await _client.post(
       Uri.parse('$apiUrl/api/auth/login'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'mobile': mobile, 'password': password}),
@@ -48,16 +58,15 @@ class AuthService {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      return User.fromJson(data);
-    } else if (response.statusCode == 401) {
-      throw AuthException('Unauthorized: Invalid credentials.');
+      return LoginResponse(
+          user: User.fromJson(data), accessToken: data['accessToken']);
     } else {
-      throw AuthException('Login failed: ${response.body}');
+      throw responseToError(response.body);
     }
   }
 
-  Future<User?> getUserFromToken(String accessToken) async {
-    final response = await http.post(
+  Future<User> getUserFromToken(String accessToken) async {
+    final response = await _client.post(
       Uri.parse('$apiUrl/api/auth/user'),
       headers: {'Authorization': 'Bearer $accessToken'},
     );
@@ -65,18 +74,14 @@ class AuthService {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       return User.fromJson(data);
-    } else if (response.statusCode == 401) {
-      log('Unauthorized access: Invalid token');
-      throw AuthException('Invalid token, please log in again.');
     } else {
-      log(response.body);
-      throw AuthException('Failed to get user from token: ${response.body}');
+      throw responseToError(response.body);
     }
   }
 
   Future<void> changePassword(
       String accessToken, String oldPassword, String newPassword) async {
-    final response = await http.post(
+    final response = await _client.post(
       Uri.parse('$apiUrl/api/auth/change-password'),
       headers: {
         'Authorization': 'Bearer $accessToken',
@@ -88,16 +93,15 @@ class AuthService {
       }),
     );
 
-    if (response.statusCode != 200) {
-      log('Failed to change password: ${response.body}');
-      throw AuthException('Failed to change password: ${response.body}');
+    if (response.statusCode == 200) {
+      log("Password changed successfully");
     } else {
-      log('Password successfully changed.');
+      throw responseToError(response.body);
     }
   }
 
   Future<User> changeProfileInfo(String accessToken, ProfileUpdate data) async {
-    final response = await http.post(
+    final response = await _client.post(
       Uri.parse('$apiUrl/api/auth/change-profile-info'),
       headers: {
         'Authorization': 'Bearer $accessToken',
@@ -106,12 +110,11 @@ class AuthService {
       body: jsonEncode(data.toJson()), // Use the model's toJson method
     );
 
-    if (response.statusCode != 200) {
-      log('Failed to change profile info: ${response.body}');
-      throw AuthException('Failed to change profile info: ${response.body}');
-    } else {
+    if (response.statusCode == 200) {
       final userData = jsonDecode(response.body);
       return User.fromJson(userData);
+    } else {
+      throw responseToError(response.body);
     }
   }
 }

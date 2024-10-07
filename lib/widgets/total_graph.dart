@@ -1,32 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:padmayoga/models/daily_total.dart';
 
 class TotalGraph extends StatelessWidget {
-  final List<DailyTotal> dailyTotals;
+  final Map<int, double> arrayToDisplay;
 
-  const TotalGraph({super.key, required this.dailyTotals});
+  const TotalGraph({super.key, required this.arrayToDisplay});
 
   @override
   Widget build(BuildContext context) {
-    if (dailyTotals.isEmpty) {
+    if (arrayToDisplay.isEmpty) {
       return const Center(child: Text('No data available'));
     }
 
-    // Sort daily totals by date
-    final sortedDailyTotals = List<DailyTotal>.from(dailyTotals)
-      ..sort((a, b) => a.dateTime.compareTo(b.dateTime));
+    // Sort arrayToDisplay by date
+    final sortedDailyTotals = arrayToDisplay.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
 
     final spots = sortedDailyTotals.map((entry) {
-      return FlSpot(entry.dateTime.day.toDouble(), entry.totalAmount);
+      return FlSpot(entry.key.toDouble(), entry.value);
     }).toList();
 
-    // Determine the maxY dynamically based on the highest total
-    final maxY =
-        (dailyTotals.map((e) => e.totalAmount).reduce((a, b) => a > b ? a : b) /
-                    1000)
+    final maxY = (arrayToDisplay.values.isNotEmpty)
+        ? (arrayToDisplay.values.reduce((a, b) => a > b ? a : b) / 1000)
                 .ceil() *
-            1000.0;
+            1000.0
+        : 1000.0; // Default to 1000 if no values
+
+    final interval = maxY / 5; // Five intervals for better visibility
 
     return Container(
       height: 200,
@@ -48,34 +48,22 @@ class TotalGraph extends StatelessWidget {
           gridData: FlGridData(
             show: true,
             drawVerticalLine: true,
-            horizontalInterval: maxY / 6,
-            verticalInterval: 6,
+            horizontalInterval: interval, // Using the calculated interval
+            verticalInterval: 2, // Show all vertical lines
           ),
           titlesData: FlTitlesData(
             bottomTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
-                interval: 6,
+                interval: 5, // Change this to 5 for labeling as 5, 10, 15
                 getTitlesWidget: (value, meta) {
-                  if (value % 12 == 0) {
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(
-                        value.toInt().toString(),
-                        style:
-                            const TextStyle(fontSize: 10, color: Colors.blue),
-                      ),
-                    );
-                  } else if (value % 6 == 0) {
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(
-                        value.toInt().toString(),
-                        style: const TextStyle(fontSize: 10),
-                      ),
-                    );
-                  }
-                  return const SizedBox.shrink();
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Text(
+                      value.toInt().toString(),
+                      style: const TextStyle(fontSize: 10, color: Colors.blue),
+                    ),
+                  );
                 },
               ),
             ),
@@ -83,19 +71,14 @@ class TotalGraph extends StatelessWidget {
               sideTitles: SideTitles(
                 showTitles: true,
                 reservedSize: 40,
-                interval: maxY / 6,
+                interval: interval, // Using calculated interval for Y axis
                 getTitlesWidget: (value, meta) {
-                  if (value >= 1000) {
-                    return Text(
-                      '${(value / 1000).toStringAsFixed(1)}k',
-                      style: const TextStyle(fontSize: 10),
-                    );
-                  } else {
-                    return Text(
-                      value.toInt().toString(),
-                      style: const TextStyle(fontSize: 10),
-                    );
-                  }
+                  return Text(
+                    value >= 1000
+                        ? '${(value / 1000).toStringAsFixed(1)}k'
+                        : value.toInt().toString(),
+                    style: const TextStyle(fontSize: 10),
+                  );
                 },
               ),
             ),

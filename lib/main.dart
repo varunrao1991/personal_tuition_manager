@@ -2,6 +2,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import './app.dart';
+import 'utils/shared_pref.dart';
 
 Future<void> main() async {
   // Ensure that widgets binding is initialized before loading .env files
@@ -16,6 +17,7 @@ Future<void> main() async {
   } catch (e) {
     log('Error loading .env file: $e');
   }
+  await sharedPrefs.init();
 
-  runApp(const MyApp()); // Directly run MyApp
+  runApp(const MyApp());
 }

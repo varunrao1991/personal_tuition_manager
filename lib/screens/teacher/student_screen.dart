@@ -3,23 +3,24 @@ import 'package:provider/provider.dart';
 import '../../models/student_model.dart';
 import '../../models/student_update.dart';
 import '../../providers/student_provider.dart';
+import '../../utils/handle_errors.dart';
 import '../../widgets/custom_fab.dart';
 import '../../widgets/search_bar.dart';
-import '../../widgets/show_custom_bottom_modal.dart';
-import '../../widgets/show_custom_center_modal.dart';
+import '../../utils/show_custom_bottom_modal.dart';
+import '../../utils/show_custom_center_modal.dart';
 import '../../widgets/sort_modal.dart';
 import 'widgets/student_form.dart';
 import 'widgets/student_card.dart';
 import '../../widgets/confirmation_modal.dart';
 
-class StudentViewer extends StatefulWidget {
-  const StudentViewer({super.key});
+class StudentScreen extends StatefulWidget {
+  const StudentScreen({super.key});
 
   @override
-  _StudentViewerState createState() => _StudentViewerState();
+  _StudentScreenState createState() => _StudentScreenState();
 }
 
-class _StudentViewerState extends State<StudentViewer> {
+class _StudentScreenState extends State<StudentScreen> {
   late ScrollController _scrollController;
   final TextEditingController _searchController = TextEditingController();
 
@@ -47,11 +48,15 @@ class _StudentViewerState extends State<StudentViewer> {
   Future<void> _fetchStudents() async {
     final studentProvider =
         Provider.of<StudentProvider>(context, listen: false);
-    await studentProvider.fetchStudents(
-        page: 1,
-        sort: _selectedSortField,
-        order: _isAscending ? 'ASC' : 'DESC',
-        name: _selectedName);
+    try {
+      await studentProvider.fetchStudents(
+          page: 1,
+          sort: _selectedSortField,
+          order: _isAscending ? 'ASC' : 'DESC',
+          name: _selectedName);
+    } catch (e) {
+      handleErrors(context, e);
+    }
   }
 
   void _onScroll() {
@@ -61,33 +66,40 @@ class _StudentViewerState extends State<StudentViewer> {
           Provider.of<StudentProvider>(context, listen: false);
       if (!studentProvider.isLoading &&
           studentProvider.currentPage < studentProvider.totalPages) {
-        studentProvider.fetchStudents(
-          page: studentProvider.currentPage + 1,
-          sort: _selectedSortField,
-          order: _isAscending ? 'ASC' : 'DESC',
-          name:
-              _searchController.text.isNotEmpty ? _searchController.text : null,
-        );
+        try {
+          studentProvider.fetchStudents(
+            page: studentProvider.currentPage + 1,
+            sort: _selectedSortField,
+            order: _isAscending ? 'ASC' : 'DESC',
+            name: _searchController.text.isNotEmpty
+                ? _searchController.text
+                : null,
+          );
+        } catch (e) {
+          handleErrors(context, e);
+        }
       }
     }
   }
 
   Future<void> _openStudentForm({StudentUpdate? student}) async {
-    // This method opens the form for adding or editing a student.
     await showCustomModalBottomSheet(
       context: context,
       child: StudentForm(
         student: student, // Pass student if editing
       ),
     );
-    // After closing the modal, refresh the student list.
     _fetchStudents();
   }
 
   Future<void> _deleteStudent(int studentId) async {
     final studentProvider =
         Provider.of<StudentProvider>(context, listen: false);
-    await studentProvider.deleteStudent(studentId);
+    try {
+      await studentProvider.deleteStudent(studentId);
+    } catch (e) {
+      handleErrors(context, e);
+    }
   }
 
   @override
@@ -99,96 +111,116 @@ class _StudentViewerState extends State<StudentViewer> {
 
   @override
   Widget build(BuildContext context) {
-    final studentProvider = Provider.of<StudentProvider>(context);
-
     return Scaffold(
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: GenericSearchBar(
-                    controller: _searchController,
-                    onClear: () async {
-                      setState(() {
-                        _selectedName = null;
-                      });
-                      _searchController.clear();
-                      await studentProvider.resetAndFetch(
-                        name: _selectedName,
-                        sort: _selectedSortField,
-                        order: _isAscending ? 'ASC' : 'DESC',
-                      );
-                    },
-                    onChanged: (value) async {
-                      setState(() {
-                        _selectedName = value;
-                      });
-                      await studentProvider.resetAndFetch(
-                        name: _selectedName,
-                        sort: _selectedSortField,
-                        order: _isAscending ? 'ASC' : 'DESC',
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(width: 10),
-                IconButton(
-                  icon: const Icon(Icons.filter_alt),
-                  onPressed: () => _openSortModal(context),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: studentProvider.isLoading && studentProvider.students.isEmpty
-                ? const Center(child: CircularProgressIndicator())
-                : RefreshIndicator(
-                    onRefresh: _fetchStudents,
-                    child: ListView.builder(
-                      controller: _scrollController,
-                      itemCount: studentProvider.students.length +
-                          (studentProvider.isLoading ? 1 : 0),
-                      itemBuilder: (context, index) {
-                        if (index == studentProvider.students.length) {
-                          return const Center(
-                              child: CircularProgressIndicator());
-                        }
-
-                        Student student = studentProvider.students[index];
-                        StudentUpdate studentUpdate =
-                            StudentUpdate.fromStudent(student);
-                        return StudentCard(
-                          student: student,
-                          onEdit: () => _openStudentForm(
-                              student: studentUpdate), // Open form for editing
-                          onDelete: () async {
-                            showCustomDialog(
-                              context: context,
-                              child: const ConfirmationDialog(
-                                message: 'Delete this student?',
-                                confirmButtonText: 'Delete',
-                                cancelButtonText: 'Cancel',
-                              ),
-                            ).then((success) => {
-                                  if (success != null && success)
-                                    {_deleteStudent(student.id)}
-                                });
-                          },
-                        );
-                      },
-                    ),
-                  ),
-          ),
+          _buildSearchAndFilterRow(context),
+          _buildStudentList(),
         ],
       ),
       floatingActionButton: CustomFAB(
         icon: Icons.add,
-        onPressed: () {
-          _openStudentForm(); // Open form for adding a new student
+        onPressed: _openStudentForm,
+      ),
+    );
+  }
+
+  Widget _buildSearchAndFilterRow(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Row(
+        children: [
+          Expanded(
+            child: GenericSearchBar(
+              controller: _searchController,
+              onClear: () => _resetSearch(context),
+              onChanged: (value) => _performSearch(context, value),
+            ),
+          ),
+          const SizedBox(width: 10),
+          IconButton(
+            icon: const Icon(Icons.filter_alt),
+            onPressed: () => _openSortModal(context),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _resetSearch(BuildContext context) async {
+    setState(() {
+      _selectedName = null;
+    });
+    _searchController.clear();
+    await _fetchStudentsWithCurrentFilters(context);
+  }
+
+  Future<void> _performSearch(BuildContext context, String value) async {
+    setState(() {
+      _selectedName = value;
+    });
+    await _fetchStudentsWithCurrentFilters(context);
+  }
+
+  Future<void> _fetchStudentsWithCurrentFilters(BuildContext context) async {
+    await Provider.of<StudentProvider>(context, listen: false).resetAndFetch(
+      name: _selectedName,
+      sort: _selectedSortField,
+      order: _isAscending ? 'ASC' : 'DESC',
+    );
+  }
+
+  Widget _buildStudentList() {
+    return Expanded(
+      child: Consumer<StudentProvider>(
+        builder: (context, studentProvider, child) {
+          if (studentProvider.isLoading && studentProvider.students.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          return Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: RefreshIndicator(
+                onRefresh: _fetchStudents,
+                child: ListView.builder(
+                  controller: _scrollController,
+                  itemCount: studentProvider.students.length +
+                      (studentProvider.isLoading ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index == studentProvider.students.length) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    return _buildStudentCard(studentProvider.students[index]);
+                  },
+                ),
+              ));
         },
+      ),
+    );
+  }
+
+  Widget _buildStudentCard(Student student) {
+    StudentUpdate studentUpdate = StudentUpdate.fromStudent(student);
+    return StudentCard(
+      student: student,
+      onEdit: () => _openStudentForm(student: studentUpdate),
+      onDelete: () async {
+        bool? success = await _showDeleteConfirmationDialog(context);
+        if (success == true) {
+          _deleteStudent(student.id);
+        }
+      },
+    );
+  }
+
+  Future<bool?> _showDeleteConfirmationDialog(BuildContext context) {
+    return showCustomDialog(
+      context: context,
+      child: const ConfirmationDialog(
+        message: 'Delete this student?',
+        confirmButtonText: 'Delete',
+        cancelButtonText: 'Cancel',
       ),
     );
   }
@@ -219,11 +251,19 @@ class _StudentViewerState extends State<StudentViewer> {
     ).then((value) {
       final studentProvider =
           Provider.of<StudentProvider>(context, listen: false);
-      studentProvider.resetAndFetch(
-        name: _selectedName,
-        sort: _selectedSortField,
-        order: _isAscending ? 'ASC' : 'DESC',
-      );
+      try {
+        studentProvider.resetAndFetch(
+          name: _selectedName,
+          sort: _selectedSortField,
+          order: _isAscending ? 'ASC' : 'DESC',
+        );
+      } catch (e) {
+        if (e is Exception) {
+          handleErrors(context, e);
+        } else {
+          handleErrors(context, Exception('An unexpected error occurred'));
+        }
+      }
     });
   }
 }

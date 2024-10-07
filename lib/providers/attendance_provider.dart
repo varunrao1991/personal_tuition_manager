@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../models/attendance.dart';
 import '../services/attendance_service.dart';
 import '../services/token_service.dart';
-import '../exceptions/attendance_exception.dart';
 
 class AttendanceProvider with ChangeNotifier {
   List<Attendance> _attendances = [];
@@ -11,11 +10,9 @@ class AttendanceProvider with ChangeNotifier {
   final AttendanceService _attendanceService;
   final TokenService _tokenService;
 
-  // Cached parameters
   DateTime? _cachedStartDate;
   DateTime? _cachedEndDate;
 
-  // Getters
   List<Attendance> get attendances => _attendances;
   bool get isLoading => _isLoading;
 
@@ -26,65 +23,77 @@ class AttendanceProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Fetch attendances for a given date range (whole month)
   Future<void> fetchAttendances({
     DateTime? startDate,
     DateTime? endDate,
+    bool forceRefresh = false
   }) async {
-    _setLoading(true);
-    _cachedStartDate = startDate ?? _cachedStartDate;
-    _cachedEndDate = endDate ?? _cachedEndDate;
-
-    try {
-      final String? accessToken = await _tokenService.getToken();
-      if (accessToken == null) {
-        throw AttendanceException('No access token found.');
-      }
-
-      _attendances = await _attendanceService.getAttendances(
-        accessToken: accessToken,
-        startDate: _cachedStartDate,
-        endDate: _cachedEndDate,
-      );
-      log('Attendances successfully fetched.');
-    } catch (e) {
-      log('Fetch attendances error: $e');
-      throw AttendanceException('Failed to fetch attendances: $e');
-    } finally {
-      _setLoading(false);
+    if (startDate == null || endDate == null) {
+      return;
     }
+
+    DateTime? startDateNew;
+    DateTime? endDateNew;
+    bool shouldResetAttendances = false;
+
+    if (!forceRefresh && _cachedStartDate != null && _cachedEndDate != null) {
+      if (startDate.isBefore(_cachedStartDate!) &&
+          endDate.isAfter(_cachedEndDate!)) {
+        startDateNew = startDate;
+        endDateNew = endDate;
+        shouldResetAttendances = true;
+      } else if (startDate.isBefore(_cachedStartDate!)) {
+        startDateNew = startDate;
+        endDateNew = _cachedStartDate!.subtract(const Duration(days: 1));
+      } else if (endDate.isAfter(_cachedEndDate!)) {
+        startDateNew = _cachedEndDate!.add(const Duration(days: 1));
+        endDateNew = endDate;
+      } else {
+        return;
+      }
+    } else {
+      startDateNew = startDate;
+      endDateNew = endDate;
+      shouldResetAttendances = true;
+    }
+
+    if (_cachedStartDate == null || startDate.isBefore(_cachedStartDate!)) {
+      _cachedStartDate = startDate;
+    }
+    if (_cachedEndDate == null || endDate.isAfter(_cachedEndDate!)) {
+      _cachedEndDate = endDate;
+    }
+
+    await _manageAttendanceLoading(() async {
+      final String accessToken = await _tokenService.getToken();
+      final List<Attendance> newAttendances =
+          await _attendanceService.getAttendances(
+        accessToken: accessToken,
+        startDate: startDateNew,
+        endDate: endDateNew,
+      );
+
+      if (shouldResetAttendances) {
+        _attendances = newAttendances;
+      } else {
+        _attendances.addAll(newAttendances);
+      }
+    });
   }
 
-  // Add attendance
   Future<void> addAttendance(int studentId, DateTime attendanceDate) async {
-    _setLoading(true);
-    try {
-      final String? accessToken = await _tokenService.getToken();
-      if (accessToken == null) {
-        throw AttendanceException('No access token found.');
-      }
-
+    await _manageAttendanceLoading(() async {
+      final String accessToken = await _tokenService.getToken();
       await _attendanceService.addAttendance(
           accessToken, attendanceDate, studentId);
       log('Attendance successfully added.');
-      await fetchAttendances(); // Optionally refresh the list after adding
-    } catch (e) {
-      log('Add attendance error: $e');
-      throw AttendanceException('Failed to add attendance: $e');
-    } finally {
-      _setLoading(false);
-    }
+      await fetchAttendances();
+    });
   }
 
-  // Delete attendance
   Future<void> deleteAttendance(int studentId, DateTime attendanceDate) async {
-    _setLoading(true);
-    try {
-      final String? accessToken = await _tokenService.getToken();
-      if (accessToken == null) {
-        throw AttendanceException('No access token found.');
-      }
-
+    await _manageAttendanceLoading(() async {
+      final String accessToken = await _tokenService.getToken();
       await _attendanceService.deleteAttendance(
           accessToken: accessToken,
           studentId: studentId,
@@ -92,9 +101,13 @@ class AttendanceProvider with ChangeNotifier {
       log('Attendance successfully deleted.');
       await fetchAttendances(
           startDate: _cachedStartDate, endDate: _cachedEndDate);
-    } catch (e) {
-      log('Delete attendance error: $e');
-      throw AttendanceException('Failed to delete attendance: $e');
+    });
+  }
+
+  Future<void> _manageAttendanceLoading(Future<void> Function() action) async {
+    _setLoading(true);
+    try {
+      await action();
     } finally {
       _setLoading(false);
     }

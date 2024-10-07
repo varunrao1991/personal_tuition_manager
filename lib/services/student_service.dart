@@ -3,8 +3,8 @@ import 'dart:developer';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
 import '../models/student_model.dart';
-import '../exceptions/student_exception.dart';
 import '../models/student_update.dart';
+import '../utils/response_to_error.dart';
 
 class StudentResponse {
   final List<Student> students;
@@ -22,6 +22,9 @@ class StudentResponse {
 
 class StudentService {
   final String apiUrl = Config().apiUrl;
+  final http.Client _client;
+
+  StudentService(this._client);
 
   Future<StudentResponse> getStudents({
     required String accessToken,
@@ -42,7 +45,7 @@ class StudentService {
         .replace(queryParameters: queryParameters);
 
     // Make the GET request with query parameters
-    final response = await http.get(
+    final response = await _client.get(
       uri,
       headers: {
         'Content-Type': 'application/json',
@@ -61,7 +64,7 @@ class StudentService {
         currentPage: data['currentPage'],
       );
     } else {
-      throw StudentException('Failed to load students: ${response.body}');
+      throw responseToError(response.body);
     }
   }
 
@@ -69,7 +72,7 @@ class StudentService {
     required String accessToken,
     required StudentUpdate studentUpdate,
   }) async {
-    final response = await http.post(
+    final response = await _client.post(
       Uri.parse('$apiUrl/api/students'),
       headers: {
         'Content-Type': 'application/json',
@@ -79,9 +82,9 @@ class StudentService {
     );
 
     if (response.statusCode != 201) {
-      throw StudentException('Failed to create student: ${response.body}');
+      throw responseToError(response.body);
     } else {
-      log(response.body);
+      log("Student created.");
     }
   }
 
@@ -89,7 +92,7 @@ class StudentService {
     required String accessToken,
     required StudentUpdate studentUpdate,
   }) async {
-    final response = await http.put(
+    final response = await _client.put(
       Uri.parse('$apiUrl/api/students/${studentUpdate.id}'),
       headers: {
         'Content-Type': 'application/json',
@@ -99,9 +102,9 @@ class StudentService {
     );
 
     if (response.statusCode != 201) {
-      throw StudentException('Failed to edit student: ${response.body}');
+      throw responseToError(response.body);
     } else {
-      log(response.body);
+      log("Student updated.");
     }
   }
 
@@ -109,7 +112,7 @@ class StudentService {
     required String accessToken,
     required int studentId,
   }) async {
-    final response = await http.delete(
+    final response = await _client.delete(
       Uri.parse('$apiUrl/api/students/$studentId'),
       headers: {
         'Authorization': 'Bearer $accessToken',
@@ -117,9 +120,9 @@ class StudentService {
     );
 
     if (response.statusCode != 200) {
-      throw StudentException('Failed to delete student: ${response.body}');
+      throw responseToError(response.body);
     } else {
-      log(response.body);
+      log("Student deleted.");
     }
   }
 }

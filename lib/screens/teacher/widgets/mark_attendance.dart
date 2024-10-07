@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:padmayoga/models/owned_by.dart';
 import 'package:padmayoga/widgets/custom_section_title.dart';
 import 'package:provider/provider.dart';
+import 'package:table_calendar/table_calendar.dart';
 import '../../../models/attendance.dart';
 import '../../../providers/attendance_provider.dart';
 import '../../../providers/student_provider.dart';
+import '../../../utils/handle_errors.dart';
+import '../../../utils/show_custom_center_modal.dart';
 import '../../../widgets/custom_card.dart';
 import '../../../widgets/custom_elevated_button.dart';
-import '../../../widgets/search_bar.dart'; // Import GenericSearchBar
+import '../../../widgets/search_bar.dart';
+import '../../../widgets/sort_modal.dart';
 
 class MarkAttendanceScreen extends StatefulWidget {
   final DateTime selectedDate;
@@ -28,6 +32,18 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
   final List<OwnedBy> _attendedStudents = [];
 
   final ScrollController _scrollController = ScrollController();
+  final TextEditingController _searchController = TextEditingController();
+  String? _selectedName; // Use a string to hold the selected name
+
+  String _selectedSortField = 'name';
+  bool _isAscending = true;
+
+  static const Map<String, String> _sortFieldLabels = {
+    'name': 'Name',
+    'mobile': 'Mobile Number',
+    'dob': 'Date of Birth',
+    'joiningDate': 'Joining Date',
+  };
 
   @override
   void initState() {
@@ -49,21 +65,30 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
 
     DateTime startDate = DateTime(widget.selectedDate.year,
         widget.selectedDate.month, widget.selectedDate.day);
-    DateTime endDate = startDate
-        .add(const Duration(days: 1)); // Fetch only for the selected day
+    DateTime endDate = startDate.add(const Duration(days: 1));
+    try {
+      await attendanceProvider.fetchAttendances(
+          startDate: startDate, endDate: endDate);
 
-    await attendanceProvider.fetchAttendances(
-        startDate: startDate, endDate: endDate);
+      List<Attendance> filteredAttendances =
+          attendanceProvider.attendances.where((attendance) {
+        DateTime attendanceDate = DateTime(attendance.attendanceDate.year,
+            attendance.attendanceDate.month, attendance.attendanceDate.day);
+        return isSameDay(attendanceDate, widget.selectedDate);
+      }).toList();
 
-    setState(() {
-      _attendances = attendanceProvider.attendances;
-      for (var attendance in _attendances) {
-        _attendedStudentsMap[attendance.ownedBy.id] = true;
-        _attendedStudents.add(attendance.ownedBy);
-      }
-    });
+      setState(() {
+        _attendances = filteredAttendances;
+        for (var attendance in _attendances) {
+          _attendedStudentsMap[attendance.ownedBy.id] = true;
+          _attendedStudents.add(attendance.ownedBy);
+        }
+      });
 
-    _loadMoreStudents();
+      _loadMoreStudents();
+    } catch (e) {
+      handleErrors(context, e);
+    }
   }
 
   Future<void> _loadMoreStudents() async {
@@ -105,15 +130,58 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
       }
     }
 
-    for (var studentId in toAdd) {
-      await attendanceProvider.addAttendance(studentId, widget.selectedDate);
-    }
+    try {
+      for (var studentId in toAdd) {
+        await attendanceProvider.addAttendance(studentId, widget.selectedDate);
+      }
 
-    for (var studentId in toRemove) {
-      await attendanceProvider.deleteAttendance(studentId, widget.selectedDate);
-    }
+      for (var studentId in toRemove) {
+        await attendanceProvider.deleteAttendance(
+            studentId, widget.selectedDate);
+      }
 
-    Navigator.of(context).pop(true);
+      Navigator.of(context).pop(true);
+    } catch (e) {
+      handleErrors(context, e);
+    }
+  }
+
+  void _openSortModal(BuildContext context) {
+    showCustomDialog(
+      context: context,
+      child: SortModal(
+        title: 'Sort Students',
+        selectedSortField: _selectedSortField,
+        sortOptions: _sortFieldLabels,
+        isAscending: _isAscending,
+        onSortFieldChange: (newSortField) {
+          if (newSortField != null) {
+            setState(() {
+              _selectedSortField = newSortField;
+            });
+          }
+          Navigator.of(context).pop();
+        },
+        onSortOrderChange: (isAscending) {
+          setState(() {
+            _isAscending = isAscending;
+          });
+          Navigator.of(context).pop();
+        },
+      ),
+    ).then((value) {
+      final studentProvider =
+          Provider.of<StudentProvider>(context, listen: false);
+      try {
+        studentProvider.resetAndFetch(
+          name: _selectedName,
+          sort: _selectedSortField,
+          order: _isAscending ? 'ASC' : 'DESC',
+        );
+      } catch (e) {
+        handleErrors(context, e);
+      }
+    });
   }
 
   @override
@@ -152,23 +220,52 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
           children: <Widget>[
             const CustomSectionTitle(title: "Mark attendance"),
             const SizedBox(height: 16),
-            GenericSearchBar(
-              controller: TextEditingController(text: _searchQuery),
-              labelText: 'Search students',
-              onClear: () {
-                setState(() {
-                  _searchQuery = null;
-                  _page = 0;
-                  _loadMoreStudents();
-                });
-              },
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value;
-                  _page = 0;
-                  _loadMoreStudents();
-                });
-              },
+            Row(
+              children: [
+                Expanded(
+                  child: GenericSearchBar(
+                    controller: _searchController,
+                    onChanged: (value) async {
+                      setState(() {
+                        _selectedName = value;
+                      });
+                      try {
+                        await studentProvider.resetAndFetch(
+                          name: _selectedName,
+                          sort: _selectedSortField,
+                          order: _isAscending ? 'ASC' : 'DESC',
+                        );
+                      } catch (e) {
+                        handleErrors(context, e);
+                      }
+                    },
+                    onClear: () async {
+                      setState(() {
+                        _selectedName = null;
+                      });
+                      try {
+                        await studentProvider.resetAndFetch(
+                          name: _selectedName,
+                          sort: _selectedSortField,
+                          order: _isAscending ? 'ASC' : 'DESC',
+                        );
+                      } catch (e) {
+                        if (e is Exception) {
+                          handleErrors(context, e);
+                        } else {
+                          handleErrors(context,
+                              Exception('An unexpected error occurred'));
+                        }
+                      }
+                    },
+                  ),
+                ),
+                const SizedBox(width: 10),
+                IconButton(
+                  icon: const Icon(Icons.filter_alt),
+                  onPressed: () => _openSortModal(context),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
             Expanded(
@@ -195,33 +292,16 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
                         _attendedStudentsMap[student.id] = !isPresent;
                       });
                     },
-                    elevation: isPresent ? 8.0 : 4.0,
-                    borderRadius: 15.0,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: isPresent
-                            ? Colors.blueAccent.withOpacity(0.1)
-                            : Colors.white,
-                        border:
-                            isPresent ? Border.all(color: Colors.blue) : null,
-                        borderRadius: BorderRadius.circular(15.0),
-                      ),
-                      padding: const EdgeInsets.all(4.0),
-                      child: Center(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4.0),
-                          child: Text(
-                            student.name,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color:
-                                  isPresent ? Colors.blueAccent : Colors.black,
-                              fontWeight: isPresent
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                              fontSize: 16.0,
-                            ),
-                          ),
+                    isSelected: isPresent,
+                    child: Center(
+                      child: Text(
+                        student.name,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: isPresent ? Colors.blueAccent : Colors.black,
+                          fontWeight:
+                              isPresent ? FontWeight.bold : FontWeight.normal,
+                          fontSize: 16.0,
                         ),
                       ),
                     ),

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../../../models/create_payment.dart';
-import '../../../providers/payment_provider.dart';
 import '../../../widgets/custom_elevated_button.dart';
 import '../../../widgets/custom_form_date_field.dart';
 import '../../../widgets/custom_form_text_field.dart';
@@ -79,7 +77,7 @@ class _EditPaymentWidgetState extends State<EditPaymentWidget> {
                     if (value == null || value.isEmpty) {
                       return 'Please enter an amount';
                     }
-                    if (double.tryParse(value) == null) {
+                    if (int.tryParse(value) == null) {
                       return 'Enter a valid number';
                     }
                     return null;

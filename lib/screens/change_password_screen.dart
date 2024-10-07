@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
-import '../../utils/roles.dart';
+import '../../utils/handle_errors.dart';
 import '../../widgets/custom_elevated_button.dart';
 import '../../widgets/custom_form_text_field.dart';
 import '../../widgets/custom_text_button.dart';
@@ -27,23 +27,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     super.dispose();
   }
 
-  void _navigateToDashboardOrChangePassword(
-      String role, bool isTemporaryPassword) {
-    if (isTemporaryPassword) {
-      Navigator.pushReplacementNamed(context, '/change-password');
-    } else {
-      final userRole = getUserRole(role);
-      if (userRole == UserRole.teacher) {
-        Navigator.pushReplacementNamed(context, '/teacher');
-      } else if (userRole == UserRole.student) {
-        Navigator.pushReplacementNamed(context, '/student');
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
@@ -125,12 +111,14 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                                       _oldPasswordController.text;
                                   final newPassword =
                                       _newPasswordController.text;
-                                  await authProvider.changePassword(
-                                      oldPassword, newPassword);
-                                  if (!authProvider.isTemporaryPassword) {
-                                    _navigateToDashboardOrChangePassword(
-                                        authProvider.user!.role,
-                                        authProvider.isTemporaryPassword);
+                                  try {
+                                    await authProvider.changePassword(
+                                        oldPassword, newPassword);
+                                    if (!authProvider.isTemporaryPassword) {
+                                      Navigator.pop(context);
+                                    }
+                                  } catch (e) {
+                                    handleErrors(context, e);
                                   }
                                 }
                               },
@@ -141,7 +129,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     CustomTextButton(
                         text: 'Skip',
                         onPressed: () {
-                          Navigator.pushReplacementNamed(context, '/dashboard');
+                          Navigator.pop(context);
                         }),
                   ],
                 ),

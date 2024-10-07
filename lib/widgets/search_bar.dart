@@ -1,34 +1,60 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 
-class GenericSearchBar extends StatelessWidget {
+class GenericSearchBar extends StatefulWidget {
   final TextEditingController controller;
   final VoidCallback onClear;
   final String? labelText;
   final ValueChanged<String> onChanged;
 
-  const GenericSearchBar(
-      {super.key,
-      required this.controller,
-      required this.onClear,
-      required this.onChanged,
-      this.labelText = 'Search'});
+  const GenericSearchBar({
+    super.key,
+    required this.controller,
+    required this.onClear,
+    required this.onChanged,
+    this.labelText = 'Search',
+  });
+
+  @override
+  _GenericSearchBarState createState() => _GenericSearchBarState();
+}
+
+class _GenericSearchBarState extends State<GenericSearchBar> {
+  Timer? _debounce;
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String query) {
+    // Cancel the previous debounce timer if it exists
+    if (_debounce?.isActive ?? false) _debounce?.cancel();
+
+    // Set a new debounce timer for 500 milliseconds
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      widget.onChanged(
+          query); // Trigger the callback once user has stopped typing
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return TextField(
-      controller: controller,
+      controller: widget.controller,
       decoration: InputDecoration(
-        labelText: 'Search',
+        labelText: widget.labelText,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(30.0)),
         prefixIcon: const Icon(Icons.search),
-        suffixIcon: controller.text.isNotEmpty
+        suffixIcon: widget.controller.text.isNotEmpty
             ? IconButton(
                 icon: const Icon(Icons.clear),
-                onPressed: onClear,
+                onPressed: widget.onClear,
               )
             : null,
       ),
-      onChanged: onChanged,
+      onChanged: _onSearchChanged, // Use the debounced version of onChanged
     );
   }
 }

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../../models/profile_update.dart';
 import '../../../models/user_model.dart';
+import '../../../utils/handle_errors.dart';
 import '../../../widgets/custom_elevated_button.dart';
 import '../../../widgets/custom_form_text_field.dart';
 import '../../../widgets/custom_snackbar.dart';
@@ -86,11 +87,9 @@ class _EditProfileScreenState extends State<EditProfileScreen>
         try {
           await authProvider.changeProfileInfo(profileUpdate);
           showCustomSnackBar(context, 'Personal info updated successfully!');
-        } catch (error) {
-          showCustomSnackBar(context, 'Error updating profile: $error');
+        } catch (e) {
+          handleErrors(context, e);
         }
-      } else {
-        showCustomSnackBar(context, 'No changes detected.');
       }
     }
   }
@@ -104,8 +103,8 @@ class _EditProfileScreenState extends State<EditProfileScreen>
           _newPasswordController.text,
         );
         showCustomSnackBar(context, 'Password changed successfully!');
-      } catch (error) {
-        showCustomSnackBar(context, 'Error changing password: $error');
+      } catch (e) {
+        handleErrors(context, e);
       }
     }
   }

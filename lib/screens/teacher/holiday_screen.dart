@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:padmayoga/providers/holiday_provider.dart';
-import 'package:padmayoga/providers/weekday_provider.dart'; // Import the weekday provider
+import 'package:padmayoga/providers/weekday_provider.dart';
 import 'package:padmayoga/widgets/custom_snackbar.dart';
 import 'package:padmayoga/widgets/custom_swipe_card.dart';
-import 'package:padmayoga/widgets/show_custom_center_modal.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../models/holiday.dart';
+import '../../utils/handle_errors.dart';
+import '../../utils/show_custom_center_modal.dart';
 import '../../widgets/confirmation_modal.dart';
-import '../../widgets/custom_card.dart';
 import '../../widgets/custom_fab.dart';
-import '../../widgets/show_custom_bottom_modal.dart';
+import '../../utils/show_custom_bottom_modal.dart';
 import 'widgets/weekday_edit.dart';
 import 'widgets/holiday_form.dart';
 
@@ -25,7 +25,6 @@ class HolidayScreen extends StatefulWidget {
 class _HolidayScreenState extends State<HolidayScreen> {
   DateTime _selectedDate = DateTime.now();
   DateTime _focusedDate = DateTime.now();
-  List<Holiday> _holidays = [];
   bool _isLoading = false;
   List<bool> _isWeekdaySelected = List.filled(7, false);
 
@@ -34,7 +33,7 @@ class _HolidayScreenState extends State<HolidayScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchHolidaysForVisibleRange();
-      _fetchWeekdays(); // Fetch weekdays
+      _fetchWeekdays();
     });
   }
 
@@ -48,12 +47,8 @@ class _HolidayScreenState extends State<HolidayScreen> {
     try {
       await holidayProvider.fetchHolidays(
           startDate: startDate, endDate: endDate);
-      setState(() {
-        _holidays = holidayProvider.holidays;
-      });
-    } catch (error) {
-      showCustomSnackBar(
-          context, 'Failed to fetch holiday data: ${error.toString()}');
+    } catch (e) {
+      handleErrors(context, e);
     } finally {
       _setLoading(false);
     }
@@ -63,7 +58,7 @@ class _HolidayScreenState extends State<HolidayScreen> {
     final weekdayProvider =
         Provider.of<WeekdayProvider>(context, listen: false);
     try {
-      await weekdayProvider.fetchWeekdays(); // Fetch weekdays from the provider
+      await weekdayProvider.fetchWeekdays();
       setState(() {
         _isWeekdaySelected = List.generate(
             7, (index) => weekdayProvider.weekdays.contains(index));
@@ -100,51 +95,35 @@ class _HolidayScreenState extends State<HolidayScreen> {
     });
   }
 
-  void _editWeekdays() {
+  Future<void> _editWeekdays() async {
     showCustomModalBottomSheet(
         context: context,
         child: WeekdayEditorDialog(
-          isSelected: _isWeekdaySelected, // Pass the selected weekdays
-        )).then((selected) {
+          isSelected: _isWeekdaySelected,
+        )).then((selected) async {
       if (selected != null) {
         setState(() {
           _isWeekdaySelected = selected;
         });
-
-        final weekdayProvider =
-            Provider.of<WeekdayProvider>(context, listen: false);
-        List<int> selectedWeekdays = [];
-        for (int i = 0; i < _isWeekdaySelected.length; i++) {
-          if (_isWeekdaySelected[i]) {
-            selectedWeekdays.add(i);
+        try {
+          final weekdayProvider =
+              Provider.of<WeekdayProvider>(context, listen: false);
+          List<int> selectedWeekdays = [];
+          for (int i = 0; i < _isWeekdaySelected.length; i++) {
+            if (_isWeekdaySelected[i]) {
+              selectedWeekdays.add(i);
+            }
           }
+          await weekdayProvider.setWeekdays(selectedWeekdays);
+        } catch (e) {
+          handleErrors(context, e);
         }
-
-        // Update weekdays in backend
-        weekdayProvider.setWeekdays(selectedWeekdays).then((_) {
-          showCustomSnackBar(context, 'Weekdays updated successfully!');
-        }).catchError((error) {
-          showCustomSnackBar(
-              context, 'Failed to update weekdays: ${error.toString()}');
-        });
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    Holiday? existingHoliday;
-
-    bool holidayExists = _holidays
-        .any((holiday) => isSameDay(holiday.holidayDate, _selectedDate));
-
-    if (holidayExists) {
-      existingHoliday = _holidays.firstWhere(
-        (holiday) => isSameDay(holiday.holidayDate, _selectedDate),
-        orElse: () => Holiday(holidayDate: _selectedDate, reason: ''),
-      );
-    }
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Holidays'),
@@ -153,61 +132,64 @@ class _HolidayScreenState extends State<HolidayScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(8.0),
               child: Column(
                 children: [
-                  SizedBox(
-                    height: 350,
-                    child: TableCalendar(
-                      focusedDay: _focusedDate,
-                      firstDay: DateTime.utc(2020, 1, 1),
-                      lastDay: DateTime.now(),
-                      availableCalendarFormats: const {
-                        CalendarFormat.month: 'Month'
-                      },
-                      headerStyle: const HeaderStyle(titleCentered: true),
-                      calendarFormat: CalendarFormat.month,
-                      calendarStyle: const CalendarStyle(
-                        todayDecoration: BoxDecoration(
-                          color: Colors.blueAccent,
-                          shape: BoxShape.circle,
-                        ),
-                        todayTextStyle: TextStyle(
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        selectedDecoration: BoxDecoration(
-                          color: Colors.redAccent,
-                          shape: BoxShape.circle,
-                        ),
-                        selectedTextStyle: TextStyle(color: Colors.white),
-                        defaultDecoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.transparent,
-                        ),
-                        defaultTextStyle: TextStyle(color: Colors.black),
+                  TableCalendar(
+                    focusedDay: _focusedDate,
+                    firstDay: DateTime.utc(2020, 1, 1),
+                    lastDay: DateTime.now().add(const Duration(days: 30)),
+                    availableCalendarFormats: const {
+                      CalendarFormat.month: 'Month'
+                    },
+                    headerStyle: const HeaderStyle(titleCentered: true),
+                    calendarFormat: CalendarFormat.month,
+                    calendarStyle: const CalendarStyle(
+                      todayDecoration: BoxDecoration(
+                        color: Colors.blueAccent,
+                        shape: BoxShape.circle,
                       ),
-                      selectedDayPredicate: (day) =>
-                          isSameDay(_selectedDate, day),
-                      onDaySelected: _onDaySelected,
-                      onPageChanged: _onPageChanged,
-                      calendarBuilders: CalendarBuilders(
-                        selectedBuilder: (context, date, _) =>
-                            _buildDayContainer(date, isSelected: true),
-                        todayBuilder: (context, date, _) =>
-                            _buildDayContainer(date, isToday: true),
-                        defaultBuilder: (context, date, _) =>
-                            _buildDayContainer(date,
-                                isWeekday: _isWeekdaySelected[date.weekday % 7],
-                                isHoliday: _holidays.any((holiday) =>
-                                    isSameDay(holiday.holidayDate, date))),
+                      todayTextStyle: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
                       ),
+                      selectedDecoration: BoxDecoration(
+                        color: Colors.redAccent,
+                        shape: BoxShape.circle,
+                      ),
+                      selectedTextStyle: TextStyle(color: Colors.white),
+                      defaultDecoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.transparent,
+                      ),
+                      defaultTextStyle: TextStyle(color: Colors.black),
+                    ),
+                    selectedDayPredicate: (day) =>
+                        isSameDay(_selectedDate, day),
+                    onDaySelected: _onDaySelected,
+                    onPageChanged: _onPageChanged,
+                    calendarBuilders: CalendarBuilders(
+                      selectedBuilder: (context, date, _) =>
+                          _buildDayContainer(date, isSelected: true),
+                      todayBuilder: (context, date, _) =>
+                          _buildDayContainer(date, isToday: true),
+                      defaultBuilder: (context, date, _) => _buildDayContainer(
+                          date,
+                          isWeekday: _isWeekdaySelected[date.weekday % 7],
+                          isHoliday: Provider.of<HolidayProvider>(context,
+                                  listen: false)
+                              .holidays
+                              .any((holiday) =>
+                                  isSameDay(holiday.holidayDate, date))),
                     ),
                   ),
-                  const SizedBox(height: 2.0),
-                  Expanded(
-                    child: _buildHolidayList(),
-                  )
+                  const SizedBox(height: 16.0),
+                  Consumer<HolidayProvider>(
+                    builder: (context, holidayProvider, child) {
+                      return Expanded(
+                          child: _buildHolidayList(holidayProvider));
+                    },
+                  ),
                 ],
               ),
             ),
@@ -216,8 +198,32 @@ class _HolidayScreenState extends State<HolidayScreen> {
         children: [
           CustomFAB(
             heroTag: 'holiday',
-            icon: holidayExists ? Icons.edit : Icons.add,
+            icon: Provider.of<HolidayProvider>(context, listen: false)
+                    .holidays
+                    .any((holiday) =>
+                        isSameDay(holiday.holidayDate, _selectedDate))
+                ? Icons.edit
+                : Icons.add,
             onPressed: () {
+              Holiday? existingHoliday;
+
+              bool holidayExists =
+                  Provider.of<HolidayProvider>(context, listen: false)
+                      .holidays
+                      .any((holiday) =>
+                          isSameDay(holiday.holidayDate, _selectedDate));
+
+              if (holidayExists) {
+                existingHoliday =
+                    Provider.of<HolidayProvider>(context, listen: false)
+                        .holidays
+                        .firstWhere(
+                          (holiday) =>
+                              isSameDay(holiday.holidayDate, _selectedDate),
+                          orElse: () =>
+                              Holiday(holidayDate: _selectedDate, reason: ''),
+                        );
+              }
               showCustomModalBottomSheet(
                 context: context,
                 child: HolidayForm(
@@ -234,37 +240,14 @@ class _HolidayScreenState extends State<HolidayScreen> {
               });
             },
           ),
-          const SizedBox(height: 16), // Spacing between buttons
+          const SizedBox(height: 16),
           CustomFAB(
             icon: Icons.calendar_today,
-            onPressed: _editWeekdays, // Edit weekdays
+            onPressed: _editWeekdays,
           ),
         ],
       ),
     );
-  }
-
-  Future<void> _addHolidayToBackend(DateTime date, String reason) async {
-    final holidayProvider =
-        Provider.of<HolidayProvider>(context, listen: false);
-    try {
-      await holidayProvider.addHoliday(date, reason);
-      showCustomSnackBar(context, 'Holiday added successfully!');
-    } catch (error) {
-      showCustomSnackBar(context, 'Failed to add holiday: ${error.toString()}');
-    }
-  }
-
-  Future<void> _deleteHolidayFromBackend(DateTime date) async {
-    final holidayProvider =
-        Provider.of<HolidayProvider>(context, listen: false);
-    try {
-      await holidayProvider.deleteHoliday(date);
-      _fetchHolidaysForVisibleRange();
-      showCustomSnackBar(context, 'Holiday delete successfully!');
-    } catch (error) {
-      showCustomSnackBar(context, 'Failed to add holiday: ${error.toString()}');
-    }
   }
 
   Widget _buildDayContainer(DateTime date,
@@ -277,23 +260,92 @@ class _HolidayScreenState extends State<HolidayScreen> {
         color: isSelected
             ? Colors.redAccent
             : isToday
-                ? Colors.blueAccent
+                ? Colors.blueAccent.withOpacity(0.3)
                 : isHoliday
-                    ? Colors.indigoAccent.shade700
+                    ? Colors.green.withOpacity(0.3)
                     : isWeekday
-                        ? Colors.grey[300] // Color for selected weekdays
-                        : Colors.transparent,
+                        ? Colors.transparent
+                        : Colors.grey.withOpacity(0.2),
         shape: BoxShape.circle,
       ),
-      alignment: Alignment.center,
-      child: Text(
-        date.day.toString(),
-        style: TextStyle(
-          color:
-              isSelected || isToday || isHoliday ? Colors.white : Colors.black,
-          fontWeight: FontWeight.bold,
+      child: Center(
+        child: Text(
+          date.day.toString(),
+          style: TextStyle(
+            color: isSelected || isToday || isHoliday || isWeekday
+                ? Colors.black
+                : Colors.black,
+            fontWeight:
+                isSelected || isToday ? FontWeight.bold : FontWeight.normal,
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _buildHolidayList(HolidayProvider holidayProvider) {
+    if (holidayProvider.holidays.isEmpty) {
+      return const Center(child: Text('No holidays in this month.'));
+    }
+    return ListView.builder(
+      itemCount: holidayProvider.holidays.length,
+      itemBuilder: (context, index) {
+        final holiday = holidayProvider.holidays[index];
+        return CustomSwipeCard(
+            onSwipeLeft: () {
+              _showDeleteConfirmationDialog(context, holiday.holidayDate);
+            },
+            onSwipeRight: () {
+              showCustomModalBottomSheet(
+                context: context,
+                child: HolidayForm(
+                  selectedDate: holiday.holidayDate,
+                  reason: holiday.reason,
+                ),
+              ).then((result) async {
+                if (result != null) {
+                  DateTime selectedDate = result['date'];
+                  String reason = result['reason'];
+                  await _addHolidayToBackend(selectedDate, reason);
+                  _fetchHolidaysForVisibleRange();
+                }
+              });
+            },
+            child: Container(
+              margin: const EdgeInsets.all(8.0),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      holiday.reason,
+                      style: const TextStyle(
+                        fontSize: 18.0,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(Icons.date_range, color: Colors.blueAccent),
+                        const SizedBox(width: 8),
+                        Text(
+                          DateFormat('EEE, d MMM y')
+                              .format(holiday.holidayDate),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.black54,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ));
+      },
     );
   }
 
@@ -315,67 +367,26 @@ class _HolidayScreenState extends State<HolidayScreen> {
     });
   }
 
-  Widget _buildHolidayList() {
-    return ListView.builder(
-      itemCount: _holidays.length,
-      itemBuilder: (context, index) {
-        final holiday = _holidays[index];
+  Future<void> _deleteHolidayFromBackend(DateTime date) async {
+    final holidayProvider =
+        Provider.of<HolidayProvider>(context, listen: false);
+    try {
+      await holidayProvider.deleteHoliday(date);
+      _fetchHolidaysForVisibleRange();
+      showCustomSnackBar(context, 'Holiday delete successfully!');
+    } catch (e) {
+      handleErrors(context, e);
+    }
+  }
 
-        return CustomSwipeCard(
-          onSwipeLeft: () {
-            _showDeleteConfirmationDialog(context, holiday.holidayDate);
-          },
-          onSwipeRight: () {
-            showCustomModalBottomSheet(
-              context: context,
-              child: HolidayForm(
-                selectedDate: holiday.holidayDate,
-                reason: holiday.reason,
-              ),
-            ).then((result) async {
-              if (result != null) {
-                DateTime selectedDate = result['date'];
-                String reason = result['reason'];
-                await _addHolidayToBackend(selectedDate, reason);
-                _fetchHolidaysForVisibleRange();
-              }
-            });
-          },
-          child: Container(
-            margin: const EdgeInsets.only(top: 4.0),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    holiday.reason,
-                    style: const TextStyle(
-                      fontSize: 18.0,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(Icons.date_range, color: Colors.blueAccent),
-                      const SizedBox(width: 8),
-                      Text(
-                        DateFormat('EEE, d MMM y').format(holiday.holidayDate),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.black54,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
+  Future<void> _addHolidayToBackend(
+      DateTime selectedDate, String reason) async {
+    try {
+      await Provider.of<HolidayProvider>(context, listen: false)
+          .addHoliday(selectedDate, reason);
+      showCustomSnackBar(context, 'Holiday added successfully.');
+    } catch (e) {
+      handleErrors(context, e);
+    }
   }
 }

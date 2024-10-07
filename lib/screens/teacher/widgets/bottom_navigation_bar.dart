@@ -26,9 +26,16 @@ class CustomBottomNavigationBar extends StatelessWidget {
           icon: Icon(Icons.people),
           label: 'Students',
         ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.class_rounded),
+          label: 'Courses',
+        ),
       ],
       currentIndex: selectedIndex,
       onTap: onItemTapped,
+      selectedItemColor: Colors.blue, // Change to your preferred color
+      unselectedItemColor: Colors.grey, // Change to your preferred color
+      type: BottomNavigationBarType.fixed, // Keeps the bottom bar fixed
     );
   }
 }

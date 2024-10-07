@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/student_provider.dart';
 import '../../../models/student_update.dart';
+import '../../../utils/handle_errors.dart';
 import '../../../widgets/custom_elevated_button.dart';
 import '../../../widgets/custom_form_date_field.dart';
 import '../../../widgets/custom_form_text_field.dart';
@@ -76,9 +77,8 @@ class _AddStudentFormState extends State<StudentForm> {
         }
 
         Navigator.of(context).pop(true); // Close modal after success
-      } catch (error) {
-        showCustomSnackBar(context, error.toString(),
-            backgroundColor: Colors.red); // Custom error message
+      } catch (e) {
+        handleErrors(context, e);
       }
     }
   }

@@ -17,38 +17,40 @@ class StudentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CustomSwipeCard(
-      onSwipeLeft: onDelete,
-      onSwipeRight: onEdit,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              student.name,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Row(
+        onSwipeLeft: onDelete,
+        onSwipeRight: onEdit,
+        child: Container(
+          margin: const EdgeInsets.all(8.0),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.phone, color: Colors.blueAccent),
-                const SizedBox(width: 8),
                 Text(
-                  student.mobile,
+                  student.name,
                   style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.black54,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
                   ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(Icons.phone, color: Colors.blueAccent),
+                    const SizedBox(width: 8),
+                    Text(
+                      student.mobile,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.black54,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
-      ),
-    );
+          ),
+        ));
   }
 }

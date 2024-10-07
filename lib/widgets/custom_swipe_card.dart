@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 
-import 'custom_card.dart';
-
 class CustomSwipeCard extends StatefulWidget {
   final Widget child;
+  final double elevation;
+  final double borderRadius;
+  final VoidCallback? onTap; // Add a callback for tap functionality
   final VoidCallback onSwipeLeft;
   final VoidCallback onSwipeRight;
 
   const CustomSwipeCard({
     super.key,
     required this.child,
+    this.elevation = 4.0,
+    this.borderRadius = 15.0,
+    this.onTap, // Include the onTap parameter
     required this.onSwipeLeft,
     required this.onSwipeRight,
   });
@@ -24,7 +28,7 @@ class _CustomSwipeCardState extends State<CustomSwipeCard> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
       child: LayoutBuilder(
         builder: (context, constraints) {
           const maxDragRatio = 0.3;
@@ -43,7 +47,8 @@ class _CustomSwipeCardState extends State<CustomSwipeCard> {
                         margin: const EdgeInsets.all(4.0),
                         decoration: const BoxDecoration(
                           borderRadius: BorderRadius.horizontal(
-                              left: Radius.circular(15.0)),
+                            left: Radius.circular(15.0),
+                          ),
                           color: Colors.blueAccent,
                         ),
                         child: const Align(
@@ -61,7 +66,8 @@ class _CustomSwipeCardState extends State<CustomSwipeCard> {
                         margin: const EdgeInsets.all(4.0),
                         decoration: const BoxDecoration(
                           borderRadius: BorderRadius.horizontal(
-                              right: Radius.circular(15.0)),
+                            right: Radius.circular(15.0),
+                          ),
                           color: Colors.redAccent,
                         ),
                         child: const Align(
@@ -76,8 +82,9 @@ class _CustomSwipeCardState extends State<CustomSwipeCard> {
                   ],
                 ),
               ),
-              // The actual card with draggable behavior
+              // The actual card with draggable behavior and tap functionality
               GestureDetector(
+                onTap: widget.onTap, // Trigger the onTap callback
                 onHorizontalDragUpdate: (details) {
                   setState(() {
                     _dragExtent += details.delta.dx * maxDragRatio;
@@ -98,7 +105,11 @@ class _CustomSwipeCardState extends State<CustomSwipeCard> {
                 },
                 child: Transform.translate(
                   offset: Offset(_dragExtent, 0),
-                  child: CustomCard(
+                  child: Card(
+                    elevation: widget.elevation,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(widget.borderRadius),
+                    ),
                     child: widget.child, // The content of the card
                   ),
                 ),

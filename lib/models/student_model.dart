@@ -3,7 +3,8 @@ class Student {
   final String name;
   final String mobile;
   final DateTime dob; // Consider using DateTime for actual date handling
-  final DateTime joiningDate; // Consider using DateTime for actual date handling
+  final DateTime
+      joiningDate; // Consider using DateTime for actual date handling
 
   Student({
     required this.id,
@@ -33,5 +34,22 @@ class Student {
       'dob': dob,
       'joiningDate': joiningDate,
     };
+  }
+
+  // Method to create a copy of the Student instance
+  Student copy({
+    int? id,
+    String? name,
+    String? mobile,
+    DateTime? dob,
+    DateTime? joiningDate,
+  }) {
+    return Student(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      mobile: mobile ?? this.mobile,
+      dob: dob ?? this.dob,
+      joiningDate: joiningDate ?? this.joiningDate,
+    );
   }
 }

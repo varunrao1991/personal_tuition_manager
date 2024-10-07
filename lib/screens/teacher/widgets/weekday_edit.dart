@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../widgets/custom_card.dart';
-import '../../../widgets/custom_elevated_button.dart'; // Assuming this widget is custom-built as in MarkAttendanceScreen.
+import '../../../widgets/custom_elevated_button.dart';
 
 class WeekdayEditorDialog extends StatefulWidget {
   final List<bool> isSelected;
@@ -59,39 +59,22 @@ class _WeekdayEditorDialogState extends State<WeekdayEditorDialog> {
                 itemCount: 7, // Number of days in a week
                 itemBuilder: (ctx, index) {
                   final isSelected = _isSelected[index];
-                  return GestureDetector(
-                    onTap: () => _toggleDaySelection(index),
-                    child: CustomCard(
-                      // Using card-like widget for button
-                      elevation: isSelected ? 8.0 : 4.0,
-                      borderRadius: 15.0,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? Colors.blueAccent.withOpacity(0.1)
-                              : Colors.white,
-                          border: isSelected
-                              ? Border.all(color: Colors.blue)
-                              : null,
-                          borderRadius: BorderRadius.circular(15.0),
-                        ),
-                        padding: const EdgeInsets.all(4.0),
-                        child: Center(
-                          child: Text(
-                            _dayName(index),
-                            style: TextStyle(
-                              color:
-                                  isSelected ? Colors.blueAccent : Colors.black,
-                              fontWeight: isSelected
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                              fontSize: 16.0,
-                            ),
+                  return CustomCard(
+                      onTap: () => _toggleDaySelection(index),
+                      isSelected: isSelected,
+                      child: Center(
+                        child: Text(
+                          _dayName(index),
+                          style: TextStyle(
+                            color:
+                                isSelected ? Colors.blueAccent : Colors.black,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                            fontSize: 16.0,
                           ),
                         ),
-                      ),
-                    ),
-                  );
+                      ));
                 },
               ),
             ),

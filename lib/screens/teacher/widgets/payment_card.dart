@@ -19,47 +19,49 @@ class PaymentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CustomSwipeCard(
-      onSwipeLeft: onDelete,
-      onSwipeRight: onEdit,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Amount: ₹${payment.amount}',
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Paid By: ${payment.ownedBy.name}',
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.black54,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Row(
+        onSwipeLeft: onDelete,
+        onSwipeRight: onEdit,
+        child: Container(
+          margin: const EdgeInsets.all(8.0),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.date_range, color: Colors.blueAccent),
-                const SizedBox(width: 8),
                 Text(
-                  DateFormat('dd-MMM-yyyy').format(payment.paymentDate),
+                  'Amount: ₹${payment.amount}',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Paid By: ${payment.ownedBy.name}',
                   style: const TextStyle(
                     fontSize: 16,
                     color: Colors.black54,
                   ),
                 ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(Icons.date_range, color: Colors.blueAccent),
+                    const SizedBox(width: 8),
+                    Text(
+                      DateFormat('dd-MMM-yyyy').format(payment.paymentDate),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.black54,
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
-          ],
-        ),
-      ),
-    );
+          ),
+        ));
   }
 }

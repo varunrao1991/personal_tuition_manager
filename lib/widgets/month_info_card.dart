@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'custom_card.dart'; // Import your custom card
+import 'custom_card.dart';
 
 class MonthInfoCard extends StatelessWidget {
   final DateTime month;
   final bool isSelected;
   final Widget child;
-  final VoidCallback onTap; // Add onTap to handle clicks
+  final Future<void> Function() onTap; // Change here to accept async callback
 
   const MonthInfoCard({
     super.key,
@@ -18,24 +18,17 @@ class MonthInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CustomCard(
-      onTap: onTap, // Use the onTap callback from CustomCard
-      elevation: 4.0,
-      borderRadius: 8.0,
-      child: Container(
-        width: 100, // Adjust width as needed
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          color: isSelected ? Colors.blueAccent : Colors.white,
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black26,
-              offset: Offset(0, 2),
-              blurRadius: 6,
-            ),
-          ],
-        ),
+    // Calculate one-third of the screen width
+    final double cardWidth = MediaQuery.of(context).size.width / 3.5;
+
+    return SizedBox(
+      width: cardWidth, // Set width to one-third of the screen width
+      child: CustomCard(
+        onTap: () async {
+          // Call the async onTap function
+          await onTap();
+        },
+        isSelected: isSelected,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

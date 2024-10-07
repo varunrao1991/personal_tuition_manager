@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/month_provider.dart';
+import '../../../utils/handle_errors.dart';
 import '../../../widgets/month_info_card.dart';
 
 class MonthlyPaymentsWidget extends StatefulWidget {
@@ -29,8 +30,7 @@ class _MonthlyPaymentsWidgetState extends State<MonthlyPaymentsWidget> {
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<MonthlyProvider>(context, listen: false)
-          .fetchPaymentsForMoreMonths();
+      _loadInitialPayments();
     });
   }
 
@@ -48,23 +48,46 @@ class _MonthlyPaymentsWidgetState extends State<MonthlyPaymentsWidget> {
     }
   }
 
+  Future<void> _loadInitialPayments() async {
+    try {
+      await Provider.of<MonthlyProvider>(context, listen: false)
+          .fetchPaymentsForMoreMonths();
+    } catch (e) {
+      handleErrors(context, e);
+    }
+  }
+
   Future<void> _loadMoreMonths() async {
     setState(() {
       _isLoadingMore = true;
     });
-    await Provider.of<MonthlyProvider>(context, listen: false)
-        .fetchPaymentsForMoreMonths();
-    setState(() {
-      _isLoadingMore = false;
-    });
+    try {
+      await Provider.of<MonthlyProvider>(context, listen: false)
+          .fetchPaymentsForMoreMonths();
+    } catch (e) {
+      handleErrors(context, e);
+    } finally {
+      setState(() {
+        _isLoadingMore = false;
+      });
+    }
   }
 
-  void _onMonthTap(DateTime month) {
+  Future<void> _onMonthTap(DateTime month) async {
     setState(() {
       _selectedMonth = month;
     });
-
-    widget.onMonthChanged?.call(month);
+    try {
+      await Provider.of<MonthlyProvider>(context, listen: false)
+          .fetchPaymentsForMoreMonths();
+      await widget.onMonthChanged?.call(month);
+    } catch (e) {
+      handleErrors(context, e);
+    } finally {
+      setState(() {
+        _isLoadingMore = false;
+      });
+    }
   }
 
   @override
@@ -76,7 +99,7 @@ class _MonthlyPaymentsWidgetState extends State<MonthlyPaymentsWidget> {
         }
 
         return SizedBox(
-          height: 120,
+          height: 150,
           child: ListView.builder(
             controller: _scrollController,
             scrollDirection: Axis.horizontal,
@@ -90,28 +113,22 @@ class _MonthlyPaymentsWidgetState extends State<MonthlyPaymentsWidget> {
               final month = provider.monthlyPayments.keys.elementAt(index);
               final totalPayments = provider.monthlyPayments[month];
 
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: MonthInfoCard(
-                  month: month,
-                  isSelected: month == _selectedMonth,
-                  onTap: () => _onMonthTap(month),
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: totalPayments != null && totalPayments != 0
-                        ? Text(
-                            '₹$totalPayments',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: month == _selectedMonth
-                                  ? Colors.white
-                                  : Colors.black,
-                            ),
-                          )
-                        : const SizedBox.shrink(),
-                  ),
-                ),
+              return MonthInfoCard(
+                month: month,
+                isSelected: month == _selectedMonth,
+                onTap: () async => await _onMonthTap(month),
+                child: totalPayments != null && totalPayments != 0
+                    ? Text(
+                        '₹$totalPayments',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: month == _selectedMonth
+                              ? Colors.white
+                              : Colors.black,
+                        ),
+                      )
+                    : const SizedBox.shrink(),
               );
             },
           ),

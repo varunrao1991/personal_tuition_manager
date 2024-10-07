@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:padmayoga/widgets/custom_snackbar.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../utils/handle_errors.dart';
 import '../../widgets/custom_elevated_button.dart';
 import '../../widgets/custom_form_text_field.dart';
 import '../../widgets/custom_text_button.dart';
@@ -51,7 +52,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       _startCountdown();
       showCustomSnackBar(context, 'OTP sent to your mobile number.');
     } catch (e) {
-      showCustomSnackBar(context, 'Failed to send OTP: $e');
+      handleErrors(context, e);
     } finally {
       setState(() {
         _isLoading = false;
@@ -73,7 +74,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       showCustomSnackBar(context, 'Password changed successfully.');
       Navigator.pop(context);
     } catch (e) {
-      showCustomSnackBar(context, 'Failed to change password: $e');
+      handleErrors(context, e);
     } finally {
       setState(() {
         _isLoading = false;
@@ -205,7 +206,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               const SizedBox(height: 20),
               CustomTextButton(
                   onPressed: () {
-                    Navigator.pushReplacementNamed(context, '/login');
+                    Navigator.pop(context);
                   },
                   text: 'Back to Login'),
               const SizedBox(height: 100),

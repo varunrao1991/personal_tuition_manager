@@ -1,24 +1,26 @@
 import 'package:flutter/material.dart';
-import 'package:padmayoga/widgets/custom_form_date_field.dart';
 import 'package:padmayoga/widgets/custom_form_text_field.dart';
 import 'package:padmayoga/widgets/custom_elevated_button.dart';
-import '../../../models/create_payment.dart';
+import '../../../models/create_course.dart';
 import '../../../models/student_model.dart';
 import '../../../widgets/custom_section_title.dart';
 import 'student_selection.dart';
 
-class PaymentProcessWidget extends StatefulWidget {
-  const PaymentProcessWidget({super.key});
+class AddStudentCourseProcessWidget extends StatefulWidget {
+  const AddStudentCourseProcessWidget({super.key});
 
   @override
-  _PaymentProcessWidgetState createState() => _PaymentProcessWidgetState();
+  _AddStudentCourseProcessWidgetState createState() =>
+      _AddStudentCourseProcessWidgetState();
 }
 
-class _PaymentProcessWidgetState extends State<PaymentProcessWidget> {
+class _AddStudentCourseProcessWidgetState
+    extends State<AddStudentCourseProcessWidget> {
   int _currentStep = 0;
   Student? _selectedStudent;
-  final TextEditingController _amountController = TextEditingController();
-  DateTime _paymentDate = DateTime.now();
+  final TextEditingController _totalClassesController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
+
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   void _goToNextStep() {
@@ -33,15 +35,11 @@ class _PaymentProcessWidgetState extends State<PaymentProcessWidget> {
     });
   }
 
-  void _submitPayment() {
+  void _submitCourse() {
     if (_formKey.currentState!.validate()) {
-      final payment = CreatePayment(
-        studentId: _selectedStudent!.id,
-        studentName: _selectedStudent!.name,
-        amount: int.parse(_amountController.text),
-        paymentDate: _paymentDate,
-      );
-      Navigator.of(context).pop(payment);
+      final totalClasses = int.parse(_totalClassesController.text);
+      Navigator.of(context).pop(CourseCreate(
+          paymentId: _selectedStudent!.id, totalClasses: totalClasses));
     }
   }
 
@@ -61,16 +59,16 @@ class _PaymentProcessWidgetState extends State<PaymentProcessWidget> {
                   _goToNextStep();
                 },
               )
-            : _buildPaymentDetailsStep(),
+            : _buildCourseDetailsStep(),
       ),
     );
   }
 
-  Widget _buildPaymentDetailsStep() {
+  Widget _buildCourseDetailsStep() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
-        const CustomSectionTitle(title: 'Payment Details'),
+        const CustomSectionTitle(title: 'Course Details'),
         const SizedBox(height: 20),
         Form(
           key: _formKey,
@@ -90,29 +88,19 @@ class _PaymentProcessWidgetState extends State<PaymentProcessWidget> {
               ),
               const SizedBox(height: 20),
               CustomFormTextField(
-                controller: _amountController,
-                labelText: 'Amount',
+                controller: _totalClassesController,
+                labelText: 'Total Classes',
                 keyboardType: TextInputType.number,
-                prefixIcon: Icons.money,
+                prefixIcon: Icons.class_,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Amount is required';
+                    return 'Total classes are required';
                   }
-                  final amount = int.tryParse(value);
-                  if (amount == null || amount <= 0) {
-                    return 'Enter a valid amount';
+                  final totalClasses = int.tryParse(value);
+                  if (totalClasses == null || totalClasses <= 0) {
+                    return 'Enter a valid number of classes';
                   }
                   return null;
-                },
-              ),
-              const SizedBox(height: 20),
-              CustomDateInputField(
-                selectedDate: _paymentDate,
-                title: 'Payment Date',
-                onDateSelected: (selectedDate) {
-                  setState(() {
-                    _paymentDate = selectedDate;
-                  });
                 },
               ),
               const SizedBox(height: 20),
@@ -124,7 +112,7 @@ class _PaymentProcessWidgetState extends State<PaymentProcessWidget> {
                     text: 'Back',
                   ),
                   CustomElevatedButton(
-                    onPressed: _submitPayment,
+                    onPressed: _submitCourse,
                     text: 'Submit Payment',
                   ),
                 ],
@@ -134,5 +122,12 @@ class _PaymentProcessWidgetState extends State<PaymentProcessWidget> {
         ),
       ],
     );
+  }
+
+  @override
+  void dispose() {
+    _totalClassesController.dispose();
+    _searchController.dispose();
+    super.dispose();
   }
 }

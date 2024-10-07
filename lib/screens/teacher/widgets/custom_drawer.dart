@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:padmayoga/screens/teacher/holiday_screen.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../utils/handle_errors.dart';
 import '../../../widgets/confirmation_modal.dart';
-import '../../../widgets/show_custom_center_modal.dart';
+import '../../../utils/show_custom_center_modal.dart';
 import 'edit_profile_screen.dart';
-import '../../about_screen.dart';
 
 class CustomDrawer extends StatelessWidget {
   const CustomDrawer({super.key});
 
   void _logout(context) {
-    showCustomDialog(
+    showCustomDialog<bool>(
       context: context,
       child: const ConfirmationDialog(
         message: 'Do you want to logout from page?',
@@ -20,14 +19,19 @@ class CustomDrawer extends StatelessWidget {
     ).then((success) async {
       if (success != null && success) {
         final authProvider = Provider.of<AuthProvider>(context, listen: false);
-        await authProvider.logout();
+        try {
+          await authProvider.logout();
+          Navigator.of(context).pushReplacementNamed('/login');
+        } catch (e) {
+          handleErrors(context, e);
+        }
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final user = authProvider.user;
 
     return Drawer(
@@ -72,7 +76,7 @@ class CustomDrawer extends StatelessWidget {
           ListTile(
             title: const Text('My Holidays'),
             onTap: () {
-              Navigator.pushNamed(context, '/holidays');
+              Navigator.pushNamed(context, '/teacher/holidays');
             },
           ),
           ListTile(
