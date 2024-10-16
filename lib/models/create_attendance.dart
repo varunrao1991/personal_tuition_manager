@@ -7,7 +7,6 @@ class CreateAttendance {
     required this.attendanceDate,
   });
 
-  // Convert the instance to a JSON map for API requests
   Map<String, dynamic> toJson() {
     return {
       'studentId': studentId,
@@ -15,7 +14,6 @@ class CreateAttendance {
     };
   }
 
-  // Create an instance from a JSON map (useful if needed for responses)
   factory CreateAttendance.fromJson(Map<String, dynamic> json) {
     return CreateAttendance(
       studentId: json['studentId'],

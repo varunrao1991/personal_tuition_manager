@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:padmayoga/screens/teacher/attendance_screen.dart';
-import 'package:padmayoga/screens/teacher/course_screen.dart';
+import '../../widgets/notification_widget.dart';
+import 'attendance_screen.dart';
+import 'course_screen.dart';
 import 'widgets/custom_drawer.dart';
 import 'student_screen.dart';
 import 'payment_screen.dart';
@@ -15,43 +16,37 @@ class TeacherHomeScreen extends StatefulWidget {
 class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
   int _selectedIndex = 0;
 
+  final Map<int, IconData> _iconMap = {
+    1: Icons.payment,
+    2: Icons.check_circle_outline,
+    3: Icons.people,
+    4: Icons.book,
+  };
+
   Widget _getViewer() {
     switch (_selectedIndex) {
-      case 0:
-        return _buildEmptyHomeScreen(); // Empty home screen
       case 1:
-        return const PaymentScreen(); // Navigate to PaymentScreen
-      case 2:
-        return const AttendanceScreen(); // Navigate to AttendanceScreen
+        return const PaymentScreen();
       case 3:
-        return const StudentScreen(); // Navigate to StudentScreen
+        return const StudentScreen();
       case 4:
-        return const CourseScreen(); // Navigate to CourseScreen
+        return const CourseScreen();
       default:
-        return _buildEmptyHomeScreen(); // Default to home screen
+        return const AttendanceScreen();
     }
-  }
-
-  Widget _buildEmptyHomeScreen() {
-    return const Center(
-      child: Text(
-        'Welcome to Teacher Dashboard',
-        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(50.0), // Set a smaller height
-        child: AppBar(
-          title: const Text("Teacher Dashboard"),
-          toolbarHeight: 50, // Make it smaller
+      appBar: AppBar(
+        title: Text(
+          "Teacher Dashboard",
+          style: Theme.of(context).textTheme.titleLarge,
         ),
+        actions: const [NotificationHandlerWidget()],
       ),
-      drawer: const CustomDrawer(), // Drawer for navigation
+      drawer: const CustomDrawer(),
       body: _getViewer(),
       bottomNavigationBar: _buildBottomNavigationBar(),
     );
@@ -60,72 +55,25 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
   Widget _buildBottomNavigationBar() {
     return BottomAppBar(
       shape: const CircularNotchedRectangle(),
-      notchMargin: 8.0, // Reduced margin to make the notch sharper
+      notchMargin: 8.0,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // Left Side Navigation Items
-          IconButton(
-            icon: Icon(
-              Icons.payment,
-              color: _selectedIndex == 1 ? Colors.blue : Colors.grey,
-            ),
-            iconSize: 30, // Increased size for visibility
+        children: _iconMap.entries.map((entry) {
+          int index = entry.key;
+          IconData icon = entry.value;
+
+          return IconButton(
+            icon: Icon(icon),
+            color: _selectedIndex == index
+                ? Theme.of(context).colorScheme.primary
+                : null,
             onPressed: () {
               setState(() {
-                _selectedIndex = 1; // Navigate to PaymentScreen
+                _selectedIndex = index;
               });
             },
-          ),
-          IconButton(
-            icon: Icon(
-              Icons.check_circle_outline,
-              color: _selectedIndex == 2 ? Colors.blue : Colors.grey,
-            ),
-            iconSize: 30, // Increased size for visibility
-            onPressed: () {
-              setState(() {
-                _selectedIndex = 2; // Navigate to AttendanceScreen
-              });
-            },
-          ),
-          IconButton(
-            icon: Icon(
-              Icons.home,
-              color: _selectedIndex == 0 ? Colors.blue : Colors.grey,
-            ),
-            iconSize: 36, // Slightly larger home icon
-            onPressed: () {
-              setState(() {
-                _selectedIndex = 0; // Navigate back to home screen
-              });
-            },
-          ),
-          IconButton(
-            icon: Icon(
-              Icons.people,
-              color: _selectedIndex == 3 ? Colors.blue : Colors.grey,
-            ),
-            iconSize: 30, // Increased size for visibility
-            onPressed: () {
-              setState(() {
-                _selectedIndex = 3; // Navigate to StudentScreen
-              });
-            },
-          ),
-          IconButton(
-            icon: Icon(
-              Icons.book,
-              color: _selectedIndex == 4 ? Colors.blue : Colors.grey,
-            ),
-            iconSize: 30, // Increased size for visibility
-            onPressed: () {
-              setState(() {
-                _selectedIndex = 4; // Navigate to CourseScreen
-              });
-            },
-          ),
-        ],
+          );
+        }).toList(),
       ),
     );
   }

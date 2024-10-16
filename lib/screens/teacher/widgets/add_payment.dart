@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:padmayoga/widgets/custom_form_date_field.dart';
-import 'package:padmayoga/widgets/custom_form_text_field.dart';
-import 'package:padmayoga/widgets/custom_elevated_button.dart';
+import '../../../widgets/custom_form_date_field.dart';
+import '../../../widgets/custom_form_text_field.dart';
+import '../../../widgets/custom_elevated_button.dart';
 import '../../../models/create_payment.dart';
 import '../../../models/student_model.dart';
-import '../../../widgets/custom_section_title.dart';
 import 'student_selection.dart';
 
 class PaymentProcessWidget extends StatefulWidget {
@@ -70,7 +69,7 @@ class _PaymentProcessWidgetState extends State<PaymentProcessWidget> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
-        const CustomSectionTitle(title: 'Payment Details'),
+        Text('Payment Details', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 20),
         Form(
           key: _formKey,

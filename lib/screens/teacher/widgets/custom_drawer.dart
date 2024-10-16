@@ -9,7 +9,7 @@ import 'edit_profile_screen.dart';
 class CustomDrawer extends StatelessWidget {
   const CustomDrawer({super.key});
 
-  void _logout(context) {
+  void _logout(BuildContext context) {
     showCustomDialog<bool>(
       context: context,
       child: const ConfirmationDialog(
@@ -31,62 +31,80 @@ class CustomDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final user = authProvider.user;
+    final theme = Theme.of(context);
 
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          DrawerHeader(
-            decoration: const BoxDecoration(color: Colors.blueAccent),
-            child: SizedBox(
-              height: 120,
-              child: Row(
-                children: [
-                  const CircleAvatar(radius: 40),
-                  const SizedBox(width: 10),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
+          Consumer<AuthProvider>(
+            builder: (context, authProvider, child) {
+              final user = authProvider.user;
+
+              return DrawerHeader(
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary,
+                ),
+                child: SizedBox(
+                  height: 120,
+                  child: Row(
                     children: [
-                      Text(
-                        user?.name ?? '',
-                        style:
-                            const TextStyle(color: Colors.white, fontSize: 24),
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            user?.name ?? '',
+                            style: theme.textTheme.titleLarge!
+                                .copyWith(color: theme.colorScheme.onPrimary),
+                          ),
+                          const SizedBox(height: 3),
+                        ],
                       ),
-                      const SizedBox(height: 3),
+                      const Spacer(),
+                      IconButton(
+                        icon: Icon(
+                          Icons.edit,
+                          color: theme.iconTheme.color,
+                        ),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const EditProfileScreen(),
+                            ),
+                          );
+                        },
+                      ),
                     ],
                   ),
-                  const Spacer(),
-                  IconButton(
-                    icon: const Icon(Icons.edit, color: Colors.white),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const EditProfileScreen()),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
+                ),
+              );
+            },
           ),
           ListTile(
-            title: const Text('My Holidays'),
+            title: Text(
+              'My Holidays',
+              style: theme.textTheme.bodyLarge,
+            ),
             onTap: () {
               Navigator.pushNamed(context, '/teacher/holidays');
             },
           ),
           ListTile(
-            title: const Text('About'),
+            title: Text(
+              'About',
+              style: theme.textTheme.bodyLarge,
+            ),
             onTap: () {
               Navigator.pushNamed(context, '/about');
             },
           ),
           ListTile(
-            title: const Text('Logout'),
+            title: Text(
+              'Logout',
+              style: theme.textTheme.bodyLarge,
+            ),
             onTap: () {
               _logout(context);
             },

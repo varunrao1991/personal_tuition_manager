@@ -1,4 +1,4 @@
-import 'package:padmayoga/models/owned_by.dart';
+import '../models/owned_by.dart';
 
 class PaymentInfo {
   final int amount;

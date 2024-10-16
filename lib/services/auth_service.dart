@@ -107,7 +107,7 @@ class AuthService {
         'Authorization': 'Bearer $accessToken',
         'Content-Type': 'application/json',
       },
-      body: jsonEncode(data.toJson()), // Use the model's toJson method
+      body: jsonEncode(data.toJson()),
     );
 
     if (response.statusCode == 200) {

@@ -2,30 +2,27 @@ import 'package:flutter/material.dart';
 
 class CustomFAB extends StatelessWidget {
   final IconData icon;
-  final VoidCallback onPressed;
-  final Color backgroundColor;
-  final Color iconColor;
+  final VoidCallback? onPressed;
   final String? tooltip;
   final String? heroTag;
+  final bool isEnabled;
 
   const CustomFAB({
     super.key,
     required this.icon,
     required this.onPressed,
-    this.backgroundColor = Colors.blue,
-    this.iconColor = Colors.white,
     this.heroTag = 'tag',
     this.tooltip,
+    this.isEnabled = true,
   });
 
   @override
   Widget build(BuildContext context) {
     return FloatingActionButton(
       heroTag: heroTag,
-      backgroundColor: backgroundColor,
-      onPressed: onPressed,
+      onPressed: isEnabled ? onPressed : null,
       tooltip: tooltip,
-      child: Icon(icon, color: iconColor),
+      child: Icon(icon),
     );
   }
 }

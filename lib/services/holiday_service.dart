@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'package:http/http.dart' as http;
-import 'package:padmayoga/models/holiday.dart';
 import '../config/app_config.dart';
+import '../models/holiday.dart';
 import '../utils/response_to_error.dart';
 
 class HolidayService {

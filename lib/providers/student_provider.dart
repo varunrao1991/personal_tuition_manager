@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import '../models/student_model.dart';
 import '../models/student_update.dart';
@@ -20,14 +22,18 @@ class StudentProvider with ChangeNotifier {
 
   StudentProvider(this._studentService, this._tokenService);
 
+  void _setLoading(bool value) {
+    _isLoading = value;
+    notifyListeners();
+  }
+
   Future<void> fetchStudents({
     int? page,
     String? sort,
     String? order,
     String? name,
   }) async {
-    _isLoading = true;
-    notifyListeners();
+    _setLoading(true);
 
     try {
       final accessToken = await _tokenService.getToken();
@@ -47,9 +53,9 @@ class StudentProvider with ChangeNotifier {
 
       _currentPage = response.currentPage;
       _totalPages = response.totalPages;
+      log('Students successfully fetched for $_currentPage: ${response.students.length}.');
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      _setLoading(false);
     }
   }
 
@@ -63,8 +69,7 @@ class StudentProvider with ChangeNotifier {
   }
 
   Future<void> createStudent(StudentUpdate studentUpdate) async {
-    _isLoading = true;
-    notifyListeners();
+    _setLoading(true);
 
     try {
       final accessToken = await _tokenService.getToken();
@@ -74,14 +79,12 @@ class StudentProvider with ChangeNotifier {
       );
       await resetAndFetch();
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      _setLoading(false);
     }
   }
 
   Future<void> updateStudent(StudentUpdate studentUpdate) async {
-    _isLoading = true;
-    notifyListeners();
+    _setLoading(true);
 
     try {
       final accessToken = await _tokenService.getToken();
@@ -91,14 +94,12 @@ class StudentProvider with ChangeNotifier {
       );
       await resetAndFetch();
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      _setLoading(false);
     }
   }
 
   Future<void> deleteStudent(int studentId) async {
-    _isLoading = true;
-    notifyListeners();
+    _setLoading(true);
 
     try {
       final accessToken = await _tokenService.getToken();
@@ -108,8 +109,7 @@ class StudentProvider with ChangeNotifier {
       );
       await resetAndFetch();
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      _setLoading(false);
     }
   }
 }

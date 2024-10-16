@@ -78,8 +78,6 @@ class _MonthlyPaymentsWidgetState extends State<MonthlyPaymentsWidget> {
       _selectedMonth = month;
     });
     try {
-      await Provider.of<MonthlyProvider>(context, listen: false)
-          .fetchPaymentsForMoreMonths();
       await widget.onMonthChanged?.call(month);
     } catch (e) {
       handleErrors(context, e);
@@ -120,13 +118,9 @@ class _MonthlyPaymentsWidgetState extends State<MonthlyPaymentsWidget> {
                 child: totalPayments != null && totalPayments != 0
                     ? Text(
                         '₹$totalPayments',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: month == _selectedMonth
-                              ? Colors.white
-                              : Colors.black,
-                        ),
+                        style: month == _selectedMonth
+                            ? Theme.of(context).textTheme.bodyMedium
+                            : Theme.of(context).textTheme.bodyMedium,
                       )
                     : const SizedBox.shrink(),
               );

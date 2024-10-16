@@ -11,10 +11,8 @@ class Attendance {
 
   factory Attendance.fromJson(Map<String, dynamic> json) {
     return Attendance(
-      attendanceDate:
-          DateTime.parse(json['attendanceDate']), // Parse the payment date
-      ownedBy: OwnedBy.fromJson(json[
-          'student']), // Use OwnedBy factory constructor to map student object
+      attendanceDate: DateTime.parse(json['attendanceDate']),
+      ownedBy: OwnedBy.fromJson(json['student']),
     );
   }
 }

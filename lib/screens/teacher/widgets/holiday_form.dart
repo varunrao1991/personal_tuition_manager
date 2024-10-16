@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../widgets/custom_elevated_button.dart';
 import '../../../widgets/custom_form_text_field.dart';
-import '../../../widgets/custom_section_title.dart';
 import '../../../widgets/custom_form_date_field.dart';
 
 class HolidayForm extends StatefulWidget {
@@ -47,12 +46,13 @@ class _HolidayFormState extends State<HolidayForm> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                const CustomSectionTitle(title: 'Add Holiday'),
+                Text('Add Holiday',
+                    style: Theme.of(context).textTheme.bodyLarge),
                 const SizedBox(height: 20),
                 CustomDateInputField(
                   title: 'Holiday Date',
                   selectedDate: widget.selectedDate,
-                  onDateSelected: (date) {}, // Handle date selection if needed
+                  onDateSelected: (date) {},
                 ),
                 const SizedBox(height: 16.0),
                 CustomFormTextField(

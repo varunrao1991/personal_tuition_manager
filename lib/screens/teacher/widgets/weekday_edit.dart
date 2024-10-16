@@ -20,6 +20,7 @@ class _WeekdayEditorDialogState extends State<WeekdayEditorDialog> {
   @override
   void initState() {
     super.initState();
+
     _isSelected = List.from(widget.isSelected);
   }
 
@@ -35,52 +36,56 @@ class _WeekdayEditorDialogState extends State<WeekdayEditorDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Container(
+    return SingleChildScrollView(
+      child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            const Text(
+            Text(
               'Select Weekdays',
-              style: TextStyle(
-                fontSize: 24.0,
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             const SizedBox(height: 16.0),
-            Expanded(
-              child: GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 8.0,
-                  mainAxisSpacing: 8.0,
-                  childAspectRatio: 1.5,
-                ),
-                itemCount: 7, // Number of days in a week
-                itemBuilder: (ctx, index) {
-                  final isSelected = _isSelected[index];
-                  return CustomCard(
-                      onTap: () => _toggleDaySelection(index),
-                      isSelected: isSelected,
-                      child: Center(
-                        child: Text(
-                          _dayName(index),
-                          style: TextStyle(
-                            color:
-                                isSelected ? Colors.blueAccent : Colors.black,
+            Text(
+              'Note: Changing these selections may affect the ongoing courses end date calculation.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.red,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16.0),
+            GridView.builder(
+              shrinkWrap: true,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: 16.0,
+                mainAxisSpacing: 8.0,
+                childAspectRatio: 1.3,
+              ),
+              itemCount: 7,
+              itemBuilder: (ctx, index) {
+                final isSelected = _isSelected[index];
+                return CustomCard(
+                  onTap: () => _toggleDaySelection(index),
+                  isSelected: isSelected,
+                  child: Center(
+                    child: Text(
+                      _dayName(index),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             fontWeight: isSelected
                                 ? FontWeight.bold
                                 : FontWeight.normal,
-                            fontSize: 16.0,
                           ),
-                        ),
-                      ));
-                },
-              ),
+                    ),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 16.0),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
                   child: CustomElevatedButton(
@@ -108,19 +113,19 @@ class _WeekdayEditorDialogState extends State<WeekdayEditorDialog> {
   String _dayName(int index) {
     switch (index) {
       case 0:
-        return 'Sunday';
+        return 'Sun';
       case 1:
-        return 'Monday';
+        return 'Mon';
       case 2:
-        return 'Tuesday';
+        return 'Tues';
       case 3:
-        return 'Wednesday';
+        return 'Wed';
       case 4:
-        return 'Thursday';
+        return 'Thu';
       case 5:
-        return 'Friday';
+        return 'Fri';
       case 6:
-        return 'Saturday';
+        return 'Sat';
       default:
         return '';
     }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:padmayoga/widgets/custom_text_button.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import '../../widgets/custom_text_button.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/handle_errors.dart';
@@ -15,9 +16,9 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _mobileController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _mobileController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _isCheckingLoginStatus = true;
 
   @override
@@ -66,97 +67,92 @@ class _LoginScreenState extends State<LoginScreen> {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     return Scaffold(
-      backgroundColor: Colors.grey[200],
       body: _isCheckingLoginStatus
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 100),
-                    const FlutterLogo(size: 100),
-                    const SizedBox(height: 20),
-                    const Text(
-                      'Welcome Back!',
-                      style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blueAccent),
-                    ),
-                    const SizedBox(height: 10),
-                    const Text(
-                      'Login to your account',
-                      style: TextStyle(fontSize: 18, color: Colors.grey),
-                    ),
-                    const SizedBox(height: 40),
-                    Form(
-                      key: _formKey,
-                      child: Column(
-                        children: [
-                          CustomFormTextField(
-                            controller: _mobileController,
-                            labelText: 'Mobile Number',
-                            prefixIcon: Icons.phone,
-                            keyboardType: TextInputType.phone,
-                            validator: (value) {
-                              if (value == null ||
-                                  value.isEmpty ||
-                                  value.length != 10) {
-                                return 'Enter a valid 10-digit mobile number';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 20),
-                          CustomFormTextField(
-                            controller: _passwordController,
-                            labelText: 'Password',
-                            prefixIcon: Icons.lock,
-                            obscureText: true,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Password is required';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 20),
-                          authProvider.isLoading
-                              ? const CircularProgressIndicator()
-                              : CustomElevatedButton(
-                                  text: 'Login',
-                                  onPressed: () async {
-                                    if (_formKey.currentState!.validate()) {
-                                      final mobile = _mobileController.text;
-                                      final password = _passwordController.text;
-                                      try {
-                                        await authProvider.login(
-                                            mobile, password);
-                                        _navigateToDashboard(
-                                            authProvider.user!.role);
-                                      } catch (e) {
-                                        handleErrors(context, e);
-                                      }
-                                    }
-                                  },
-                                ),
-                          const SizedBox(height: 20),
-                          CustomTextButton(
-                            onPressed: () {
-                              Navigator.pushNamed(context, '/forgot-password');
-                            },
-                            text: 'Forgot your password?',
-                          )
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 100),
-                  ],
-                ),
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 100),
+                  SvgPicture.asset('assets/icon/app_icon.svg',
+                      width: 100, height: 100),
+                  const SizedBox(height: 20),
+                  Text('Welcome Back!',
+                      style: Theme.of(context).textTheme.headlineLarge),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Login to your account',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Colors.grey,
+                        ),
+                  ),
+                  const SizedBox(height: 40),
+                  _buildLoginForm(authProvider),
+                  const SizedBox(height: 100),
+                ],
               ),
             ),
+    );
+  }
+
+  Widget _buildLoginForm(AuthProvider authProvider) {
+    return Form(
+      key: _formKey,
+      child: Column(
+        children: [
+          CustomFormTextField(
+            controller: _mobileController,
+            labelText: 'Mobile Number',
+            prefixIcon: Icons.phone,
+            keyboardType: TextInputType.phone,
+            validator: (value) {
+              if (value == null || value.isEmpty || value.length != 10) {
+                return 'Enter a valid 10-digit mobile number';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 20),
+          CustomFormTextField(
+            controller: _passwordController,
+            labelText: 'Password',
+            prefixIcon: Icons.lock,
+            obscureText: true,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Password is required';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 20),
+          authProvider.isLoading
+              ? const CircularProgressIndicator()
+              : CustomElevatedButton(
+                  text: 'Login',
+                  onPressed: () async {
+                    if (_formKey.currentState!.validate()) {
+                      final mobile = _mobileController.text;
+                      final password = _passwordController.text;
+                      try {
+                        await authProvider.login(mobile, password);
+                        _navigateToDashboard(authProvider.user!.role);
+                      } catch (e) {
+                        handleErrors(context, e);
+                      }
+                    }
+                  },
+                ),
+          const SizedBox(height: 20),
+          CustomTextButton(
+            onPressed: () {
+              Navigator.pushNamed(context, '/forgot-password');
+            },
+            text: 'Forgot your password?',
+          ),
+        ],
+      ),
     );
   }
 }

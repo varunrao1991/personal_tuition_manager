@@ -5,30 +5,29 @@ class Course {
   final DateTime? startDate;
   final DateTime? endDate;
   final int totalClasses;
-  final PaymentInfo? payment;
+  final bool? canStart;
+  final bool? noCreatit;
+  final PaymentInfo payment;
 
-  Course({
-    required this.paymentId,
-    required this.startDate,
-    required this.endDate,
-    required this.totalClasses,
-    this.payment,
-  });
+  Course(
+      {required this.paymentId,
+      required this.startDate,
+      required this.endDate,
+      required this.totalClasses,
+      required this.payment,
+      this.canStart,
+      this.noCreatit});
 
-  // Factory method for JSON deserialization
   factory Course.fromJson(Map<String, dynamic> json) {
-    PaymentInfo? paymentInfo;
-    if (json['payment'] != null) {
-      paymentInfo = PaymentInfo.fromJson(json['payment']);
-    }
-
     return Course(
       paymentId: json['paymentId'],
+      canStart: json['canStart'] ?? false,
+      noCreatit: json['noCreatit'] ?? false,
       startDate:
           json['startDate'] != null ? DateTime.parse(json['startDate']) : null,
       endDate: json['endDate'] != null ? DateTime.parse(json['endDate']) : null,
-      totalClasses: json['totalClasses'] ?? 0, // Default to 0 if null
-      payment: paymentInfo,
+      totalClasses: json['totalClasses'],
+      payment: PaymentInfo.fromJson(json['payment']),
     );
   }
 }

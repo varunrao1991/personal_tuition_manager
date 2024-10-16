@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:padmayoga/widgets/custom_snackbar.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import '../../widgets/custom_snackbar.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/handle_errors.dart';
@@ -42,21 +43,23 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   Future<void> _requestOtp() async {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    setState(() {
-      _isLoading = true;
-    });
-    try {
-      await authProvider.requestPasswordChange(_mobileController.text);
-      _isOtpSent = true;
-      _startCountdown();
-      showCustomSnackBar(context, 'OTP sent to your mobile number.');
-    } catch (e) {
-      handleErrors(context, e);
-    } finally {
+    if (_formKey.currentState!.validate()) {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
       setState(() {
-        _isLoading = false;
+        _isLoading = true;
       });
+      try {
+        await authProvider.requestPasswordChange(_mobileController.text);
+        _isOtpSent = true;
+        _startCountdown();
+        showCustomSnackBar(context, 'OTP sent to your mobile number.');
+      } catch (e) {
+        handleErrors(context, e);
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -91,7 +94,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[200],
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -99,20 +101,20 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const SizedBox(height: 100),
-              const FlutterLogo(size: 100),
+              SvgPicture.asset('assets/icon/app_icon.svg',
+                  width: 100, height: 100),
               const SizedBox(height: 20),
-              const Text(
+              Text(
                 'Reset Your Password',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blueAccent,
-                ),
+                style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: 10),
-              const Text(
+              Text(
                 'Enter your details below',
-                style: TextStyle(fontSize: 18, color: Colors.grey),
+                style: Theme.of(context)
+                    .textTheme
+                    .titleMedium
+                    ?.copyWith(color: Colors.grey),
               ),
               const SizedBox(height: 40),
               Form(
@@ -188,10 +190,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             ),
                       const SizedBox(height: 20),
                       if (_countdown > 0)
-                        Text('Resend OTP in $_countdown seconds')
+                        Text(
+                          'Resend OTP in $_countdown seconds',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        )
                       else
                         CustomTextButton(
-                            onPressed: _requestOtp, text: 'Resend OTP'),
+                          onPressed: _requestOtp,
+                          text: 'Resend OTP',
+                        ),
                     ] else ...[
                       _isLoading
                           ? const CircularProgressIndicator()
@@ -205,10 +212,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               ),
               const SizedBox(height: 20),
               CustomTextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  text: 'Back to Login'),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                text: 'Back to Login',
+              ),
               const SizedBox(height: 100),
             ],
           ),

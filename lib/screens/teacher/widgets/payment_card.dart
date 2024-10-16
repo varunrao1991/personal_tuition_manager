@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:padmayoga/models/fetch_payment.dart';
-
-import '../../../widgets/custom_swipe_card.dart'; // Adjust the import as per your project structure
+import '../../../models/fetch_payment.dart';
+import '../../../widgets/custom_swipe_card.dart';
 
 class PaymentCard extends StatelessWidget {
   final Payment payment;
@@ -16,52 +15,58 @@ class PaymentCard extends StatelessWidget {
     required this.onDelete,
   });
 
+  Color _getColorBasedOnStatus(int courseStatus) {
+    switch (courseStatus) {
+      case 0:
+        return Colors.green;
+      case 1:
+        return Colors.yellow;
+      case 2:
+        return Colors.red;
+      case 3:
+        return Colors.grey;
+      default:
+        return Colors.black;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return CustomSwipeCard(
-        onSwipeLeft: onDelete,
-        onSwipeRight: onEdit,
-        child: Container(
-          margin: const EdgeInsets.all(8.0),
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
+      onSwipeLeft: onDelete,
+      onSwipeRight: onEdit,
+      child: Row(
+        children: [
+          Container(
+            width: 4,
+            height: 100,
+            color: _getColorBasedOnStatus(payment.courseStatus),
+            margin: const EdgeInsets.only(right: 16.0),
+          ),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  'Amount: ₹${payment.amount}',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
+                Text('₹ ${payment.amount}',
+                    style: Theme.of(context).textTheme.headlineSmall),
                 const SizedBox(height: 8),
-                Text(
-                  'Paid By: ${payment.ownedBy.name}',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.black54,
-                  ),
-                ),
+                Text(payment.ownedBy.name,
+                    style: Theme.of(context).textTheme.bodyMedium),
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    const Icon(Icons.date_range, color: Colors.blueAccent),
+                    const Icon(Icons.date_range),
                     const SizedBox(width: 8),
-                    Text(
-                      DateFormat('dd-MMM-yyyy').format(payment.paymentDate),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.black54,
-                      ),
-                    ),
+                    Text(DateFormat('dd-MMM-yyyy').format(payment.paymentDate),
+                        style: Theme.of(context).textTheme.bodyMedium),
                   ],
                 ),
               ],
             ),
           ),
-        ));
+        ],
+      ),
+    );
   }
 }

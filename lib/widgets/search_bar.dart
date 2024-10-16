@@ -29,13 +29,10 @@ class _GenericSearchBarState extends State<GenericSearchBar> {
   }
 
   void _onSearchChanged(String query) {
-    // Cancel the previous debounce timer if it exists
     if (_debounce?.isActive ?? false) _debounce?.cancel();
 
-    // Set a new debounce timer for 500 milliseconds
     _debounce = Timer(const Duration(milliseconds: 500), () {
-      widget.onChanged(
-          query); // Trigger the callback once user has stopped typing
+      widget.onChanged(query);
     });
   }
 
@@ -54,7 +51,7 @@ class _GenericSearchBarState extends State<GenericSearchBar> {
               )
             : null,
       ),
-      onChanged: _onSearchChanged, // Use the debounced version of onChanged
+      onChanged: _onSearchChanged,
     );
   }
 }

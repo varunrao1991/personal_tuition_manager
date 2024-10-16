@@ -38,7 +38,6 @@ class PaymentProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Fetch Payments with pagination and optional filters
   Future<void> fetchPayments({
     int? page,
     String? sort,
@@ -72,13 +71,12 @@ class PaymentProvider with ChangeNotifier {
 
       _currentPage = response.currentPage;
       _totalPages = response.totalPages;
-      log('Payments successfully fetched.');
+      log('Payments successfully fetched for $_currentPage: ${response.payments.length}');
     } finally {
       _setLoading(false);
     }
   }
 
-  // Reset the payment list and fetch from page 1 (useful for filtering or refresh)
   Future<void> resetAndFetch({
     String? sort,
     String? order,
@@ -95,7 +93,6 @@ class PaymentProvider with ChangeNotifier {
     );
   }
 
-  // Add Payment
   Future<void> addPayment(CreatePayment createPayment) async {
     _setLoading(true);
 
@@ -112,7 +109,6 @@ class PaymentProvider with ChangeNotifier {
     }
   }
 
-  // Update Payment
   Future<void> updatePayment(CreatePayment payment) async {
     _setLoading(true);
 
@@ -129,7 +125,6 @@ class PaymentProvider with ChangeNotifier {
     }
   }
 
-  // Fetch Daily Total Payments for Month with caching
   Future<void> fetchDailyTotalPayments(DateTime monthToFetch) async {
     _setLoading(true);
     try {
@@ -148,7 +143,6 @@ class PaymentProvider with ChangeNotifier {
     }
   }
 
-  // Delete Payment
   Future<void> deletePayment(int paymentId) async {
     _setLoading(true);
     try {

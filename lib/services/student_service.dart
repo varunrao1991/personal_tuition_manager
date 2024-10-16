@@ -33,7 +33,6 @@ class StudentService {
     String? order,
     String? name,
   }) async {
-    // Build the query parameters
     final queryParameters = {
       'page': page.toString(),
       if (sort != null) 'sort': sort,
@@ -44,7 +43,6 @@ class StudentService {
     final uri = Uri.parse('$apiUrl/api/students')
         .replace(queryParameters: queryParameters);
 
-    // Make the GET request with query parameters
     final response = await _client.get(
       uri,
       headers: {
@@ -101,7 +99,7 @@ class StudentService {
       body: jsonEncode(studentUpdate.toJson()),
     );
 
-    if (response.statusCode != 201) {
+    if (response.statusCode != 200) {
       throw responseToError(response.body);
     } else {
       log("Student updated.");

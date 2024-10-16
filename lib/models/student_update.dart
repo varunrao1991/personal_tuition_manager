@@ -7,7 +7,6 @@ class StudentUpdate {
   DateTime? dob;
   DateTime? joiningDate;
 
-  // Constructor to initialize fields
   StudentUpdate({
     this.id,
     this.name,
@@ -16,7 +15,6 @@ class StudentUpdate {
     this.joiningDate,
   });
 
-  // Constructor to initialize fields from a Student object
   StudentUpdate.fromStudent(Student student) {
     id = student.id;
     name = student.name;
@@ -25,7 +23,6 @@ class StudentUpdate {
     joiningDate = student.joiningDate;
   }
 
-  // Method to convert the model to JSON
   Map<String, dynamic> toJson() {
     return {
       if (id != null) 'id': id,

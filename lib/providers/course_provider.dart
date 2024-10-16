@@ -1,22 +1,38 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
+import '../models/owned_by.dart';
 import '../models/course.dart';
 import '../services/course_service.dart';
 import '../services/token_service.dart';
 
 class CourseProvider with ChangeNotifier {
-  List<Course> _courses = [];
+  final Map<String, List<Course>> _coursesMap = {
+    'ongoing': [],
+    'closed': [],
+    'waitlist': [],
+  };
+
+  List<OwnedBy> _eligibleStudents = [];
+  bool _hasEligibleStudents = false;
+
   bool _isLoading = false;
   final CourseService _courseService;
   final TokenService _tokenService;
 
   int _currentPage = 1;
   int _totalPages = 1;
+  int _currentEligibleStudentPage = 1;
+  int _totalEligibleStudentPages = 1;
 
-  List<Course> get courses => _courses;
+  Map<String, List<Course>> get coursesMap => _coursesMap;
+  List<OwnedBy> get eligibleStudents => _eligibleStudents;
+  bool get hasEligibleStudents => _hasEligibleStudents;
+
   bool get isLoading => _isLoading;
   int get currentPage => _currentPage;
   int get totalPages => _totalPages;
+  int get currentEligibleStudentPage => _currentEligibleStudentPage;
+  int get totalEligibleStudentPages => _totalEligibleStudentPages;
 
   CourseProvider(this._courseService, this._tokenService);
 
@@ -25,11 +41,38 @@ class CourseProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> fetchEligibleStudents({int? page}) async {
+    _setLoading(true);
+    try {
+      final accessToken = await _tokenService.getToken();
+      final response = await _courseService.getEligibleStudents(
+        accessToken: accessToken,
+        page: page ?? _currentEligibleStudentPage,
+      );
+
+      if (page == 1 || page == null) {
+        _eligibleStudents = response.students;
+      } else {
+        _eligibleStudents.addAll(response.students);
+      }
+
+      _currentEligibleStudentPage = response.currentPage;
+      _totalEligibleStudentPages = response.totalPages;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<void> resetAndFetchEligibleStudents() async {
+    _currentPage = 1;
+    await fetchEligibleStudents(page: 1);
+  }
+
   Future<void> fetchCourses({
     int? page,
     String? sort,
     String? order,
-    String? filterBy,
+    required String filterBy,
   }) async {
     _setLoading(true);
 
@@ -45,28 +88,39 @@ class CourseProvider with ChangeNotifier {
       );
 
       if (page == 1 || page == null) {
-        _courses = response.courses;
+        _coursesMap[filterBy] = response.courses;
       } else {
-        _courses.addAll(response.courses);
+        _coursesMap[filterBy]?.addAll(response.courses);
       }
 
       _currentPage = response.currentPage;
       _totalPages = response.totalPages;
 
-      log('Courses successfully fetched.');
+      log('Courses successfully fetched for $filterBy: ${response.courses.length}.');
     } finally {
-      _setLoading(
-          false); // Ensure loading is set to false regardless of success or failure
+      _setLoading(false);
     }
   }
 
   Future<void> resetAndFetch({
     String? sort,
     String? order,
-    String? filterBy,
+    required String filterBy,
   }) async {
     _currentPage = 1;
     await fetchCourses(page: 1, sort: sort, order: order, filterBy: filterBy);
+  }
+
+  Future<void> existsEligibleStudents() async {
+    _setLoading(true);
+    try {
+      final String accessToken = await _tokenService.getToken();
+
+      _hasEligibleStudents =
+          await _courseService.hasEligibleStudents(accessToken);
+    } finally {
+      _setLoading(false);
+    }
   }
 
   Future<void> addCourse(int studentId, int totalClasses) async {
@@ -81,7 +135,7 @@ class CourseProvider with ChangeNotifier {
         studentId: studentId,
       );
       log('Course successfully added.');
-      await resetAndFetch();
+      await resetAndFetch(filterBy: 'waitlist');
     } finally {
       _setLoading(false);
     }
@@ -95,11 +149,11 @@ class CourseProvider with ChangeNotifier {
 
       await _courseService.startCourse(
         accessToken: accessToken,
-        studentId: studentId,
+        courseId: studentId,
         startDate: startDate,
       );
       log('Course successfully started.');
-      await resetAndFetch();
+      await resetAndFetch(filterBy: 'ongoing');
     } finally {
       _setLoading(false);
     }
@@ -113,21 +167,20 @@ class CourseProvider with ChangeNotifier {
 
       await _courseService.endCourse(
         accessToken: accessToken,
-        studentId: studentId,
+        courseId: studentId,
         endDate: endDate,
       );
       log('Course successfully ended.');
-      await resetAndFetch();
+      await resetAndFetch(filterBy: 'closed');
     } finally {
       _setLoading(false);
     }
   }
 
   Future<void> updateCourse(
-    int courseId, {
-    int? totalClasses,
-    DateTime? startDate,
-  }) async {
+    int courseId,
+    int totalClasses,
+  ) async {
     _setLoading(true);
 
     try {
@@ -137,10 +190,10 @@ class CourseProvider with ChangeNotifier {
         accessToken: accessToken,
         courseId: courseId,
         totalClasses: totalClasses,
-        startDate: startDate,
       );
       log('Course successfully updated.');
-      await resetAndFetch();
+
+      await resetAndFetch(filterBy: 'ongoing');
     } finally {
       _setLoading(false);
     }
@@ -157,7 +210,8 @@ class CourseProvider with ChangeNotifier {
         courseId: courseId,
       );
       log('Course successfully deleted.');
-      await resetAndFetch();
+
+      await resetAndFetch(filterBy: 'waitlist');
     } finally {
       _setLoading(false);
     }

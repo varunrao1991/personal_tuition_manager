@@ -26,7 +26,7 @@ Exception responseToError(String responseBody) {
       case 'INTERNAL_SERVER_ERROR':
         return InternalServerErrorException(message);
       default:
-        return CustomException(message, errorCode); // Catch any unknown errors
+        return CustomException(message, errorCode);
     }
   } else {
     return CustomException('Unknown error occurred', 'UNKNOWN_ERROR');

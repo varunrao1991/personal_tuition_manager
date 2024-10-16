@@ -6,26 +6,24 @@ class MonthInfoCard extends StatelessWidget {
   final DateTime month;
   final bool isSelected;
   final Widget child;
-  final Future<void> Function() onTap; // Change here to accept async callback
+  final Future<void> Function() onTap;
 
   const MonthInfoCard({
     super.key,
     required this.month,
     required this.isSelected,
     required this.child,
-    required this.onTap, // Pass onTap to constructor
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Calculate one-third of the screen width
     final double cardWidth = MediaQuery.of(context).size.width / 3.5;
 
     return SizedBox(
-      width: cardWidth, // Set width to one-third of the screen width
+      width: cardWidth,
       child: CustomCard(
         onTap: () async {
-          // Call the async onTap function
           await onTap();
         },
         isSelected: isSelected,
@@ -34,22 +32,19 @@ class MonthInfoCard extends StatelessWidget {
           children: [
             Text(
               DateFormat('MMM').format(month),
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: isSelected ? Colors.white : Colors.black,
-              ),
+              style: isSelected
+                  ? Theme.of(context).textTheme.bodyLarge
+                  : Theme.of(context).textTheme.bodyLarge,
             ),
             const SizedBox(height: 4),
             Text(
               DateFormat('y').format(month),
-              style: TextStyle(
-                fontSize: 12,
-                color: isSelected ? Colors.white70 : Colors.grey,
-              ),
+              style: isSelected
+                  ? Theme.of(context).textTheme.labelSmall
+                  : Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: 8),
-            child, // Use the provided child for total payment
+            child,
           ],
         ),
       ),

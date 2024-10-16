@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:padmayoga/widgets/custom_form_text_field.dart';
-import 'package:padmayoga/widgets/custom_elevated_button.dart';
 import '../../../models/create_course.dart';
-import '../../../models/student_model.dart';
-import '../../../widgets/custom_section_title.dart';
-import 'student_selection.dart';
+import '../../../models/owned_by.dart';
+import '../../../widgets/custom_elevated_button.dart';
+import '../../../widgets/custom_form_text_field.dart';
+import 'payment_selection.dart';
 
 class AddStudentCourseProcessWidget extends StatefulWidget {
-  const AddStudentCourseProcessWidget({super.key});
+  const AddStudentCourseProcessWidget({Key? key}) : super(key: key);
 
   @override
   _AddStudentCourseProcessWidgetState createState() =>
@@ -17,10 +16,8 @@ class AddStudentCourseProcessWidget extends StatefulWidget {
 class _AddStudentCourseProcessWidgetState
     extends State<AddStudentCourseProcessWidget> {
   int _currentStep = 0;
-  Student? _selectedStudent;
+  OwnedBy? _selectedStudent;
   final TextEditingController _totalClassesController = TextEditingController();
-  final TextEditingController _searchController = TextEditingController();
-
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   void _goToNextStep() {
@@ -45,14 +42,13 @@ class _AddStudentCourseProcessWidgetState
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        width: 600,
+    return SingleChildScrollView(
+      child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: _currentStep == 0
-            ? StudentSelector(
-                selectedStudent: _selectedStudent,
-                onStudentSelected: (student) {
+            ? PaymentOwnerSelector(
+                selectedPayment: _selectedStudent,
+                onPaymentSelected: (student) {
                   setState(() {
                     _selectedStudent = student;
                   });
@@ -66,9 +62,9 @@ class _AddStudentCourseProcessWidgetState
 
   Widget _buildCourseDetailsStep() {
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        const CustomSectionTitle(title: 'Course Details'),
+        Text('Course Details', style: Theme.of(context).textTheme.bodyLarge),
         const SizedBox(height: 20),
         Form(
           key: _formKey,
@@ -127,7 +123,6 @@ class _AddStudentCourseProcessWidgetState
   @override
   void dispose() {
     _totalClassesController.dispose();
-    _searchController.dispose();
     super.dispose();
   }
 }

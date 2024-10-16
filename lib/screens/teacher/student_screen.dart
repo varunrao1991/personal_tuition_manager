@@ -60,10 +60,11 @@ class _StudentScreenState extends State<StudentScreen> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels ==
-        _scrollController.position.maxScrollExtent) {
-      final studentProvider =
-          Provider.of<StudentProvider>(context, listen: false);
+    final studentProvider =
+        Provider.of<StudentProvider>(context, listen: false);
+
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 100) {
       if (!studentProvider.isLoading &&
           studentProvider.currentPage < studentProvider.totalPages) {
         try {
@@ -86,7 +87,7 @@ class _StudentScreenState extends State<StudentScreen> {
     await showCustomModalBottomSheet(
       context: context,
       child: StudentForm(
-        student: student, // Pass student if editing
+        student: student,
       ),
     );
     _fetchStudents();
@@ -225,30 +226,23 @@ class _StudentScreenState extends State<StudentScreen> {
     );
   }
 
-  void _openSortModal(BuildContext context) {
-    showCustomDialog(
+  void _openSortModal(BuildContext context) async {
+    final result = await showCustomDialog(
       context: context,
       child: SortModal(
         title: 'Sort Students',
         selectedSortField: _selectedSortField,
         sortOptions: _sortFieldLabels,
         isAscending: _isAscending,
-        onSortFieldChange: (newSortField) {
-          if (newSortField != null) {
-            setState(() {
-              _selectedSortField = newSortField;
-            });
-          }
-          Navigator.of(context).pop();
-        },
-        onSortOrderChange: (isAscending) {
-          setState(() {
-            _isAscending = isAscending;
-          });
-          Navigator.of(context).pop();
-        },
       ),
-    ).then((value) {
+    );
+
+    if (result != null) {
+      setState(() {
+        _selectedSortField = result['field'];
+        _isAscending = result['order'];
+      });
+
       final studentProvider =
           Provider.of<StudentProvider>(context, listen: false);
       try {
@@ -264,6 +258,6 @@ class _StudentScreenState extends State<StudentScreen> {
           handleErrors(context, Exception('An unexpected error occurred'));
         }
       }
-    });
+    }
   }
 }

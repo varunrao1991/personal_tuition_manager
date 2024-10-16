@@ -12,7 +12,6 @@ class TotalGraph extends StatelessWidget {
       return const Center(child: Text('No data available'));
     }
 
-    // Sort arrayToDisplay by date
     final sortedDailyTotals = arrayToDisplay.entries.toList()
       ..sort((a, b) => a.key.compareTo(b.key));
 
@@ -24,9 +23,13 @@ class TotalGraph extends StatelessWidget {
         ? (arrayToDisplay.values.reduce((a, b) => a > b ? a : b) / 1000)
                 .ceil() *
             1000.0
-        : 1000.0; // Default to 1000 if no values
+        : 1000.0;
 
-    final interval = maxY / 5; // Five intervals for better visibility
+    final interval = maxY / 5;
+
+    // Access themed colors
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Container(
       height: 200,
@@ -36,32 +39,40 @@ class TotalGraph extends StatelessWidget {
           lineBarsData: [
             LineChartBarData(
               spots: spots,
-              isCurved: false,
+              isCurved: true,
+              color: colorScheme.primary,
               barWidth: 2,
-              color: Colors.blue,
               belowBarData: BarAreaData(
                 show: true,
-                color: Colors.blue.withOpacity(0.3),
+                color: colorScheme.secondary.withOpacity(0.3),
               ),
             ),
           ],
           gridData: FlGridData(
             show: true,
             drawVerticalLine: true,
-            horizontalInterval: interval, // Using the calculated interval
-            verticalInterval: 2, // Show all vertical lines
+            horizontalInterval: interval,
+            verticalInterval: 2,
+            getDrawingHorizontalLine: (value) => FlLine(
+              color: colorScheme.onSurface.withOpacity(0.2),
+              strokeWidth: 1,
+            ),
+            getDrawingVerticalLine: (value) => FlLine(
+              color: colorScheme.onSurface.withOpacity(0.2),
+              strokeWidth: 1,
+            ),
           ),
           titlesData: FlTitlesData(
             bottomTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
-                interval: 5, // Change this to 5 for labeling as 5, 10, 15
+                interval: 4,
                 getTitlesWidget: (value, meta) {
                   return Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
+                    padding: const EdgeInsets.only(top: 2.0),
                     child: Text(
                       value.toInt().toString(),
-                      style: const TextStyle(fontSize: 10, color: Colors.blue),
+                      style: theme.textTheme.bodySmall,
                     ),
                   );
                 },
@@ -71,13 +82,13 @@ class TotalGraph extends StatelessWidget {
               sideTitles: SideTitles(
                 showTitles: true,
                 reservedSize: 40,
-                interval: interval, // Using calculated interval for Y axis
+                interval: interval,
                 getTitlesWidget: (value, meta) {
                   return Text(
                     value >= 1000
                         ? '${(value / 1000).toStringAsFixed(1)}k'
                         : value.toInt().toString(),
-                    style: const TextStyle(fontSize: 10),
+                    style: theme.textTheme.bodySmall,
                   );
                 },
               ),
@@ -91,7 +102,10 @@ class TotalGraph extends StatelessWidget {
           ),
           borderData: FlBorderData(
             show: true,
-            border: Border.all(color: Colors.grey, width: 1),
+            border: Border.all(
+              color: colorScheme.onSurface.withOpacity(0.5),
+              width: 1,
+            ),
           ),
           minX: 1,
           maxX: 31,

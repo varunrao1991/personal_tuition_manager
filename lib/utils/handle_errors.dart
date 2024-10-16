@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'dart:developer';
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:padmayoga/exceptions/custom_exception.dart';
-import 'package:padmayoga/widgets/custom_snackbar.dart';
 import '../exceptions/auth_exception.dart';
+import '../exceptions/custom_exception.dart';
+import '../widgets/custom_snackbar.dart';
 
 void handleErrors(BuildContext context, e) {
   if (e is AuthException) {
@@ -20,6 +21,12 @@ void handleErrors(BuildContext context, e) {
     _handleUnauthorizedError(context, e.message);
   } else if (e is TimeoutException) {
     _handleTimeoutError(context, e.message);
+  } else if (e is SocketException) {
+    showCustomSnackBar(context, "No Internet connection. Check your network.");
+  } else if (e is HttpException) {
+    showCustomSnackBar(context, "Failed to connect to the server.");
+  } else if (e is FormatException) {
+    showCustomSnackBar(context, "Invalid response format.");
   } else if (e is Error) {
     showCustomSnackBar(
         context, 'An unexpected error occurred: ${e.toString()}');

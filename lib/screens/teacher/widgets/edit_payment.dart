@@ -3,8 +3,7 @@ import '../../../models/create_payment.dart';
 import '../../../widgets/custom_elevated_button.dart';
 import '../../../widgets/custom_form_date_field.dart';
 import '../../../widgets/custom_form_text_field.dart';
-import '../../../widgets/custom_section_title.dart';
-import '../../../widgets/custom_snackbar.dart'; // Import custom snackBar utility
+import '../../../widgets/custom_snackbar.dart';
 
 class EditPaymentWidget extends StatefulWidget {
   final CreatePayment payment;
@@ -57,15 +56,15 @@ class _EditPaymentWidgetState extends State<EditPaymentWidget> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                const CustomSectionTitle(title: 'Edit Payment'),
+                Text('Edit Payment',
+                    style: Theme.of(context).textTheme.bodyLarge),
                 const SizedBox(height: 20),
                 CustomFormTextField(
                   controller:
                       TextEditingController(text: widget.payment.studentName),
                   labelText: 'Selected Student',
                   prefixIcon: Icons.person,
-                  readOnly:
-                      true, // Set field to read-only for existing student name
+                  readOnly: true,
                 ),
                 const SizedBox(height: 16),
                 CustomFormTextField(

@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:padmayoga/models/owned_by.dart';
-import 'package:padmayoga/widgets/custom_section_title.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../../models/attendance.dart';
+import '../../../models/owned_by.dart';
 import '../../../providers/attendance_provider.dart';
 import '../../../providers/student_provider.dart';
 import '../../../utils/handle_errors.dart';
@@ -33,7 +32,7 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
 
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
-  String? _selectedName; // Use a string to hold the selected name
+  String? _selectedName;
 
   String _selectedSortField = 'name';
   bool _isAscending = true;
@@ -62,45 +61,44 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
   Future<void> _loadInitialAttendance() async {
     final attendanceProvider =
         Provider.of<AttendanceProvider>(context, listen: false);
-
-    DateTime startDate = DateTime(widget.selectedDate.year,
-        widget.selectedDate.month, widget.selectedDate.day);
+    DateTime startDate = _getDayStart(widget.selectedDate);
     DateTime endDate = startDate.add(const Duration(days: 1));
+
     try {
       await attendanceProvider.fetchAttendances(
           startDate: startDate, endDate: endDate);
-
-      List<Attendance> filteredAttendances =
-          attendanceProvider.attendances.where((attendance) {
-        DateTime attendanceDate = DateTime(attendance.attendanceDate.year,
-            attendance.attendanceDate.month, attendance.attendanceDate.day);
-        return isSameDay(attendanceDate, widget.selectedDate);
-      }).toList();
-
-      setState(() {
-        _attendances = filteredAttendances;
-        for (var attendance in _attendances) {
-          _attendedStudentsMap[attendance.ownedBy.id] = true;
-          _attendedStudents.add(attendance.ownedBy);
-        }
-      });
-
+      _filterAndSetAttendances(attendanceProvider);
       _loadMoreStudents();
     } catch (e) {
       handleErrors(context, e);
     }
   }
 
+  DateTime _getDayStart(DateTime date) {
+    return DateTime(date.year, date.month, date.day);
+  }
+
+  void _filterAndSetAttendances(AttendanceProvider attendanceProvider) {
+    List<Attendance> filteredAttendances =
+        attendanceProvider.attendances.where((attendance) {
+      return isSameDay(attendance.attendanceDate, widget.selectedDate);
+    }).toList();
+
+    setState(() {
+      _attendances = filteredAttendances;
+      for (var attendance in _attendances) {
+        _attendedStudentsMap[attendance.ownedBy.id] = true;
+        _attendedStudents.add(attendance.ownedBy);
+      }
+    });
+  }
+
   Future<void> _loadMoreStudents() async {
     final studentProvider =
         Provider.of<StudentProvider>(context, listen: false);
-
-    setState(() {
-      _isLoadingMore = true;
-    });
+    setState(() => _isLoadingMore = true);
 
     _page++;
-
     await studentProvider.fetchStudents(
         name: _searchQuery, page: _page, sort: 'name', order: 'ASC');
 
@@ -146,32 +144,26 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
     }
   }
 
-  void _openSortModal(BuildContext context) {
-    showCustomDialog(
+  void _openSortModal(BuildContext context) async {
+    final result = await showCustomDialog(
       context: context,
       child: SortModal(
         title: 'Sort Students',
         selectedSortField: _selectedSortField,
         sortOptions: _sortFieldLabels,
         isAscending: _isAscending,
-        onSortFieldChange: (newSortField) {
-          if (newSortField != null) {
-            setState(() {
-              _selectedSortField = newSortField;
-            });
-          }
-          Navigator.of(context).pop();
-        },
-        onSortOrderChange: (isAscending) {
-          setState(() {
-            _isAscending = isAscending;
-          });
-          Navigator.of(context).pop();
-        },
       ),
-    ).then((value) {
+    );
+
+    if (result != null) {
       final studentProvider =
           Provider.of<StudentProvider>(context, listen: false);
+
+      setState(() {
+        _selectedSortField = result['field'];
+        _isAscending = result['order'];
+      });
+
       try {
         studentProvider.resetAndFetch(
           name: _selectedName,
@@ -181,7 +173,7 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
       } catch (e) {
         handleErrors(context, e);
       }
-    });
+    }
   }
 
   @override
@@ -198,117 +190,27 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
 
     final markedStudents = students
         .where((s) => _attendedStudentsMap[s.id] == true)
-        .map((student) => OwnedBy(
-              id: student.id,
-              name: student.name,
-            ))
+        .map((student) => OwnedBy(id: student.id, name: student.name))
         .toList();
     final unmarkedStudents = students
         .where((s) => _attendedStudentsMap[s.id] != true)
-        .map((student) => OwnedBy(
-              id: student.id,
-              name: student.name,
-            ))
+        .map((student) => OwnedBy(id: student.id, name: student.name))
         .toList();
 
     final rearrangedStudents = [...markedStudents, ...unmarkedStudents];
 
-    return Center(
-      child: Container(
+    return SingleChildScrollView(
+      child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            const CustomSectionTitle(title: "Mark attendance"),
+            Text('Mark attendance',
+                style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: GenericSearchBar(
-                    controller: _searchController,
-                    onChanged: (value) async {
-                      setState(() {
-                        _selectedName = value;
-                      });
-                      try {
-                        await studentProvider.resetAndFetch(
-                          name: _selectedName,
-                          sort: _selectedSortField,
-                          order: _isAscending ? 'ASC' : 'DESC',
-                        );
-                      } catch (e) {
-                        handleErrors(context, e);
-                      }
-                    },
-                    onClear: () async {
-                      setState(() {
-                        _selectedName = null;
-                      });
-                      try {
-                        await studentProvider.resetAndFetch(
-                          name: _selectedName,
-                          sort: _selectedSortField,
-                          order: _isAscending ? 'ASC' : 'DESC',
-                        );
-                      } catch (e) {
-                        if (e is Exception) {
-                          handleErrors(context, e);
-                        } else {
-                          handleErrors(context,
-                              Exception('An unexpected error occurred'));
-                        }
-                      }
-                    },
-                  ),
-                ),
-                const SizedBox(width: 10),
-                IconButton(
-                  icon: const Icon(Icons.filter_alt),
-                  onPressed: () => _openSortModal(context),
-                ),
-              ],
-            ),
+            _buildSearchBar(context, studentProvider),
             const SizedBox(height: 16),
-            Expanded(
-              child: GridView.builder(
-                controller: _scrollController,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 8.0,
-                  mainAxisSpacing: 8.0,
-                  childAspectRatio: 1.5,
-                ),
-                itemCount: rearrangedStudents.length + (_isLoadingMore ? 1 : 0),
-                itemBuilder: (ctx, index) {
-                  if (index == rearrangedStudents.length && _isLoadingMore) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  final student = rearrangedStudents[index];
-                  final isPresent = _attendedStudentsMap[student.id] ?? false;
-
-                  return CustomCard(
-                    onTap: () {
-                      setState(() {
-                        _attendedStudentsMap[student.id] = !isPresent;
-                      });
-                    },
-                    isSelected: isPresent,
-                    child: Center(
-                      child: Text(
-                        student.name,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: isPresent ? Colors.blueAccent : Colors.black,
-                          fontWeight:
-                              isPresent ? FontWeight.bold : FontWeight.normal,
-                          fontSize: 16.0,
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
+            _buildStudentGrid(rearrangedStudents),
             const SizedBox(height: 16),
             CustomElevatedButton(
               onPressed: _submitAttendance,
@@ -316,6 +218,93 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSearchBar(
+      BuildContext context, StudentProvider studentProvider) {
+    return Row(
+      children: [
+        Expanded(
+          child: GenericSearchBar(
+            controller: _searchController,
+            onChanged: (value) async {
+              setState(() {
+                _selectedName = value;
+              });
+              try {
+                await studentProvider.resetAndFetch(
+                  name: _selectedName,
+                  sort: _selectedSortField,
+                  order: _isAscending ? 'ASC' : 'DESC',
+                );
+              } catch (e) {
+                handleErrors(context, e);
+              }
+            },
+            onClear: () async {
+              setState(() {
+                _selectedName = null;
+              });
+              try {
+                await studentProvider.resetAndFetch(
+                  name: _selectedName,
+                  sort: _selectedSortField,
+                  order: _isAscending ? 'ASC' : 'DESC',
+                );
+              } catch (e) {
+                handleErrors(context, e);
+              }
+            },
+          ),
+        ),
+        const SizedBox(width: 10),
+        IconButton(
+          icon: const Icon(Icons.filter_alt),
+          onPressed: () => _openSortModal(context),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStudentGrid(List<OwnedBy> students) {
+    return SizedBox(
+      height: 300,
+      child: GridView.builder(
+        controller: _scrollController,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          crossAxisSpacing: 8.0,
+          mainAxisSpacing: 8.0,
+          childAspectRatio: 1.3,
+        ),
+        itemCount: students.length + (_isLoadingMore ? 1 : 0),
+        itemBuilder: (ctx, index) {
+          if (index == students.length && _isLoadingMore) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final student = students[index];
+          bool isPresent = _attendedStudentsMap[student.id] ?? false;
+          return CustomCard(
+            isSelected: _attendedStudentsMap[student.id] ?? false,
+            onTap: () {
+              setState(() {
+                _attendedStudentsMap[student.id] =
+                    !(_attendedStudentsMap[student.id] ?? false);
+              });
+            },
+            child: Center(
+              child: Text(
+                student.name,
+                textAlign: TextAlign.center,
+                style: isPresent
+                    ? Theme.of(context).textTheme.bodyMedium
+                    : Theme.of(context).textTheme.bodyMedium,
+              ),
+            ),
+          );
+        },
       ),
     );
   }

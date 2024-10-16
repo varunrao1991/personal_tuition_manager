@@ -4,16 +4,20 @@ void showCustomSnackBar(
   BuildContext context,
   String message, {
   Duration duration = const Duration(seconds: 2),
-  Color backgroundColor = Colors.blueAccent,
+  Color? backgroundColor,
 }) {
+  final theme = Theme.of(context);
+
+  final snackBarBackgroundColor = backgroundColor ?? theme.colorScheme.primary;
+
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
       content: Text(
         message,
-        style: const TextStyle(color: Colors.white), // Customize text color
+        style: TextStyle(color: theme.colorScheme.onPrimary),
       ),
       duration: duration,
-      backgroundColor: backgroundColor,
+      backgroundColor: snackBarBackgroundColor,
     ),
   );
 }

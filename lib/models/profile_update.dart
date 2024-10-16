@@ -1,5 +1,3 @@
-// profile_update.dart
-
 class ProfileUpdate {
   String? name;
   String? mobile;

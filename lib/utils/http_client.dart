@@ -7,8 +7,6 @@ class HttpTimeoutClient extends http.BaseClient {
 
   @override
   Future<http.StreamedResponse> send(http.BaseRequest request) {
-    return _inner
-        .send(request)
-        .timeout(const Duration(seconds: 5)); // Set timeout here
+    return _inner.send(request).timeout(const Duration(seconds: 5));
   }
 }

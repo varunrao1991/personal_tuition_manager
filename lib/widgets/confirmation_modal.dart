@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'custom_elevated_button.dart'; // Import the custom button
+import '../constants/app_constants.dart';
+import 'custom_elevated_button.dart';
 
 class ConfirmationDialog extends StatelessWidget {
   final String message;
@@ -19,19 +20,22 @@ class ConfirmationDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(AppPaddings.mediumPadding),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
+            'Confirmation',
+            style: theme.textTheme.titleLarge,
+          ),
+          const SizedBox(height: 10.0),
+          Text(
             message,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.normal,
-            ),
-            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyMedium,
           ),
           const SizedBox(height: 30.0),
           Row(
@@ -45,7 +49,7 @@ class ConfirmationDialog extends StatelessWidget {
                   },
                 ),
               ),
-              const SizedBox(width: 50.0),
+              const SizedBox(width: AppMargins.mediumMargin),
               Expanded(
                 child: CustomElevatedButton(
                   text: confirmButtonText,

@@ -12,13 +12,11 @@ class WeekdayService {
   WeekdayService(this._client);
 
   Future<void> setWeekdays(String accessToken, List<int> days) async {
-    // Ensure the days are valid integers between 0 and 6
     if (days.any((day) => day < 0 || day > 6)) {
       throw WeekdayException(
           'Days must be integers between 0 (Sunday) and 6 (Saturday).');
     }
 
-    // Convert the list of days to a JSON-encoded string
     String daysBody = jsonEncode({'days': days});
 
     final response = await _client.post(
@@ -37,11 +35,9 @@ class WeekdayService {
     }
   }
 
-  // Get weekdays for a user
   Future<List<int>> getWeekdays(String accessToken) async {
     final response = await _client.get(
-      Uri.parse(
-          '$apiUrl/api/weekdays'), // Get weekdays without additional parameters
+      Uri.parse('$apiUrl/api/weekdays'),
       headers: {
         'Authorization': 'Bearer $accessToken',
         'Content-Type': 'application/json',
@@ -50,8 +46,7 @@ class WeekdayService {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      List<int> weekdays =
-          List<int>.from(data); // Directly assuming response is a list of days
+      List<int> weekdays = List<int>.from(data);
       return weekdays;
     } else {
       throw responseToError(response.body);

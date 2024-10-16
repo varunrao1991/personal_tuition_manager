@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:http/http.dart' as http;
 import '../models/course.dart';
 import '../config/app_config.dart';
+import '../models/owned_by.dart';
 import '../utils/response_to_error.dart';
 
 class CourseResponse {
@@ -19,13 +20,79 @@ class CourseResponse {
   });
 }
 
+class EligibleStudentResponse {
+  final List<OwnedBy> students;
+  final int totalPages;
+  final int totalRecords;
+  final int currentPage;
+
+  EligibleStudentResponse({
+    required this.students,
+    required this.totalPages,
+    required this.totalRecords,
+    required this.currentPage,
+  });
+}
+
 class CourseService {
   String apiUrl = Config().apiUrl;
   final http.Client _client;
 
   CourseService(this._client);
 
-  // Create a new course
+  Future<bool> hasEligibleStudents(String accessToken) async {
+    final uri = Uri.parse('$apiUrl/api/courses/exists_eligible');
+
+    final response = await _client.get(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $accessToken',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      log("Courses addable? ${response.body}");
+      return response.body == 'true';
+    } else {
+      throw responseToError(response.body);
+    }
+  }
+
+  Future<EligibleStudentResponse> getEligibleStudents({
+    required String accessToken,
+    required int page,
+  }) async {
+    final queryParameters = {
+      'page': page.toString(),
+    };
+
+    final uri = Uri.parse('$apiUrl/api/courses/eligible')
+        .replace(queryParameters: queryParameters);
+
+    final response = await _client.get(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $accessToken',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data = jsonDecode(response.body);
+      return EligibleStudentResponse(
+        students: (data['data'] as List)
+            .map((student) => OwnedBy.fromJson(student))
+            .toList(),
+        totalPages: data['totalPages'],
+        totalRecords: data['totalRecords'],
+        currentPage: data['currentPage'],
+      );
+    } else {
+      throw responseToError(response.body);
+    }
+  }
+
   Future<void> addCourse({
     required String accessToken,
     required int totalClasses,
@@ -47,10 +114,9 @@ class CourseService {
     }
   }
 
-  // Start a course
   Future<void> startCourse({
     required String accessToken,
-    required int studentId,
+    required int courseId,
     required DateTime startDate,
   }) async {
     final response = await _client.patch(
@@ -60,7 +126,7 @@ class CourseService {
         'Content-Type': 'application/json',
       },
       body: jsonEncode({
-        'studentId': studentId,
+        'courseId': courseId,
         'startDate': startDate.toIso8601String(),
       }),
     );
@@ -72,10 +138,9 @@ class CourseService {
     }
   }
 
-  // End a course
   Future<void> endCourse({
     required String accessToken,
-    required int studentId,
+    required int courseId,
     required DateTime endDate,
   }) async {
     final response = await _client.patch(
@@ -85,7 +150,7 @@ class CourseService {
         'Content-Type': 'application/json',
       },
       body: jsonEncode({
-        'studentId': studentId,
+        'courseId': courseId,
         'endDate': endDate.toIso8601String(),
       }),
     );
@@ -97,12 +162,10 @@ class CourseService {
     }
   }
 
-  // Update an existing course
   Future<void> updateCourse({
     required String accessToken,
     required int courseId,
-    required int? totalClasses,
-    required DateTime? startDate,
+    required int totalClasses,
   }) async {
     final response = await _client.patch(
       Uri.parse('$apiUrl/api/courses/$courseId'),
@@ -111,8 +174,7 @@ class CourseService {
         'Content-Type': 'application/json',
       },
       body: jsonEncode({
-        if (totalClasses != null) 'totalClasses': totalClasses,
-        if (startDate != null) 'startDate': startDate.toIso8601String(),
+        'totalClasses': totalClasses,
       }),
     );
 
@@ -123,7 +185,6 @@ class CourseService {
     }
   }
 
-  // Delete a course
   Future<void> deleteCourse({
     required String accessToken,
     required int courseId,

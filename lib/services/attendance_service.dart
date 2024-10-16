@@ -11,7 +11,6 @@ class AttendanceService {
 
   AttendanceService(this._client);
 
-  // Fetch attendances for a specific date range (whole month)
   Future<List<Attendance>> getAttendances({
     required String accessToken,
     DateTime? startDate,
@@ -44,7 +43,39 @@ class AttendanceService {
     }
   }
 
-  // Create a new attendance record
+  Future<List<DateTime>> getAttendancesForStudent({
+    required String accessToken,
+    required int studentId,
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {
+    Map<String, String> queryParams = {};
+
+    queryParams['studentId'] = studentId.toString();
+    queryParams['startDate'] = startDate.toIso8601String();
+    queryParams['endDate'] = endDate.toIso8601String();
+
+    Uri uri = Uri.parse('$apiUrl/api/attendances/attendances_for_student')
+        .replace(queryParameters: queryParams);
+
+    final response = await _client.get(uri, headers: {
+      'Authorization': 'Bearer $accessToken',
+      'Content-Type': 'application/json',
+    });
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final attendances = (data as List)
+          .map((attendanceJson) =>
+              DateTime.parse(attendanceJson['attendanceDate']))
+          .toList();
+
+      return attendances;
+    } else {
+      throw responseToError(response.body);
+    }
+  }
+
   Future<void> addAttendance(
       String accessToken, DateTime attendanceDate, int studentId) async {
     String formattedDate = attendanceDate.toIso8601String();
@@ -62,7 +93,6 @@ class AttendanceService {
     }
   }
 
-  // Delete an attendance record by ID
   Future<void> deleteAttendance({
     required String accessToken,
     required int studentId,

@@ -6,13 +6,12 @@ import '../../../utils/handle_errors.dart';
 import '../../../widgets/custom_elevated_button.dart';
 import '../../../widgets/custom_form_date_field.dart';
 import '../../../widgets/custom_form_text_field.dart';
-import '../../../widgets/custom_section_title.dart';
 import '../../../widgets/custom_snackbar.dart';
 
 class StudentForm extends StatefulWidget {
-  final StudentUpdate? student; // Optional parameter for editing
+  final StudentUpdate? student;
 
-  const StudentForm({super.key, this.student}); // Accept student for edit
+  const StudentForm({super.key, this.student});
 
   @override
   _AddStudentFormState createState() => _AddStudentFormState();
@@ -28,7 +27,7 @@ class _AddStudentFormState extends State<StudentForm> {
   @override
   void initState() {
     super.initState();
-    // Initialize fields with student data if editing, otherwise use defaults
+
     _nameController = TextEditingController(
       text: widget.student?.name ?? '',
     );
@@ -39,7 +38,6 @@ class _AddStudentFormState extends State<StudentForm> {
     _joiningDate = widget.student?.joiningDate ?? DateTime.now();
   }
 
-  // Method to check if any field has changed
   bool _hasChanges() {
     return _nameController.text != widget.student?.name ||
         _mobileController.text != widget.student?.mobile ||
@@ -50,7 +48,6 @@ class _AddStudentFormState extends State<StudentForm> {
   Future<void> _saveForm(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
       if (!_hasChanges()) {
-        // If no changes, simply close the modal
         Navigator.of(context).pop(false);
         return;
       }
@@ -67,7 +64,6 @@ class _AddStudentFormState extends State<StudentForm> {
         final studentProvider =
             Provider.of<StudentProvider>(context, listen: false);
 
-        // Call update if editing, otherwise create new student
         if (widget.student != null) {
           await studentProvider.updateStudent(student);
           showCustomSnackBar(context, 'Student updated successfully!');
@@ -76,7 +72,7 @@ class _AddStudentFormState extends State<StudentForm> {
           showCustomSnackBar(context, 'Student added successfully!');
         }
 
-        Navigator.of(context).pop(true); // Close modal after success
+        Navigator.of(context).pop(true);
       } catch (e) {
         handleErrors(context, e);
       }
@@ -94,10 +90,8 @@ class _AddStudentFormState extends State<StudentForm> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                CustomSectionTitle(
-                  title:
-                      widget.student != null ? 'Edit Student' : 'Add Student',
-                ),
+                Text(widget.student != null ? 'Edit Student' : 'Add Student',
+                    style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 20),
                 CustomFormTextField(
                   controller: _nameController,

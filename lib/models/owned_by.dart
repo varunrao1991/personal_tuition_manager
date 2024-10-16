@@ -9,8 +9,18 @@ class OwnedBy {
 
   factory OwnedBy.fromJson(Map<String, dynamic> json) {
     return OwnedBy(
-      id: json['id'], // Extract the student ID from the student object
-      name: json['name'], // Extract the student name from the student object
+      id: json['id'],
+      name: json['name'],
+    );
+  }
+
+  OwnedBy copy({
+    int? id,
+    String? name,
+  }) {
+    return OwnedBy(
+      id: id ?? this.id,
+      name: name ?? this.name,
     );
   }
 }

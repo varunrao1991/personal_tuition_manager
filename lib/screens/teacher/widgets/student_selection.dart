@@ -1,24 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:padmayoga/widgets/custom_card.dart';
-import 'package:padmayoga/widgets/custom_elevated_button.dart';
-import 'package:padmayoga/widgets/custom_section_title.dart';
-import 'package:padmayoga/widgets/search_bar.dart';
-import 'package:padmayoga/widgets/sort_modal.dart';
-import 'package:padmayoga/utils/handle_errors.dart';
 import 'package:provider/provider.dart';
 import '../../../models/student_model.dart';
 import '../../../providers/student_provider.dart';
+import '../../../utils/handle_errors.dart';
 import '../../../utils/show_custom_center_modal.dart';
+import '../../../widgets/custom_card.dart';
+import '../../../widgets/custom_elevated_button.dart';
+import '../../../widgets/search_bar.dart';
+import '../../../widgets/sort_modal.dart';
 
 class StudentSelector extends StatefulWidget {
   final Function(Student?) onStudentSelected;
   final Student? selectedStudent;
 
   const StudentSelector({
-    super.key,
+    Key? key,
     required this.onStudentSelected,
     this.selectedStudent,
-  });
+  }) : super(key: key);
 
   @override
   _StudentSelectorState createState() => _StudentSelectorState();
@@ -32,13 +31,6 @@ class _StudentSelectorState extends State<StudentSelector> {
   late ScrollController _scrollController;
   Student? _selectedStudent;
 
-  static const Map<String, String> _sortFieldLabels = {
-    'name': 'Name',
-    'mobile': 'Mobile Number',
-    'dob': 'Date of Birth',
-    'joiningDate': 'Joining Date',
-  };
-
   @override
   void initState() {
     super.initState();
@@ -49,8 +41,7 @@ class _StudentSelectorState extends State<StudentSelector> {
     });
 
     if (widget.selectedStudent != null) {
-      _selectedStudent =
-          widget.selectedStudent; // Store the full Student object
+      _selectedStudent = widget.selectedStudent;
     }
   }
 
@@ -61,35 +52,33 @@ class _StudentSelectorState extends State<StudentSelector> {
     super.dispose();
   }
 
-  void _openSortModal(BuildContext context) {
-    showCustomDialog(
+  void _openSortModal(BuildContext context) async {
+    final result = await showCustomDialog(
       context: context,
       child: SortModal(
         title: 'Sort Students',
         selectedSortField: _selectedSortField,
-        sortOptions: _sortFieldLabels,
+        sortOptions: const {
+          'name': 'Name',
+          'mobile': 'Mobile Number',
+          'dob': 'Date of Birth',
+          'joiningDate': 'Joining Date',
+        },
         isAscending: _isAscending,
-        onSortFieldChange: (newSortField) {
-          if (newSortField != null) {
-            setState(() {
-              _selectedSortField = newSortField;
-            });
-          }
-          Navigator.of(context).pop();
-        },
-        onSortOrderChange: (isAscending) {
-          setState(() {
-            _isAscending = isAscending;
-          });
-          Navigator.of(context).pop();
-        },
       ),
-    ).then((value) {
+    );
+
+    if (result != null) {
+      setState(() {
+        _selectedSortField = result['field'];
+        _isAscending = result['order'];
+      });
+
       _fetchStudents();
-    });
+    }
   }
 
-  void _fetchStudents({int page = 1}) async {
+  Future<void> _fetchStudents({int page = 1}) async {
     try {
       await context.read<StudentProvider>().fetchStudents(
             page: page,
@@ -103,8 +92,8 @@ class _StudentSelectorState extends State<StudentSelector> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels ==
-            _scrollController.position.maxScrollExtent &&
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent * 0.8 &&
         !context.read<StudentProvider>().isLoading &&
         context.read<StudentProvider>().currentPage <
             context.read<StudentProvider>().totalPages) {
@@ -114,114 +103,114 @@ class _StudentSelectorState extends State<StudentSelector> {
 
   void _handleNext() {
     if (_selectedStudent != null) {
-      widget.onStudentSelected(_selectedStudent!
-          .copy()); // Assuming you have a copy method in your Student model
+      widget.onStudentSelected(_selectedStudent!.copy());
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: <Widget>[
-        const CustomSectionTitle(title: 'Select Student'),
-        const SizedBox(height: 20),
-        Row(
-          children: [
-            Expanded(
-              child: GenericSearchBar(
-                controller: _searchController,
-                onChanged: (value) {
-                  setState(() {
-                    _selectedName = value;
-                  });
-                  _fetchStudents();
-                },
-                onClear: () {
-                  setState(() {
-                    _selectedName = null;
-                    _searchController.clear();
-                  });
-                  _fetchStudents();
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(4.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Text('Select Student',
+                style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: GenericSearchBar(
+                    controller: _searchController,
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedName = value;
+                      });
+                      _fetchStudents();
+                    },
+                    onClear: () {
+                      setState(() {
+                        _selectedName = null;
+                        _searchController.clear();
+                      });
+                      _fetchStudents();
+                    },
+                  ),
+                ),
+                const SizedBox(width: 10),
+                IconButton(
+                  icon: const Icon(Icons.filter_alt),
+                  onPressed: () => _openSortModal(context),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 200,
+              child: Consumer<StudentProvider>(
+                builder: (context, studentProvider, _) {
+                  return studentProvider.isLoading &&
+                          studentProvider.students.isEmpty
+                      ? const Center(child: CircularProgressIndicator())
+                      : GridView.builder(
+                          controller: _scrollController,
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            crossAxisSpacing: 4.0,
+                            mainAxisSpacing: 16.0,
+                            childAspectRatio: 1.3,
+                          ),
+                          itemCount: studentProvider.students.length +
+                              (studentProvider.isLoading ? 1 : 0),
+                          itemBuilder: (context, index) {
+                            if (index == studentProvider.students.length) {
+                              return const Center(
+                                  child: CircularProgressIndicator());
+                            }
+                            final student = studentProvider.students[index];
+                            return _buildStudentCard(student);
+                          },
+                        );
                 },
               ),
             ),
-            const SizedBox(width: 10),
-            IconButton(
-              icon: const Icon(Icons.filter_alt),
-              onPressed: () => _openSortModal(context),
+            const SizedBox(height: 20),
+            if (_selectedStudent != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10.0),
+                child: Text('Selected Student: ${_selectedStudent!.name}',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium),
+              ),
+            const SizedBox(height: 10),
+            CustomElevatedButton(
+              onPressed: _handleNext,
+              text: 'Next',
             ),
           ],
         ),
-        const SizedBox(height: 16),
-        Expanded(
-          child: Consumer<StudentProvider>(
-            builder: (context, studentProvider, _) {
-              return studentProvider.isLoading &&
-                      studentProvider.students.isEmpty
-                  ? const Center(child: CircularProgressIndicator())
-                  : GridView.builder(
-                      controller: _scrollController,
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3,
-                        crossAxisSpacing: 8.0,
-                        mainAxisSpacing: 8.0,
-                        childAspectRatio: 1.5,
-                      ),
-                      itemCount: studentProvider.students.length +
-                          (studentProvider.isLoading ? 1 : 0),
-                      itemBuilder: (context, index) {
-                        if (index == studentProvider.students.length) {
-                          return const Center(
-                              child: CircularProgressIndicator());
-                        }
-                        final student = studentProvider.students[index];
-                        return _buildStudentCard(student);
-                      },
-                    );
-            },
-          ),
-        ),
-        const SizedBox(height: 20),
-        if (_selectedStudent != null) // Check if selectedStudent is not null
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10.0),
-            child: Text(
-              'Selected Student: ${_selectedStudent!.name}', // Display the student's name
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-            ),
-          ),
-        const SizedBox(height: 10),
-        CustomElevatedButton(
-          onPressed: _handleNext,
-          text: 'Next',
-        ),
-      ],
+      ),
     );
   }
 
   Widget _buildStudentCard(Student student) {
-    bool isSelected =
-        _selectedStudent?.id == student.id; // Compare with Student object
+    bool isSelected = _selectedStudent?.id == student.id;
 
     return CustomCard(
-      onTap: () {
-        setState(() {
-          _selectedStudent =
-              student; // Set the selected student object directly
-        });
-      },
-      isSelected: isSelected,
-      child: Text(
-        student.name,
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          color: isSelected ? Colors.blue : Colors.black87,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
+        onTap: () {
+          setState(() {
+            _selectedStudent = student;
+          });
+        },
+        isSelected: isSelected,
+        child: Text(
+          student.name,
+          textAlign: TextAlign.center,
+          style: isSelected
+              ? Theme.of(context).textTheme.bodyMedium
+              : Theme.of(context).textTheme.bodyMedium,
+        ));
   }
 }

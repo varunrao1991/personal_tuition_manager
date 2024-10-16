@@ -1,7 +1,7 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
-import 'package:padmayoga/exceptions/custom_exception.dart';
-import 'package:padmayoga/models/profile_update.dart';
+import '../exceptions/custom_exception.dart';
+import '../models/profile_update.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
 import '../services/token_service.dart';
@@ -18,10 +18,13 @@ class AuthProvider with ChangeNotifier {
 
   AuthProvider(this._authService, this._tokenService);
 
-  Future<void> loadUser() async {
-    _isLoading = true;
+  void _setLoading(bool value) {
+    _isLoading = value;
     notifyListeners();
+  }
 
+  Future<void> loadUser() async {
+    _setLoading(true);
     try {
       final accessToken = await _tokenService.getToken();
       final user = await _authService.getUserFromToken(accessToken);
@@ -36,14 +39,12 @@ class AuthProvider with ChangeNotifier {
         rethrow;
       }
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      _setLoading(false);
     }
   }
 
   Future<void> login(String mobile, String password) async {
-    _isLoading = true;
-    notifyListeners();
+    _setLoading(true);
 
     try {
       final userData = await _authService.login(mobile, password);
@@ -51,53 +52,45 @@ class AuthProvider with ChangeNotifier {
       await _tokenService.saveToken(userData.accessToken);
       log("Saved access token");
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      _setLoading(false);
     }
   }
 
   Future<void> requestPasswordChange(String mobile) async {
-    _isLoading = true;
-    notifyListeners();
+    _setLoading(true);
 
     try {
       await _authService.requestPasswordChange(mobile);
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      _setLoading(false);
     }
   }
 
   Future<void> changePasswordWithOTP(
       String mobile, String otp, String newPassword) async {
-    _isLoading = true;
-    notifyListeners();
+    _setLoading(true);
 
     try {
       await _authService.changePasswordWithOTP(mobile, otp, newPassword);
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      _setLoading(false);
     }
   }
 
   Future<void> changePassword(String oldPassword, String newPassword) async {
-    _isLoading = true;
-    notifyListeners();
+    _setLoading(true);
 
     try {
       final accessToken = await _tokenService.getToken();
       await _authService.changePassword(accessToken, oldPassword, newPassword);
       _user!.isTemporaryPassword = false;
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      _setLoading(false);
     }
   }
 
   Future<void> changeProfileInfo(ProfileUpdate profile) async {
-    _isLoading = true;
-    notifyListeners();
+    _setLoading(true);
 
     try {
       final accessToken = await _tokenService.getToken();
@@ -105,19 +98,16 @@ class AuthProvider with ChangeNotifier {
       _user = User.copyFrom(userData);
       _user!.isTemporaryPassword = false;
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      _setLoading(false);
     }
   }
 
   Future<void> logout() async {
-    _isLoading = true;
-    notifyListeners();
+    _setLoading(true);
 
     _user = null;
     await _tokenService.clearToken();
 
-    _isLoading = false;
-    notifyListeners();
+    _setLoading(false);
   }
 }

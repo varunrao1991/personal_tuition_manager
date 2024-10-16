@@ -2,9 +2,8 @@ class Student {
   final int id;
   final String name;
   final String mobile;
-  final DateTime dob; // Consider using DateTime for actual date handling
-  final DateTime
-      joiningDate; // Consider using DateTime for actual date handling
+  final DateTime dob;
+  final DateTime joiningDate;
 
   Student({
     required this.id,
@@ -14,7 +13,6 @@ class Student {
     required this.joiningDate,
   });
 
-  // Factory method to create a Student instance from JSON
   factory Student.fromJson(Map<String, dynamic> json) {
     return Student(
       id: json['id'],
@@ -25,7 +23,6 @@ class Student {
     );
   }
 
-  // Method to convert a Student instance to JSON
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -36,7 +33,6 @@ class Student {
     };
   }
 
-  // Method to create a copy of the Student instance
   Student copy({
     int? id,
     String? name,

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/auth_provider.dart';
-import '../../utils/handle_errors.dart';
-import '../../widgets/custom_elevated_button.dart';
-import '../../widgets/custom_form_text_field.dart';
-import '../../widgets/custom_text_button.dart';
+import '../../../providers/auth_provider.dart';
+import '../../../utils/handle_errors.dart';
+import '../../../widgets/custom_elevated_button.dart';
+import '../../../widgets/custom_form_text_field.dart';
+import '../../../widgets/custom_text_button.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
@@ -33,7 +33,6 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      backgroundColor: Colors.grey[200],
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -43,18 +42,19 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               const SizedBox(height: 100),
               const FlutterLogo(size: 80),
               const SizedBox(height: 20),
-              const Text(
+              Text(
                 'Change Password',
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blueAccent,
-                ),
+                style: Theme.of(context).textTheme.headlineSmall!.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
               ),
               const SizedBox(height: 10),
-              const Text(
+              Text(
                 'Set a new password to secure your account',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
               ),
               const SizedBox(height: 40),
               Form(
@@ -127,10 +127,11 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                           ),
                     const SizedBox(height: 20),
                     CustomTextButton(
-                        text: 'Skip',
-                        onPressed: () {
-                          Navigator.pop(context);
-                        }),
+                      text: 'Skip',
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                    ),
                   ],
                 ),
               ),

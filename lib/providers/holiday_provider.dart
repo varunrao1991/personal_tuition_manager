@@ -1,5 +1,6 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
+import '../exceptions/holiday_exception.dart';
 import '../models/holiday.dart';
 import '../services/holiday_service.dart';
 import '../services/token_service.dart';
@@ -28,16 +29,23 @@ class HolidayProvider with ChangeNotifier {
     DateTime? endDate,
   }) async {
     _setLoading(true);
-    _cachedStartDate = startDate ?? _cachedStartDate;
-    _cachedEndDate = endDate ?? _cachedEndDate;
+
+    final newStartDate = startDate ?? _cachedStartDate;
+    final newEndDate = endDate ?? _cachedEndDate;
+    if (newStartDate == null || newEndDate == null) {
+      throw HolidayException(
+          "Either of the requested dates and cacthed dates are null to fetch");
+    }
 
     try {
       final String accessToken = await _tokenService.getToken();
       _holidays = await _holidayService.getHolidays(
         accessToken,
-        _cachedStartDate!,
-        _cachedEndDate!,
+        newStartDate,
+        newEndDate,
       );
+      _cachedStartDate = newStartDate;
+      _cachedEndDate = newEndDate;
       log('Holidays successfully fetched.');
     } finally {
       _setLoading(false);
@@ -50,7 +58,7 @@ class HolidayProvider with ChangeNotifier {
       final String accessToken = await _tokenService.getToken();
       await _holidayService.addHoliday(accessToken, holidayDate, reason);
       log('Holiday successfully added.');
-      await fetchHolidays(); // Refresh the list after adding
+      await fetchHolidays();
     } finally {
       _setLoading(false);
     }
@@ -63,9 +71,7 @@ class HolidayProvider with ChangeNotifier {
       await _holidayService.deleteHoliday(
           accessToken: accessToken, holidayDate: holidayDate);
       log('Holiday successfully deleted.');
-      await fetchHolidays(
-          startDate: _cachedStartDate,
-          endDate: _cachedEndDate); // Refresh the list after deletion
+      await fetchHolidays();
     } finally {
       _setLoading(false);
     }

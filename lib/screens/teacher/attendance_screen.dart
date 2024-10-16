@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:padmayoga/models/attendance.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
+import '../../models/attendance.dart';
 import '../../providers/attendance_provider.dart';
 import '../../providers/holiday_provider.dart';
 import '../../providers/weekday_provider.dart';
@@ -94,29 +93,44 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                   firstDay: DateTime.utc(2020, 1, 1),
                   lastDay: DateTime.now(),
                   availableCalendarFormats: const {
-                    CalendarFormat.month: 'Month'
+                    CalendarFormat.month: 'Month',
                   },
-                  headerStyle: const HeaderStyle(titleCentered: true),
+                  headerStyle: HeaderStyle(
+                    titleCentered: true,
+                    titleTextStyle: Theme.of(context).textTheme.headlineSmall!,
+                  ),
                   calendarFormat: CalendarFormat.month,
-                  calendarStyle: const CalendarStyle(
-                    todayDecoration: BoxDecoration(
-                      color: Colors.blueAccent,
+                  calendarStyle: CalendarStyle(
+                    todayDecoration: const BoxDecoration(
+                      color: Colors.transparent,
                       shape: BoxShape.circle,
                     ),
                     todayTextStyle: TextStyle(
-                      color: Colors.black,
+                      color: Theme.of(context).colorScheme.primary,
                       fontWeight: FontWeight.bold,
                     ),
                     selectedDecoration: BoxDecoration(
-                      color: Colors.redAccent,
+                      color: Theme.of(context).colorScheme.secondary,
                       shape: BoxShape.circle,
                     ),
-                    selectedTextStyle: TextStyle(color: Colors.white),
-                    defaultDecoration: BoxDecoration(
+                    selectedTextStyle: TextStyle(
+                      color: Theme.of(context).colorScheme.onSecondary,
+                    ),
+                    defaultDecoration: const BoxDecoration(
                       shape: BoxShape.circle,
                       color: Colors.transparent,
                     ),
-                    defaultTextStyle: TextStyle(color: Colors.black),
+                    defaultTextStyle: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface),
+                    weekendDecoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.transparent,
+                    ),
+                    weekendTextStyle: TextStyle(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withOpacity(0.7)),
                   ),
                   selectedDayPredicate: (day) => isSameDay(_selectedDate, day),
                   onDaySelected: _onDaySelected,
@@ -194,10 +208,11 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     return Container(
       decoration: BoxDecoration(
         color: isSelected
-            ? Colors.redAccent
-            : (isHoliday || !isWeekday ? Colors.grey[300] : Colors.transparent),
+            ? Theme.of(context).colorScheme.secondary
+            : (isHoliday || !isWeekday
+                ? Theme.of(context).colorScheme.onSurface.withOpacity(0.3)
+                : Colors.transparent),
         shape: BoxShape.circle,
-        border: isToday ? Border.all(color: Colors.black, width: 1) : null,
       ),
       child: Stack(
         alignment: Alignment.bottomRight,
@@ -206,7 +221,9 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
             child: Text(
               '${date.day}',
               style: TextStyle(
-                color: isSelected ? Colors.white : Colors.black,
+                color: isSelected
+                    ? Colors.white
+                    : Theme.of(context).colorScheme.onSurface,
                 fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
               ),
             ),
@@ -218,16 +235,15 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
               child: Container(
                 padding: const EdgeInsets.all(6.0),
                 decoration: BoxDecoration(
-                  color: Colors.blueAccent,
+                  color: Theme.of(context).colorScheme.primary,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   '$attendanceCount',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
               ),
             ),
@@ -238,7 +254,12 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
 
   Widget _buildAttendanceList(List<Attendance> attendanceList) {
     if (attendanceList.isEmpty) {
-      return const Center(child: Text('No attendances for the selected date.'));
+      return Center(
+        child: Text(
+          'No attendances for the selected date.',
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+      );
     }
 
     return ListView.builder(
@@ -247,24 +268,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
         final attendance = attendanceList[index];
 
         return CustomCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                attendance.ownedBy.name,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                DateFormat('EEE, d MMM y').format(attendance.attendanceDate),
-                style: const TextStyle(color: Colors.black54),
-              ),
-            ],
-          ),
-        );
+            child: Text(attendance.ownedBy.name,
+                style: Theme.of(context).textTheme.bodyLarge));
       },
     );
   }

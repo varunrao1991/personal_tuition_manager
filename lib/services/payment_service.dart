@@ -137,12 +137,10 @@ class PaymentService {
     } else {
       final List<dynamic> data = jsonDecode(response.body);
 
-      // Map the response data to a list of DailyTotal objects
       final List<DailyTotal> dailyTotals = data.map((entry) {
         return DailyTotal.fromJson(entry);
       }).toList();
 
-      // Create a map of DateTime and totalAmount
       return {
         for (var dailyTotal in dailyTotals)
           dailyTotal.dateTime.day: dailyTotal.totalAmount

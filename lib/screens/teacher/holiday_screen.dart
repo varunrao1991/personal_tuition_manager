@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:padmayoga/providers/holiday_provider.dart';
-import 'package:padmayoga/providers/weekday_provider.dart';
-import 'package:padmayoga/widgets/custom_snackbar.dart';
-import 'package:padmayoga/widgets/custom_swipe_card.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../models/holiday.dart';
+import '../../providers/holiday_provider.dart';
+import '../../providers/weekday_provider.dart';
 import '../../utils/handle_errors.dart';
 import '../../utils/show_custom_center_modal.dart';
 import '../../widgets/confirmation_modal.dart';
 import '../../widgets/custom_fab.dart';
 import '../../utils/show_custom_bottom_modal.dart';
+import '../../widgets/custom_snackbar.dart';
+import '../../widgets/custom_swipe_card.dart';
 import 'widgets/weekday_edit.dart';
 import 'widgets/holiday_form.dart';
 
@@ -126,8 +126,10 @@ class _HolidayScreenState extends State<HolidayScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Holidays'),
-        centerTitle: true,
+        title: Text(
+          'Holidays',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -259,25 +261,22 @@ class _HolidayScreenState extends State<HolidayScreen> {
       decoration: BoxDecoration(
         color: isSelected
             ? Colors.redAccent
-            : isToday
-                ? Colors.blueAccent.withOpacity(0.3)
-                : isHoliday
-                    ? Colors.green.withOpacity(0.3)
-                    : isWeekday
-                        ? Colors.transparent
-                        : Colors.grey.withOpacity(0.2),
+            : isHoliday || !isWeekday
+                ? Colors.grey.withOpacity(0.2)
+                : Colors.transparent,
         shape: BoxShape.circle,
       ),
       child: Center(
         child: Text(
           date.day.toString(),
-          style: TextStyle(
-            color: isSelected || isToday || isHoliday || isWeekday
-                ? Colors.black
-                : Colors.black,
-            fontWeight:
-                isSelected || isToday ? FontWeight.bold : FontWeight.normal,
-          ),
+          style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                color: isSelected
+                    ? Colors.white
+                    : Theme.of(context).colorScheme.onSurface,
+                fontWeight: (isSelected || isToday)
+                    ? FontWeight.bold
+                    : FontWeight.normal,
+              ),
         ),
       ),
     );
@@ -285,8 +284,14 @@ class _HolidayScreenState extends State<HolidayScreen> {
 
   Widget _buildHolidayList(HolidayProvider holidayProvider) {
     if (holidayProvider.holidays.isEmpty) {
-      return const Center(child: Text('No holidays in this month.'));
+      return Center(
+        child: Text(
+          'No holidays in this month.',
+          style: Theme.of(context).textTheme.bodyLarge,
+        ),
+      );
     }
+
     return ListView.builder(
       itemCount: holidayProvider.holidays.length,
       itemBuilder: (context, index) {
@@ -318,27 +323,17 @@ class _HolidayScreenState extends State<HolidayScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      holiday.reason,
-                      style: const TextStyle(
-                        fontSize: 18.0,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
+                    Text(holiday.reason,
+                        style: Theme.of(context).textTheme.bodyLarge),
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        const Icon(Icons.date_range, color: Colors.blueAccent),
+                        const Icon(Icons.date_range),
                         const SizedBox(width: 8),
                         Text(
-                          DateFormat('EEE, d MMM y')
-                              .format(holiday.holidayDate),
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: Colors.black54,
-                          ),
-                        ),
+                            DateFormat('EEE, dd MMM y')
+                                .format(holiday.holidayDate),
+                            style: Theme.of(context).textTheme.bodyMedium),
                       ],
                     ),
                   ],

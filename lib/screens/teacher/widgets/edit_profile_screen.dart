@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:padmayoga/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../../models/profile_update.dart';
 import '../../../models/user_model.dart';
+import '../../../providers/auth_provider.dart';
 import '../../../utils/handle_errors.dart';
 import '../../../widgets/custom_elevated_button.dart';
 import '../../../widgets/custom_form_text_field.dart';
@@ -113,158 +113,154 @@ class _EditProfileScreenState extends State<EditProfileScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Profile'),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Personal Info'),
-            Tab(text: 'Change Password'),
-          ],
+        title: Text(
+          'Edit Profile',
+          style: Theme.of(context).textTheme.headlineSmall,
         ),
       ),
       body: TabBarView(
         controller: _tabController,
         children: [
-          Form(
-            key: _formKey,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 20),
-
-                  // Name field using Custom Form Text Field
-                  CustomFormTextField(
-                    controller: _nameController,
-                    labelText: 'Name',
-                    prefixIcon: Icons.person,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your name';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Mobile field using Custom Form Text Field
-                  CustomFormTextField(
-                    controller: _mobileController,
-                    labelText: 'Mobile',
-                    prefixIcon: Icons.phone,
-                    keyboardType: TextInputType.phone,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your mobile number';
-                      }
-                      if (value.length != 10) {
-                        return 'Mobile number must be 10 digits';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Date of Birth field using Custom Form Text Field
-                  CustomFormTextField(
-                    controller: _dobController,
-                    labelText: 'Date of Birth',
-                    prefixIcon: Icons.calendar_today,
-                    obscureText: false,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please select your date of birth';
-                      }
-                      return null;
-                    },
-                    onTap: () => _selectDob(context),
-                  ),
-                  const SizedBox(height: 30),
-
-                  // Save Changes button for Personal Info
-                  SizedBox(
-                    width: double.infinity,
-                    child: CustomElevatedButton(
-                      onPressed: _savePersonalInfo,
-                      text: 'Save Personal Info',
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // Change Password Tab
-          Form(
-            key: _passwordFormKey,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  const SizedBox(height: 20),
-
-                  // Old Password field using Custom Form Text Field
-                  CustomFormTextField(
-                    controller: _oldPasswordController,
-                    labelText: 'Old Password',
-                    prefixIcon: Icons.lock_outline,
-                    obscureText: true,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your old password';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 20),
-
-                  // New Password field using Custom Form Text Field
-                  CustomFormTextField(
-                    controller: _newPasswordController,
-                    labelText: 'New Password',
-                    prefixIcon: Icons.lock,
-                    obscureText: true,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your new password';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Re-enter New Password field using Custom Form Text Field
-                  CustomFormTextField(
-                    controller: _reenterPasswordController,
-                    labelText: 'Re-enter New Password',
-                    prefixIcon: Icons.lock,
-                    obscureText: true,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please re-enter your new password';
-                      }
-                      if (value != _newPasswordController.text) {
-                        return 'Passwords do not match';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 30),
-
-                  // Save Changes button for Password
-                  SizedBox(
-                    width: double.infinity,
-                    child: CustomElevatedButton(
-                      onPressed: _savePassword,
-                      text: 'Change Password',
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          _buildPersonalInfoForm(),
+          _buildPasswordForm(),
         ],
+      ),
+      bottomNavigationBar: TabBar(
+        controller: _tabController,
+        tabs: const [
+          Tab(text: 'Personal Info', icon: Icon(Icons.person)),
+          Tab(text: 'Change Password', icon: Icon(Icons.lock)),
+        ],
+        indicatorColor: Theme.of(context).colorScheme.primary,
+        labelColor: Theme.of(context).colorScheme.primary,
+        unselectedLabelColor: Colors.grey,
+      ),
+    );
+  }
+
+  Widget _buildPersonalInfoForm() {
+    return Form(
+      key: _formKey,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 20),
+            CustomFormTextField(
+              controller: _nameController,
+              labelText: 'Name',
+              prefixIcon: Icons.person,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your name';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 20),
+            CustomFormTextField(
+              controller: _mobileController,
+              labelText: 'Mobile',
+              prefixIcon: Icons.phone,
+              keyboardType: TextInputType.phone,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your mobile number';
+                }
+                if (value.length != 10) {
+                  return 'Mobile number must be 10 digits';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 20),
+            CustomFormTextField(
+              controller: _dobController,
+              labelText: 'Date of Birth',
+              prefixIcon: Icons.calendar_today,
+              obscureText: false,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please select your date of birth';
+                }
+                return null;
+              },
+              onTap: () => _selectDob(context),
+            ),
+            const SizedBox(height: 30),
+            SizedBox(
+              width: double.infinity,
+              child: CustomElevatedButton(
+                onPressed: _savePersonalInfo,
+                text: 'Save Personal Info',
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPasswordForm() {
+    return Form(
+      key: _passwordFormKey,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            const SizedBox(height: 20),
+            CustomFormTextField(
+              controller: _oldPasswordController,
+              labelText: 'Old Password',
+              prefixIcon: Icons.lock_outline,
+              obscureText: true,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your old password';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 20),
+            CustomFormTextField(
+              controller: _newPasswordController,
+              labelText: 'New Password',
+              prefixIcon: Icons.lock,
+              obscureText: true,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your new password';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 20),
+            CustomFormTextField(
+              controller: _reenterPasswordController,
+              labelText: 'Re-enter New Password',
+              prefixIcon: Icons.lock,
+              obscureText: true,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please re-enter your new password';
+                }
+                if (value != _newPasswordController.text) {
+                  return 'Passwords do not match';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 30),
+            SizedBox(
+              width: double.infinity,
+              child: CustomElevatedButton(
+                onPressed: _savePassword,
+                text: 'Change Password',
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
