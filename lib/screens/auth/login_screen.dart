@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../constants/app_constants.dart';
 import '../../widgets/custom_text_button.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
@@ -34,7 +35,7 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await authProvider.loadUser();
       if (authProvider.user != null) {
-        _navigateToDashboard(authProvider.user!.role);
+        await _navigateToDashboard(authProvider.user!.role);
       }
     } catch (e) {
       handleErrors(context, e);
@@ -47,30 +48,29 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _navigateToDashboard(String role) {
+  Future<void> _navigateToDashboard(String role) async {
     final userRole = getUserRole(role);
+    String navigationScreen = '/student';
     switch (userRole) {
       case UserRole.teacher:
-        Navigator.of(context).pushReplacementNamed('/teacher');
-        break;
-      case UserRole.student:
-        Navigator.of(context).pushReplacementNamed('/student');
+        navigationScreen = '/teacher';
         break;
       default:
-        Navigator.of(context).pushReplacementNamed('/manager');
+        navigationScreen = '/student';
         break;
     }
+    await Navigator.of(context).pushReplacementNamed(navigationScreen);
   }
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final authProvider = Provider.of<AuthProvider>(context);
 
     return Scaffold(
       body: _isCheckingLoginStatus
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(AppPaddings.smallPadding),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -107,8 +107,11 @@ class _LoginScreenState extends State<LoginScreen> {
             prefixIcon: Icons.phone,
             keyboardType: TextInputType.phone,
             validator: (value) {
-              if (value == null || value.isEmpty || value.length != 10) {
+              if (value == null || value.isEmpty) {
                 return 'Enter a valid 10-digit mobile number';
+              }
+              if (!RegularExpressions.mobileRegex.hasMatch(value)) {
+                return 'Mobile number must be exactly 10 digits and contain only numbers';
               }
               return null;
             },
@@ -122,6 +125,9 @@ class _LoginScreenState extends State<LoginScreen> {
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Password is required';
+              }
+              if (!RegularExpressions.passwordRegex.hasMatch(value)) {
+                return 'Password must be at least 6 characters,\ncontain a letter, number, and special character';
               }
               return null;
             },

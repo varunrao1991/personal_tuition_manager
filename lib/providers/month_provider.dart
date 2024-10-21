@@ -4,11 +4,13 @@ import '../services/payment_service.dart';
 import '../services/token_service.dart';
 
 class MonthlyProvider with ChangeNotifier {
+  MonthlyProvider(this._paymentService, this._tokenService);
+
   final PaymentService _paymentService;
   final TokenService _tokenService;
 
-  final Map<DateTime, int> _monthlyPayments = {};
   bool _isLoading = false;
+  Map<DateTime, int> _monthlyPayments = {};
   bool _hasMoreMonths = true;
   DateTime? _lastLoadedMonth;
 
@@ -16,7 +18,13 @@ class MonthlyProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get hasMoreMonths => _hasMoreMonths;
 
-  MonthlyProvider(this._paymentService, this._tokenService);
+  void clearData() {
+    _setLoading(true);
+    _hasMoreMonths = true;
+    _lastLoadedMonth = null;
+    _monthlyPayments = {};
+    _setLoading(false);
+  }
 
   void _setLoading(bool value) {
     _isLoading = value;

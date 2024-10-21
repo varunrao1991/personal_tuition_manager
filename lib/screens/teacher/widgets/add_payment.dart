@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../constants/app_constants.dart';
 import '../../../widgets/custom_form_date_field.dart';
 import '../../../widgets/custom_form_text_field.dart';
 import '../../../widgets/custom_elevated_button.dart';
@@ -49,7 +50,7 @@ class _PaymentProcessWidgetState extends State<PaymentProcessWidget> {
     return Center(
       child: Container(
         width: 600,
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(AppPaddings.mediumPadding),
         child: _currentStep == 0
             ? StudentSelector(
                 selectedStudent: _selectedStudent,

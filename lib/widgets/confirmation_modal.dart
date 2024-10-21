@@ -24,7 +24,7 @@ class ConfirmationDialog extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppPaddings.mediumPadding),
+      padding: const EdgeInsets.all(AppPaddings.smallPadding),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

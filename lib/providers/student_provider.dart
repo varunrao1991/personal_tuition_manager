@@ -7,11 +7,13 @@ import '../services/student_service.dart';
 import '../services/token_service.dart';
 
 class StudentProvider with ChangeNotifier {
+  StudentProvider(this._studentService, this._tokenService);
+
   final StudentService _studentService;
   final TokenService _tokenService;
 
-  List<Student> _students = [];
   bool _isLoading = false;
+  List<Student> _students = [];
   int _currentPage = 1;
   int _totalPages = 1;
 
@@ -20,7 +22,13 @@ class StudentProvider with ChangeNotifier {
   int get currentPage => _currentPage;
   int get totalPages => _totalPages;
 
-  StudentProvider(this._studentService, this._tokenService);
+  void clearData() {
+    _setLoading(true);
+    _students = [];
+    _currentPage = 1;
+    _totalPages = 1;
+    _setLoading(false);
+  }
 
   void _setLoading(bool value) {
     _isLoading = value;

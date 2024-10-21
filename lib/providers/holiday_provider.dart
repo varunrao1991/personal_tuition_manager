@@ -6,18 +6,26 @@ import '../services/holiday_service.dart';
 import '../services/token_service.dart';
 
 class HolidayProvider with ChangeNotifier {
-  List<Holiday> _holidays = [];
-  bool _isLoading = false;
+  HolidayProvider(this._holidayService, this._tokenService);
+
   final HolidayService _holidayService;
   final TokenService _tokenService;
 
+  bool _isLoading = false;
+  List<Holiday> _holidays = [];
   DateTime? _cachedStartDate;
   DateTime? _cachedEndDate;
 
   List<Holiday> get holidays => _holidays;
   bool get isLoading => _isLoading;
 
-  HolidayProvider(this._holidayService, this._tokenService);
+  void clearData() {
+    _setLoading(true);
+    _cachedEndDate = null;
+    _cachedStartDate = null;
+    _holidays = [];
+    _setLoading(false);
+  }
 
   void _setLoading(bool value) {
     _isLoading = value;

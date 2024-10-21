@@ -33,40 +33,40 @@ class PaymentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CustomSwipeCard(
-      onSwipeLeft: onDelete,
-      onSwipeRight: onEdit,
-      child: Row(
-        children: [
-          Container(
-            width: 4,
-            height: 100,
-            color: _getColorBasedOnStatus(payment.courseStatus),
-            margin: const EdgeInsets.only(right: 16.0),
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('₹ ${payment.amount}',
-                    style: Theme.of(context).textTheme.headlineSmall),
-                const SizedBox(height: 8),
-                Text(payment.ownedBy.name,
-                    style: Theme.of(context).textTheme.bodyMedium),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(Icons.date_range),
-                    const SizedBox(width: 8),
-                    Text(DateFormat('dd-MMM-yyyy').format(payment.paymentDate),
-                        style: Theme.of(context).textTheme.bodyMedium),
-                  ],
-                ),
-              ],
+        onSwipeLeft: onDelete,
+        onSwipeRight: onEdit,
+        child: Row(
+          children: [
+            Container(
+              width: 4,
+              height: 90,
+              color: _getColorBasedOnStatus(payment.courseStatus),
+              margin: const EdgeInsets.only(right: 12.0),
             ),
-          ),
-        ],
-      ),
-    );
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('₹ ${payment.amount}',
+                      style: Theme.of(context).textTheme.headlineSmall),
+                  const SizedBox(height: 8),
+                  Text(payment.ownedBy.name,
+                      style: Theme.of(context).textTheme.bodyMedium),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(Icons.date_range),
+                      const SizedBox(width: 8),
+                      Text(
+                          DateFormat('dd-MMM-yyyy').format(payment.paymentDate),
+                          style: Theme.of(context).textTheme.bodyMedium),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ));
   }
 }

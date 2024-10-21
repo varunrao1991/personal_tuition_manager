@@ -42,7 +42,7 @@ class _GenericSearchBarState extends State<GenericSearchBar> {
       controller: widget.controller,
       decoration: InputDecoration(
         labelText: widget.labelText,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(30.0)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)),
         prefixIcon: const Icon(Icons.search),
         suffixIcon: widget.controller.text.isNotEmpty
             ? IconButton(

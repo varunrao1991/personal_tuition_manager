@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../constants/app_constants.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
@@ -14,21 +15,26 @@ class AboutScreen extends StatelessWidget {
             Navigator.pop(context);
           },
         ),
-        title: const Text(
-          'About Us',
-        ),
+        title: const Text('About Us'),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeaderSection(context),
-            _buildMissionSection(context),
-            _buildFeaturesSection(context),
-            _buildContactInfo(context),
-            _buildFooter(context),
-          ],
-        ),
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppPaddings.mediumPadding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeaderSection(context),
+                  _buildMissionSection(context),
+                  _buildFeaturesSection(context),
+                  _buildContactInfo(context),
+                ],
+              ),
+            ),
+          ),
+          _buildFooter(context), // Moved footer outside of Expanded
+        ],
       ),
     );
   }
@@ -36,7 +42,7 @@ class AboutScreen extends StatelessWidget {
   Widget _buildHeaderSection(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(AppPaddings.smallPadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -44,8 +50,9 @@ class AboutScreen extends StatelessWidget {
               style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 10),
           Text(
-              'Simplifying yoga class management for teachers, one pose at a time.',
-              style: Theme.of(context).textTheme.bodyLarge),
+            'Simplifying yoga class management for teachers, one pose at a time.',
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
           const SizedBox(height: 20),
         ],
       ),
@@ -54,7 +61,7 @@ class AboutScreen extends StatelessWidget {
 
   Widget _buildMissionSection(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(AppPaddings.smallPadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -77,7 +84,7 @@ class AboutScreen extends StatelessWidget {
 
   Widget _buildFeaturesSection(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(AppPaddings.smallPadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -103,8 +110,6 @@ class AboutScreen extends StatelessWidget {
         children: [
           Icon(
             icon,
-            color: Theme.of(context).colorScheme.secondary,
-            size: 28,
           ),
           const SizedBox(width: 15),
           Expanded(
@@ -120,7 +125,7 @@ class AboutScreen extends StatelessWidget {
 
   Widget _buildContactInfo(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(AppPaddings.smallPadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -140,10 +145,12 @@ class AboutScreen extends StatelessWidget {
 
   Widget _buildFooter(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(AppPaddings.smallPadding),
       child: Center(
-        child: Text('© 2024 Padmayoga - All Rights Reserved',
-            style: Theme.of(context).textTheme.bodySmall),
+        child: Text(
+          '© 2024 Padmayoga - All Rights Reserved',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
       ),
     );
   }

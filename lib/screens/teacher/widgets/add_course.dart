@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../constants/app_constants.dart';
 import '../../../models/create_course.dart';
 import '../../../models/owned_by.dart';
 import '../../../widgets/custom_elevated_button.dart';
@@ -6,8 +7,7 @@ import '../../../widgets/custom_form_text_field.dart';
 import 'payment_selection.dart';
 
 class AddStudentCourseProcessWidget extends StatefulWidget {
-  const AddStudentCourseProcessWidget({Key? key}) : super(key: key);
-
+  const AddStudentCourseProcessWidget({super.key});
   @override
   _AddStudentCourseProcessWidgetState createState() =>
       _AddStudentCourseProcessWidgetState();
@@ -17,7 +17,9 @@ class _AddStudentCourseProcessWidgetState
     extends State<AddStudentCourseProcessWidget> {
   int _currentStep = 0;
   OwnedBy? _selectedStudent;
-  final TextEditingController _totalClassesController = TextEditingController();
+  static const int defaultTotalClasses = 23;
+  final TextEditingController _totalClassesController =
+      TextEditingController(text: defaultTotalClasses.toString());
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   void _goToNextStep() {
@@ -44,7 +46,7 @@ class _AddStudentCourseProcessWidgetState
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(AppPaddings.smallPadding),
         child: _currentStep == 0
             ? PaymentOwnerSelector(
                 selectedPayment: _selectedStudent,

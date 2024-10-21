@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import '../models/course.dart';
 import '../config/app_config.dart';
 import '../models/owned_by.dart';
+import '../models/student_course.dart';
 import '../utils/response_to_error.dart';
 
 class CourseResponse {
@@ -13,6 +14,20 @@ class CourseResponse {
   final int currentPage;
 
   CourseResponse({
+    required this.courses,
+    required this.totalPages,
+    required this.totalRecords,
+    required this.currentPage,
+  });
+}
+
+class StudentCourseResponse {
+  final List<StudentCourse> courses;
+  final int totalPages;
+  final int totalRecords;
+  final int currentPage;
+
+  StudentCourseResponse({
     required this.courses,
     required this.totalPages,
     required this.totalRecords,
@@ -204,13 +219,12 @@ class CourseService {
     }
   }
 
-  Future<CourseResponse> getCourses({
-    required String accessToken,
-    required int page,
-    String? sort,
-    String? order,
-    String? filterBy,
-  }) async {
+  Future<CourseResponse> getCourses(
+      {required String accessToken,
+      required int page,
+      String? sort,
+      String? order,
+      String? filterBy}) async {
     Map<String, String> queryParams = {
       'page': page.toString(),
     };
@@ -234,6 +248,43 @@ class CourseService {
           .toList();
 
       return CourseResponse(
+        courses: courses,
+        totalPages: data['totalPages'],
+        totalRecords: data['totalRecords'],
+        currentPage: data['currentPage'],
+      );
+    } else {
+      throw responseToError(response.body);
+    }
+  }
+
+  Future<StudentCourseResponse> getMyCourses(
+      {required String accessToken,
+      required int page,
+      String? sort,
+      String? order}) async {
+    Map<String, String> queryParams = {
+      'page': page.toString(),
+    };
+
+    if (sort != null) queryParams['sort'] = sort;
+    if (order != null) queryParams['order'] = order;
+
+    Uri uri = Uri.parse('$apiUrl/api/courses/my_courses')
+        .replace(queryParameters: queryParams);
+
+    final response = await _client.get(uri, headers: {
+      'Authorization': 'Bearer $accessToken',
+      'Content-Type': 'application/json',
+    });
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final courses = (data['data'] as List)
+          .map((courseJson) => StudentCourse.fromJson(courseJson))
+          .toList();
+
+      return StudentCourseResponse(
         courses: courses,
         totalPages: data['totalPages'],
         totalRecords: data['totalRecords'],

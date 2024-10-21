@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../constants/app_constants.dart';
 import '../../../widgets/custom_card.dart';
 import '../../../widgets/custom_elevated_button.dart';
 
@@ -38,16 +39,12 @@ class _WeekdayEditorDialogState extends State<WeekdayEditorDialog> {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(AppPaddings.mediumPadding),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            Text(
-              'Select Weekdays',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
+            Text('Select Weekdays',
+                style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 16.0),
             Text(
               'Note: Changing these selections may affect the ongoing courses end date calculation.',

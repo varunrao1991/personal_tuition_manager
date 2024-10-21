@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
+import '../../constants/app_constants.dart';
 import '../../models/course.dart';
 import '../../models/create_course.dart';
 import '../../models/holiday.dart';
@@ -18,7 +19,7 @@ import 'widgets/add_course.dart';
 import 'widgets/closed_course_card.dart';
 import 'widgets/edit_course.dart';
 import 'widgets/ongoing_course_card.dart';
-import 'widgets/student_calender.dart';
+import '../common/student_calender.dart';
 import 'widgets/waitlist_course_card.dart';
 
 class CourseScreen extends StatefulWidget {
@@ -161,7 +162,8 @@ class _CourseScreenState extends State<CourseScreen>
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppPaddings.smallPadding),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -218,7 +220,8 @@ class _CourseScreenState extends State<CourseScreen>
         return RefreshIndicator(
           onRefresh: () => _fetchCourses(_tabController.index),
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppPaddings.smallPadding),
             child: Column(
               children: [
                 ...List.generate(
@@ -243,21 +246,21 @@ class _CourseScreenState extends State<CourseScreen>
     required List<DateTime> holidays,
     required List<int> weekdays,
   }) {
-    DateTime currentDate = startDate;
-    int classesCount = 1;
+    DateTime endDate = startDate.subtract(const Duration(days: 1));
+    int classesCount = 0;
 
     DateTime maxEndDate = startDate.add(Duration(days: totalClasses * 2));
 
     while (classesCount < totalClasses) {
-      currentDate = currentDate.add(const Duration(days: 1));
-      if (!_isHolidayOrInvalidWeekday(currentDate, holidays, weekdays)) {
+      endDate = endDate.add(const Duration(days: 1));
+      if (!_isHolidayOrInvalidWeekday(endDate, holidays, weekdays)) {
         classesCount++;
       }
-      if (currentDate.isAfter(maxEndDate)) {
+      if (endDate.isAfter(maxEndDate)) {
         return maxEndDate;
       }
     }
-    return currentDate;
+    return endDate;
   }
 
   bool _isHolidayOrInvalidWeekday(
@@ -282,7 +285,7 @@ class _CourseScreenState extends State<CourseScreen>
       await showCustomModalBottomSheet<int>(
         context: context,
         child: Container(
-            margin: const EdgeInsets.all(16.0),
+            margin: const EdgeInsets.all(AppMargins.smallMargin),
             child: StudentCalendar(
               startDate: course.startDate!,
               endDate: _endDateToUse!,

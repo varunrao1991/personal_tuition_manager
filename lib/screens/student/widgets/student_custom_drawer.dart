@@ -1,21 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:yoglogonline/providers/attendance_provider.dart';
-import 'package:yoglogonline/providers/course_provider.dart';
-import 'package:yoglogonline/providers/holiday_provider.dart';
-import 'package:yoglogonline/providers/month_provider.dart';
-import 'package:yoglogonline/providers/notification_provider.dart';
-import 'package:yoglogonline/providers/payment_provider.dart';
-import 'package:yoglogonline/providers/student_provider.dart';
-import 'package:yoglogonline/providers/weekday_provider.dart';
+import '../../../providers/attendance_provider.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../providers/course_provider.dart';
+import '../../../providers/holiday_provider.dart';
+import '../../../providers/notification_provider.dart';
+import '../../../providers/weekday_provider.dart';
 import '../../../utils/handle_errors.dart';
 import '../../../widgets/confirmation_modal.dart';
 import '../../../utils/show_custom_center_modal.dart';
 import '../../common/edit_profile_screen.dart';
 
-class CustomDrawer extends StatelessWidget {
-  const CustomDrawer({super.key});
+class StudentCustomDrawer extends StatelessWidget {
+  const StudentCustomDrawer({super.key});
 
   void _logout(BuildContext context) {
     showCustomDialog<bool>(
@@ -29,14 +26,12 @@ class CustomDrawer extends StatelessWidget {
         final authProvider = Provider.of<AuthProvider>(context, listen: false);
         try {
           await authProvider.logout();
+
           Provider.of<AttendanceProvider>(context, listen: false).clearData();
           Provider.of<AuthProvider>(context, listen: false).clearData();
           Provider.of<CourseProvider>(context, listen: false).clearData();
           Provider.of<HolidayProvider>(context, listen: false).clearData();
-          Provider.of<MonthlyProvider>(context, listen: false).clearData();
           Provider.of<NotificationProvider>(context, listen: false).clearData();
-          Provider.of<PaymentProvider>(context, listen: false).clearData();
-          Provider.of<StudentProvider>(context, listen: false).clearData();
           Provider.of<WeekdayProvider>(context, listen: false).clearData();
 
           Navigator.of(context).pushReplacementNamed('/login');
@@ -98,15 +93,6 @@ class CustomDrawer extends StatelessWidget {
                   ),
                 ),
               );
-            },
-          ),
-          ListTile(
-            title: Text(
-              'My Holidays',
-              style: theme.textTheme.bodyLarge,
-            ),
-            onTap: () {
-              Navigator.pushNamed(context, '/teacher/holidays');
             },
           ),
           ListTile(

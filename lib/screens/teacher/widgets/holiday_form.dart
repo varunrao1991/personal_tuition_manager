@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../constants/app_constants.dart';
 import '../../../widgets/custom_elevated_button.dart';
 import '../../../widgets/custom_form_text_field.dart';
 import '../../../widgets/custom_form_date_field.dart';
@@ -39,7 +40,7 @@ class _HolidayFormState extends State<HolidayForm> {
   Widget build(BuildContext context) {
     return Center(
       child: Container(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(AppPaddings.mediumPadding),
         child: SingleChildScrollView(
           child: Form(
             key: _formKey,
@@ -47,7 +48,7 @@ class _HolidayFormState extends State<HolidayForm> {
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 Text('Add Holiday',
-                    style: Theme.of(context).textTheme.bodyLarge),
+                    style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 20),
                 CustomDateInputField(
                   title: 'Holiday Date',

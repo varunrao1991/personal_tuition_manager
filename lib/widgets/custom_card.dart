@@ -7,15 +7,18 @@ class CustomCard extends StatelessWidget {
   final bool isSelected;
   final Function(DragUpdateDetails)? onHorizontalDragUpdate;
   final Function(DragEndDetails)? onHorizontalDragEnd;
+  final EdgeInsetsGeometry padding;
+  final EdgeInsetsGeometry margin;
 
-  const CustomCard({
-    super.key,
-    required this.child,
-    this.onTap,
-    this.isSelected = false,
-    this.onHorizontalDragUpdate,
-    this.onHorizontalDragEnd,
-  });
+  const CustomCard(
+      {super.key,
+      required this.child,
+      this.onTap,
+      this.isSelected = false,
+      this.onHorizontalDragUpdate,
+      this.onHorizontalDragEnd,
+      this.padding = const EdgeInsets.all(AppPaddings.smallPadding),
+      this.margin = const EdgeInsets.all(AppMargins.smallMargin)});
 
   @override
   Widget build(BuildContext context) {
@@ -26,8 +29,9 @@ class CustomCard extends StatelessWidget {
       onHorizontalDragUpdate: onHorizontalDragUpdate,
       onHorizontalDragEnd: onHorizontalDragEnd,
       child: Card(
+        margin: margin,
         child: Container(
-          padding: const EdgeInsets.all(AppPaddings.mediumPadding),
+          padding: padding,
           decoration: BoxDecoration(
             color: theme.cardColor,
             border: isSelected

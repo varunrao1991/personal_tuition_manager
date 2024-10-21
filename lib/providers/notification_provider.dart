@@ -1,37 +1,33 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import '../models/notification_item.dart';
 import '../services/notification_service.dart';
 import '../services/token_service.dart';
-import '../utils/background_handler.dart';
 
 class NotificationProvider with ChangeNotifier {
+  NotificationProvider(this._notificationService, this._tokenService);
+
   final NotificationService _notificationService;
   final TokenService _tokenService;
 
-  List<NotificationItem> _notifications = [];
   bool _isLoading = false;
+  List<NotificationItem> _notifications = [];
   int _currentPage = 1;
   int _totalPages = 1;
-  bool _newNotification = false;
+  bool _unread = false;
 
   List<NotificationItem> get notifications => _notifications;
   bool get isLoading => _isLoading;
   int get currentPage => _currentPage;
   int get totalPages => _totalPages;
-  bool get newNotification => _newNotification;
 
-  String? _firebaseToken;
-  String? get firebaseToken => _firebaseToken;
-
-  NotificationProvider(this._notificationService, this._tokenService) {
-    _initialize();
-  }
-
-  Future<void> _initialize() async {
-    _firebaseToken = await _notificationService.initialize(
-        _onMessage, _onMessageOpened, _onTokenRefresh, backgroundHandler);
+  void clearData() {
+    _setLoading(true);
+    _currentPage = 1;
+    _totalPages = 1;
+    _notifications = [];
+    _unread = false;
+    _setLoading(false);
   }
 
   void _setLoading(bool value) {
@@ -39,37 +35,24 @@ class NotificationProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> markNotificationAsRead(int notificationId) async {
+  Future<void> markNotificationAsRead(List<String> ids) async {
     try {
       final accessToken = await _tokenService.getToken();
-      await _notificationService.markNotificationAsRead(
-          accessToken, notificationId);
+      await _notificationService.markNotificationAsRead(accessToken, ids);
 
-      _notifications = _notifications.map((notification) {
-        if (notification.id == notificationId) {
-          return notification.copyWith(isRead: true);
-        }
-        return notification;
-      }).toList();
-
+      await fetchNotifications(unread: _unread);
       notifyListeners();
-      log('Notification marked as read: $notificationId');
     } catch (e) {
       log('Error marking notification as read: $e');
     }
   }
 
-  Future<void> deleteNotification(int notificationId) async {
+  Future<void> deleteNotifications(List<String> ids) async {
     try {
       final accessToken = await _tokenService.getToken();
-      await _notificationService.deleteNotification(
-          accessToken, notificationId);
-
-      _notifications
-          .removeWhere((notification) => notification.id == notificationId);
-
+      await _notificationService.deleteNotifications(accessToken, ids);
+      await fetchNotifications(unread: _unread);
       notifyListeners();
-      log('Notification deleted: $notificationId');
     } catch (e) {
       log('Error deleting notification: $e');
     }
@@ -77,13 +60,13 @@ class NotificationProvider with ChangeNotifier {
 
   Future<void> fetchNotifications({
     int? page,
+    required bool unread,
   }) async {
     _setLoading(true);
-    _newNotification = false;
     try {
       final accessToken = await _tokenService.getToken();
       final response = await _notificationService.fetchUserNotifications(
-          accessToken, page ?? _currentPage);
+          accessToken, page ?? _currentPage, unread);
 
       if (page == 1 || page == null) {
         _notifications = response.notifications;
@@ -93,6 +76,7 @@ class NotificationProvider with ChangeNotifier {
 
       _currentPage = response.currentPage;
       _totalPages = response.totalPages;
+      _unread = unread;
 
       log('Notifications fetched for page $_currentPage: ${response.notifications.length}');
     } finally {
@@ -102,26 +86,6 @@ class NotificationProvider with ChangeNotifier {
 
   Future<void> resetAndFetch() async {
     _currentPage = 1;
-    await fetchNotifications(page: 1);
-  }
-
-  void _onMessage(RemoteMessage message) {
-    _newNotification = true;
-    notifyListeners();
-  }
-
-  void _onMessageOpened(RemoteMessage message) {
-    if (message.notification != null) {
-      _newNotification = true;
-      notifyListeners();
-    }
-  }
-
-  void _onTokenRefresh(String newToken) {
-    _firebaseToken = newToken;
-  }
-
-  Future<void> removeToken() async {
-    await _notificationService.deleteToken();
+    await fetchNotifications(page: 1, unread: _unread);
   }
 }

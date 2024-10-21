@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../constants/app_constants.dart';
 import '../../../models/owned_by.dart';
 import '../../../providers/course_provider.dart';
 import '../../../utils/handle_errors.dart';
@@ -11,10 +12,10 @@ class PaymentOwnerSelector extends StatefulWidget {
   final OwnedBy? selectedPayment;
 
   const PaymentOwnerSelector({
-    Key? key,
+    super.key,
     required this.onPaymentSelected,
     this.selectedPayment,
-  }) : super(key: key);
+  });
 
   @override
   _PaymentOwnerSelectorState createState() => _PaymentOwnerSelectorState();
@@ -64,65 +65,71 @@ class _PaymentOwnerSelectorState extends State<PaymentOwnerSelector> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        Text('Select Paid Student',
-            style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: 20),
-        SizedBox(
-          height: 200,
-          child: Consumer<CourseProvider>(
-            builder: (context, courseProvider, _) {
-              return courseProvider.isLoading &&
-                      courseProvider.eligibleStudents.isEmpty
-                  ? const Center(child: CircularProgressIndicator())
-                  : GridView.builder(
-                      controller: _scrollController,
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3,
-                        crossAxisSpacing: 4.0,
-                        mainAxisSpacing: 16.0,
-                        childAspectRatio: 1.5,
-                      ),
-                      itemCount: courseProvider.eligibleStudents.length +
-                          (courseProvider.isLoading ? 1 : 0),
-                      itemBuilder: (context, index) {
-                        if (index == courseProvider.eligibleStudents.length) {
-                          return const Center(
-                              child: CircularProgressIndicator());
-                        }
-                        final student = courseProvider.eligibleStudents[index];
-                        return _buildStudentCard(student);
-                      },
-                    );
-            },
-          ),
-        ),
-        const SizedBox(height: 20),
-        if (_selectedPayment != null)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10.0),
-            child: Text(
-              'Selected Student: ${_selectedPayment!.name}',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w500,
+    return SingleChildScrollView(
+        child: Padding(
+            padding: const EdgeInsets.all(AppPaddings.mediumPadding),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Text('Select Paid Student',
+                    style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: 20),
+                SizedBox(
+                  height: 200,
+                  child: Consumer<CourseProvider>(
+                    builder: (context, courseProvider, _) {
+                      return courseProvider.isLoading &&
+                              courseProvider.eligibleStudents.isEmpty
+                          ? const Center(child: CircularProgressIndicator())
+                          : GridView.builder(
+                              controller: _scrollController,
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 3,
+                                crossAxisSpacing: 4.0,
+                                mainAxisSpacing: 16.0,
+                                childAspectRatio: 1.5,
+                              ),
+                              itemCount:
+                                  courseProvider.eligibleStudents.length +
+                                      (courseProvider.isLoading ? 1 : 0),
+                              itemBuilder: (context, index) {
+                                if (index ==
+                                    courseProvider.eligibleStudents.length) {
+                                  return const Center(
+                                      child: CircularProgressIndicator());
+                                }
+                                final student =
+                                    courseProvider.eligibleStudents[index];
+                                return _buildStudentCard(student);
+                              },
+                            );
+                    },
                   ),
-            ),
-          ),
-        const SizedBox(height: 10),
-        CustomElevatedButton(
-          onPressed: () {
-            if (_selectedPayment != null) {
-              widget.onPaymentSelected(_selectedPayment!);
-            }
-          },
-          text: 'Next',
-        ),
-      ],
-    );
+                ),
+                const SizedBox(height: 20),
+                if (_selectedPayment != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10.0),
+                    child: Text(
+                      'Selected Student: ${_selectedPayment!.name}',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w500,
+                          ),
+                    ),
+                  ),
+                const SizedBox(height: 10),
+                CustomElevatedButton(
+                  onPressed: () {
+                    if (_selectedPayment != null) {
+                      widget.onPaymentSelected(_selectedPayment!);
+                    }
+                  },
+                  text: 'Next',
+                ),
+              ],
+            )));
   }
 
   Widget _buildStudentCard(OwnedBy student) {

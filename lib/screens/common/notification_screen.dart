@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:yoglogonline/providers/auth_provider.dart';
+import 'package:yoglogonline/widgets/custom_fab.dart';
 import '../../providers/notification_provider.dart';
 import '../../utils/handle_errors.dart';
-import '../../widgets/custom_deletable_card.dart';
+import '../../widgets/custom_card.dart';
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({Key? key}) : super(key: key);
@@ -12,41 +15,87 @@ class NotificationScreen extends StatefulWidget {
 }
 
 class _NotificationScreenState extends State<NotificationScreen> {
-  late ScrollController _scrollController;
-  bool _isSelectMode = false;
+  late final ScrollController _scrollController;
+  bool _showUnreadOnly = true;
+  final Set<String> _selectedNotifications = {};
+  String? _expandedNotificationId;
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _fetchNotifications();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _fetchNotifications();
+      _resetNewNotifications();
     });
+  }
+
+  void _resetNewNotifications() {
+    Provider.of<AuthProvider>(context, listen: false).resetNotification();
   }
 
   Future<void> _fetchNotifications() async {
     final notificationProvider =
         Provider.of<NotificationProvider>(context, listen: false);
     try {
-      await notificationProvider.fetchNotifications();
+      await notificationProvider.fetchNotifications(unread: _showUnreadOnly);
     } catch (e) {
       handleErrors(context, e);
     }
   }
 
-  Future<void> _deleteNotification(int notificationId) async {
+  void _toggleSelectAllNotifications() {
+    final notificationProvider =
+        Provider.of<NotificationProvider>(context, listen: false);
+
+    setState(() {
+      if (_selectedNotifications.length ==
+          notificationProvider.notifications.length) {
+        _selectedNotifications.clear();
+      } else {
+        _selectedNotifications.addAll(
+          notificationProvider.notifications.map((notif) => notif.messageId),
+        );
+      }
+    });
+  }
+
+  Future<void> _markSelectedAsRead() async {
     final notificationProvider =
         Provider.of<NotificationProvider>(context, listen: false);
     try {
-      await notificationProvider.deleteNotification(notificationId);
+      await notificationProvider
+          .markNotificationAsRead(_selectedNotifications.toList());
+      _selectedNotifications.clear();
+      setState(() {});
     } catch (e) {
       handleErrors(context, e);
     }
   }
 
-  void _toggleSelectMode() {
-    setState(() {
-      _isSelectMode = !_isSelectMode;
+  Future<void> _deleteSelectedNotifications(
+      List<String> notificationIds) async {
+    final notificationProvider =
+        Provider.of<NotificationProvider>(context, listen: false);
+    try {
+      await notificationProvider.deleteNotifications(notificationIds);
+      _selectedNotifications.clear();
+      setState(() {});
+    } catch (e) {
+      handleErrors(context, e);
+    }
+  }
+
+  bool get _isAnySelected => _selectedNotifications.isNotEmpty;
+
+  bool get _isAnyUnreadSelected {
+    final notificationProvider =
+        Provider.of<NotificationProvider>(context, listen: false);
+
+    return _selectedNotifications.any((id) {
+      final notification = notificationProvider.notifications
+          .firstWhere((notif) => notif.messageId == id);
+      return notification.status != 'read';
     });
   }
 
@@ -62,20 +111,59 @@ class _NotificationScreenState extends State<NotificationScreen> {
       appBar: AppBar(
         title: const Text('Notifications'),
         actions: [
-          if (_isSelectMode)
-            IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed: () {
-                // Handle batch delete logic if needed
-                _toggleSelectMode();
-              },
-            )
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: _isAnySelected
+                ? () => _deleteSelectedNotifications(
+                    _selectedNotifications.toList())
+                : null,
+          ),
+          IconButton(
+            icon: const Icon(Icons.done_all),
+            onPressed: _isAnyUnreadSelected ? _markSelectedAsRead : null,
+          ),
         ],
       ),
-      body: _buildNotificationList(),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _toggleSelectMode,
-        child: Icon(_isSelectMode ? Icons.check : Icons.select_all),
+      body: Column(
+        children: [
+          Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                TextButton(
+                  onPressed: _toggleSelectAllNotifications,
+                  child: const Text('Select All'),
+                ),
+                TextButton(
+                  onPressed: () => setState(() {
+                    _selectedNotifications.clear();
+                  }),
+                  child: const Text('Deselect All'),
+                ),
+                Row(
+                  children: [
+                    const Text('Unread'),
+                    Transform.scale(
+                      scale: 0.8,
+                      child: Switch(
+                        value: _showUnreadOnly,
+                        onChanged: (value) async {
+                          setState(() {
+                            _showUnreadOnly = value;
+                          });
+                          await _fetchNotifications();
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Expanded(child: _buildNotificationList()),
+        ],
       ),
     );
   }
@@ -83,78 +171,99 @@ class _NotificationScreenState extends State<NotificationScreen> {
   Widget _buildNotificationList() {
     return Consumer<NotificationProvider>(
       builder: (context, notificationProvider, child) {
+        // Check if the list is loading and empty
         if (notificationProvider.isLoading &&
             notificationProvider.notifications.isEmpty) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: RefreshIndicator(
-            onRefresh: _fetchNotifications,
-            child: ListView.builder(
-              controller: _scrollController,
-              itemCount: notificationProvider.notifications.length,
-              itemBuilder: (context, index) {
-                final notification = notificationProvider.notifications[index];
-                return CustomDeletableCard(
-                  child: ListTile(
-                    title: Text(notification.title),
-                    subtitle: Text(notification.body),
-                    tileColor:
-                        notification.isRead ? Colors.grey[200] : Colors.white,
-                    onTap: () {
-                      if (!_isSelectMode) {
-                        // Mark as read logic here
-                        _markAsRead(notification.id);
-                      }
-                    },
-                  ),
-                  onDelete: () async {
-                    bool? success =
-                        await _showDeleteConfirmationDialog(context);
-                    if (success == true) {
-                      _deleteNotification(notification.id);
-                    }
-                  },
-                );
-              },
+        // Check if there are no notifications
+        if (notificationProvider.notifications.isEmpty) {
+          return const Center(
+            child: Text(
+              'No notifications to show', // Message when no notifications
+              style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold), // Style the text as needed
             ),
+          );
+        }
+
+        return RefreshIndicator(
+          onRefresh: _fetchNotifications,
+          child: ListView.builder(
+            controller: _scrollController,
+            itemCount: notificationProvider.notifications.length,
+            itemBuilder: (context, index) {
+              final notification = notificationProvider.notifications[index];
+              final isSelected =
+                  _selectedNotifications.contains(notification.messageId);
+              final isExpanded =
+                  _expandedNotificationId == notification.messageId;
+
+              bool isRead = notification.status == 'read';
+              return CustomCard(
+                isSelected: isSelected,
+                onTap: () {
+                  setState(() {
+                    _expandedNotificationId =
+                        isExpanded ? null : notification.messageId;
+                  });
+                },
+                child: Stack(
+                  children: [
+                    ListTile(
+                      title: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            notification.title,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          Text(
+                            DateFormat('EEE, dd MMM y')
+                                .format(notification.createdAt),
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                          Text(
+                            notification.body,
+                            maxLines: isExpanded ? null : 2,
+                            overflow: isExpanded
+                                ? TextOverflow.visible
+                                : TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Positioned(
+                      right: -2.0,
+                      top: -2.0,
+                      child: isRead
+                          ? const Icon(
+                              Icons.done_all,
+                              color: Colors.green,
+                              size: 20,
+                            )
+                          : Checkbox(
+                              value: isSelected,
+                              onChanged: (bool? value) {
+                                setState(() {
+                                  if (value == true) {
+                                    _selectedNotifications
+                                        .add(notification.messageId);
+                                  } else {
+                                    _selectedNotifications
+                                        .remove(notification.messageId);
+                                  }
+                                });
+                              },
+                            ),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
-        );
-      },
-    );
-  }
-
-  Future<void> _markAsRead(int notificationId) async {
-    final notificationProvider =
-        Provider.of<NotificationProvider>(context, listen: false);
-    try {
-      await notificationProvider.markNotificationAsRead(notificationId);
-      setState(() {}); // Refresh the UI
-    } catch (e) {
-      handleErrors(context, e);
-    }
-  }
-
-  Future<bool?> _showDeleteConfirmationDialog(BuildContext context) {
-    return showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Delete Notification'),
-          content:
-              const Text('Are you sure you want to delete this notification?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Delete'),
-            ),
-          ],
         );
       },
     );

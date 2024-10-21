@@ -5,6 +5,7 @@ import '../../../utils/handle_errors.dart';
 import '../../../widgets/custom_elevated_button.dart';
 import '../../../widgets/custom_form_text_field.dart';
 import '../../../widgets/custom_text_button.dart';
+import '../../constants/app_constants.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
@@ -35,7 +36,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     return Scaffold(
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(AppPaddings.smallPadding),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -82,6 +83,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Provide new password';
+                        }
+                        if (!RegularExpressions.passwordRegex.hasMatch(value)) {
+                          return 'Password must be at least 6 characters,\ncontain a letter, number, and special character';
                         }
                         return null;
                       },

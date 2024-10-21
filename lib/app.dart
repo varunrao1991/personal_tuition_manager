@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:yoglogonline/screens/common/notification_screen.dart';
+import 'package:yoglogonline/services/firebase_service.dart';
 import './providers/attendance_provider.dart';
 import './providers/holiday_provider.dart';
 import './providers/month_provider.dart';
 import './providers/weekday_provider.dart';
 import './routes/teacher_routes.dart';
+import './routes/student_routes.dart';
+import 'providers/student_course_provider.dart';
 import 'routes/navigator.dart';
 import 'screens/common/about_screen.dart';
 import './services/attendance_service.dart';
@@ -42,6 +45,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (context) => AuthProvider(
               AuthService(context.read<HttpTimeoutClient>()),
+              FirebaseService(),
               context.read<TokenService>()),
         ),
         ChangeNotifierProvider(
@@ -80,6 +84,10 @@ class MyApp extends StatelessWidget {
             create: (context) => CourseProvider(
                 CourseService(context.read<HttpTimeoutClient>()),
                 context.read<TokenService>())),
+        ChangeNotifierProvider(
+            create: (context) => StudentCourseProvider(
+                CourseService(context.read<HttpTimeoutClient>()),
+                context.read<TokenService>())),
       ],
       child: MaterialApp(
         navigatorKey: navigatorKey,
@@ -90,6 +98,7 @@ class MyApp extends StatelessWidget {
         routes: {
           ...authRoutes,
           ...teacherRoutes,
+          ...studentRoutes,
           '/about': (context) => const AboutScreen(),
           '/notification': (context) => const NotificationScreen(),
           '/change-password': (context) => const ChangePasswordScreen(),

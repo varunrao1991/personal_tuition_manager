@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:yoglogonline/widgets/icon_info_column.dart';
+import '../../../constants/app_constants.dart';
 import '../../../widgets/custom_elevated_button.dart';
 import '../../../widgets/custom_swipe_card.dart';
 
@@ -30,36 +31,38 @@ class WaitlistCourseCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CustomSwipeCard(
-      onTap: onTap,
-      onSwipeLeft: onDelete,
-      onSwipeRight: onEdit,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(studentName, style: Theme.of(context).textTheme.headlineSmall),
-          const SizedBox(height: 8),
-          Row(
+        onTap: onTap,
+        onSwipeLeft: onDelete,
+        onSwipeRight: onEdit,
+        child: Padding(
+          padding: const EdgeInsets.all(AppPaddings.smallPadding),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Center(
-                  child: IconInfoColumn(
-                    icon: Icons.date_range,
-                    label1: '$totalClasses',
-                    label2: 'Total Classes',
+              Text(studentName, style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: Center(
+                      child: IconInfoColumn(
+                        icon: Icons.date_range,
+                        label1: '$totalClasses',
+                        label2: 'Total Classes',
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              Align(
-                alignment: Alignment.bottomRight,
-                child: CustomElevatedButton(
-                  text: 'Start Course',
-                  onPressed: canStart ? onStart : null,
-                ),
+                  Align(
+                    alignment: Alignment.bottomRight,
+                    child: CustomElevatedButton(
+                      text: 'Start Course',
+                      onPressed: canStart ? onStart : null,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
-    );
+        ));
   }
 }

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:yoglogonline/constants/app_constants.dart';
 import '../../widgets/custom_snackbar.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
@@ -96,7 +97,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     return Scaffold(
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(AppPaddings.smallPadding),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -127,10 +128,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       prefixIcon: Icons.phone,
                       keyboardType: TextInputType.phone,
                       validator: (value) {
-                        if (value == null ||
-                            value.isEmpty ||
-                            value.length != 10) {
-                          return 'Enter a valid 10-digit mobile number';
+                        if (value == null || value.isEmpty) {
+                          return 'Enter a valid mobile number';
+                        }
+                        if (!RegularExpressions.mobileRegex.hasMatch(value)) {
+                          return 'Mobile number must be exactly 10 digits and contain only numbers';
                         }
                         return null;
                       },
@@ -145,6 +147,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           if (value == null || value.isEmpty) {
                             return 'Enter the OTP sent to your mobile';
                           }
+                          if (!RegularExpressions.otpRegex.hasMatch(value)) {
+                            return 'OTP must be exactly 4 digits and contain numbers only';
+                          }
                           return null;
                         },
                       ),
@@ -157,6 +162,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Password must not be empty';
+                          }
+                          if (!RegularExpressions.passwordRegex
+                              .hasMatch(value)) {
+                            return 'Password must be at least 6 characters,\ncontain a letter, number, and special character';
                           }
                           return null;
                         },

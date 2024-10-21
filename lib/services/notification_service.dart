@@ -1,6 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:http/http.dart' as http;
 
 import '../config/app_config.dart';
@@ -22,60 +20,23 @@ class NotifyResponse {
 }
 
 class NotificationService {
-  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
   final String apiUrl = Config().apiUrl;
   final http.Client _client;
 
   NotificationService(this._client);
 
-  Future<String?> initialize(
-    Function(RemoteMessage) onMessage,
-    Function(RemoteMessage) onMessageOpened,
-    Function(String) onTokenRefresh,
-    Future<void> Function(RemoteMessage) backgroundHandler,
-  ) async {
-    NotificationSettings settings =
-        await _firebaseMessaging.requestPermission();
-    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-      log('User granted permission');
-    }
-
-    String? token = await _firebaseMessaging.getToken();
-    log('Token received in foreground: $token');
-
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      log('Message received in foreground: ${message.notification?.body}');
-      onMessage(message);
-    });
-
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      log('App opened from notification: ${message.notification?.body}');
-      onMessageOpened(message);
-    });
-
-    FirebaseMessaging.onBackgroundMessage(backgroundHandler);
-
-    _firebaseMessaging.onTokenRefresh.listen(onTokenRefresh);
-    return token;
-  }
-
-  Future<void> sendTokenToBackend(
-      String accessToken, String notificationToken) async {
-    final response = await _client.post(
-      Uri.parse('$apiUrl/api/notifications/token'),
-      headers: {'Authorization': 'Bearer $accessToken'},
-      body: {'token': notificationToken},
-    );
-
-    if (response.statusCode != 201) {
-      throw responseToError(response.body);
-    }
-  }
-
   Future<NotifyResponse> fetchUserNotifications(
-      String accessToken, int page) async {
+      String accessToken, int page, bool unread) async {
+    final queryParameters = {
+      'page': page.toString(),
+      'unread': unread.toString(),
+    };
+
+    final uri = Uri.parse('$apiUrl/api/notifications')
+        .replace(queryParameters: queryParameters);
+
     final response = await _client.get(
-      Uri.parse('$apiUrl/api/notifications?page=$page'),
+      uri,
       headers: {'Authorization': 'Bearer $accessToken'},
     );
 
@@ -94,12 +55,15 @@ class NotificationService {
     }
   }
 
-  /// Mark a notification as read by its ID.
   Future<void> markNotificationAsRead(
-      String accessToken, int notificationId) async {
+      String accessToken, List<String> ids) async {
     final response = await _client.patch(
-      Uri.parse('$apiUrl/api/notifications/$notificationId/read'),
-      headers: {'Authorization': 'Bearer $accessToken'},
+      Uri.parse('$apiUrl/api/notifications/read'),
+      headers: {
+        'Authorization': 'Bearer $accessToken',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'ids': ids}),
     );
 
     if (response.statusCode != 200) {
@@ -107,39 +71,18 @@ class NotificationService {
     }
   }
 
-  Future<void> deleteNotification(
-      String accessToken, int notificationId) async {
+  Future<void> deleteNotifications(String accessToken, List<String> ids) async {
     final response = await _client.delete(
-      Uri.parse('$apiUrl/api/notifications/$notificationId'),
-      headers: {'Authorization': 'Bearer $accessToken'},
+      Uri.parse('$apiUrl/api/notifications'),
+      headers: {
+        'Authorization': 'Bearer $accessToken',
+        'Content-Type': 'application/json'
+      },
+      body: jsonEncode({'ids': ids}),
     );
 
     if (response.statusCode != 200) {
       throw responseToError(response.body);
     }
-  }
-
-  Future<void> subscribeToTopic(String topic) async {
-    await _firebaseMessaging.subscribeToTopic(topic);
-  }
-
-  Future<void> unsubscribeFromTopic(String topic) async {
-    await _firebaseMessaging.unsubscribeFromTopic(topic);
-  }
-
-  Future<void> deleteToken() async {
-    await _firebaseMessaging.deleteToken();
-  }
-
-  Future<bool> checkNotificationPermission() async {
-    NotificationSettings settings =
-        await _firebaseMessaging.getNotificationSettings();
-    return settings.authorizationStatus == AuthorizationStatus.authorized;
-  }
-
-  Future<bool> enableNotifications() async {
-    NotificationSettings settings =
-        await _firebaseMessaging.requestPermission();
-    return settings.authorizationStatus == AuthorizationStatus.authorized;
   }
 }

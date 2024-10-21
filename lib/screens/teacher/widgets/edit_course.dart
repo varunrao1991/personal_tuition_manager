@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../constants/app_constants.dart';
 import '../../../widgets/custom_elevated_button.dart';
 import '../../../widgets/custom_form_text_field.dart';
 
@@ -32,7 +33,7 @@ class _EditCourseWidgetState extends State<EditCourseWidget> {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(AppPaddings.smallPadding),
         child: Form(
           key: _formKey,
           child: Column(

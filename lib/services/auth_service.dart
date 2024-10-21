@@ -19,6 +19,26 @@ class AuthService {
 
   AuthService(this._client);
 
+  Future<void> sendTokenToBackend(
+      String accessToken, String? notificationToken) async {
+    final uri = Uri.parse('$apiUrl/api/notifications/token');
+    final headers = {'Authorization': 'Bearer $accessToken'};
+
+    final response = await _client.post(
+      uri,
+      headers: headers,
+      body: {'token': notificationToken ?? ''},
+    );
+
+    if (response.statusCode == 201) {
+      log('Token sent/updated successfully');
+    } else if (response.statusCode == 204) {
+      log('Token removed successfully');
+    } else {
+      throw responseToError(response.body);
+    }
+  }
+
   Future<void> requestPasswordChange(String mobile) async {
     final response = await _client.post(
       Uri.parse('$apiUrl/api/auth/request-password-change'),
@@ -45,6 +65,17 @@ class AuthService {
     if (response.statusCode == 200) {
       log("Password changed with OTP successfully");
     } else {
+      throw responseToError(response.body);
+    }
+  }
+
+  Future<void> logout(String accessToken) async {
+    final response = await _client.post(
+      Uri.parse('$apiUrl/api/auth/logout'),
+      headers: {'Authorization': 'Bearer $accessToken'},
+    );
+
+    if (response.statusCode != 200) {
       throw responseToError(response.body);
     }
   }
@@ -79,7 +110,7 @@ class AuthService {
     }
   }
 
-  Future<void> changePassword(
+  Future<String> changePassword(
       String accessToken, String oldPassword, String newPassword) async {
     final response = await _client.post(
       Uri.parse('$apiUrl/api/auth/change-password'),
@@ -94,7 +125,9 @@ class AuthService {
     );
 
     if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
       log("Password changed successfully");
+      return data['accessToken'];
     } else {
       throw responseToError(response.body);
     }

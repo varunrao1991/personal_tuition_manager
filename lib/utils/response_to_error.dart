@@ -9,26 +9,28 @@ Exception responseToError(String responseBody) {
     final String message = errorResponse['error'] ?? 'An error occurred';
 
     switch (errorCode) {
-      case 'NULL_TOKEN':
+      case ErrorCodes.nullToken:
         return TokenIsNullException(message);
-      case 'EXPIRED_TOKEN':
+      case ErrorCodes.expiredToken:
         return ExpiredTokenException(message);
-      case 'INVALID_TOKEN':
+      case ErrorCodes.invalidSession:
+        return InvalidSessionException(message);
+      case ErrorCodes.invalidToken:
         return InvalidTokenException(message);
-      case 'UNAUTHORIZED':
-        return UnauthrosizedException(message);
-      case 'BAD_REQUEST':
+      case ErrorCodes.unauthorized:
+        return UnauthorizedException(message);
+      case ErrorCodes.badRequest:
         return BadRequestException(message);
-      case 'NOT_FOUND':
+      case ErrorCodes.notFound:
         return NotFoundException(message);
-      case 'CONFLICT':
+      case ErrorCodes.conflict:
         return ConflictException(message);
-      case 'INTERNAL_SERVER_ERROR':
+      case ErrorCodes.internalServerError:
         return InternalServerErrorException(message);
       default:
         return CustomException(message, errorCode);
     }
   } else {
-    return CustomException('Unknown error occurred', 'UNKNOWN_ERROR');
+    return CustomException('Unknown error occurred', ErrorCodes.unknownError);
   }
 }

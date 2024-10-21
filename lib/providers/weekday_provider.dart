@@ -4,15 +4,22 @@ import '../services/weekday_service.dart';
 import '../services/token_service.dart';
 
 class WeekdayProvider with ChangeNotifier {
-  List<int> _weekdays = [];
-  bool _isLoading = false;
+  WeekdayProvider(this._weekdayService, this._tokenService);
+
   final WeekdayService _weekdayService;
   final TokenService _tokenService;
+
+  bool _isLoading = false;
+  List<int> _weekdays = [];
 
   List<int> get weekdays => _weekdays;
   bool get isLoading => _isLoading;
 
-  WeekdayProvider(this._weekdayService, this._tokenService);
+  void clearData() {
+    _setLoading(true);
+    _weekdays = [];
+    _setLoading(false);
+  }
 
   void _setLoading(bool value) {
     _isLoading = value;

@@ -30,20 +30,12 @@ class MonthInfoCard extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              DateFormat('MMM').format(month),
-              style: isSelected
-                  ? Theme.of(context).textTheme.bodyLarge
-                  : Theme.of(context).textTheme.bodyLarge,
-            ),
+            Text(DateFormat('MMM').format(month),
+                style: Theme.of(context).textTheme.bodyLarge),
             const SizedBox(height: 4),
-            Text(
-              DateFormat('y').format(month),
-              style: isSelected
-                  ? Theme.of(context).textTheme.labelSmall
-                  : Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(height: 8),
+            Text(DateFormat('y').format(month),
+                style: Theme.of(context).textTheme.labelSmall),
+            const SizedBox(height: 4),
             child,
           ],
         ),

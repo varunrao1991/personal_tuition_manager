@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../constants/app_constants.dart';
 import 'custom_dropdown.dart';
 import 'custom_elevated_button.dart';
 
@@ -38,41 +39,45 @@ class _SortModalState extends State<SortModal> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(widget.title, style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: 16),
-        CustomDropdownButton(
-          labelText: "Sort by",
-          selectedSortField: _selectedSortField,
-          sortOptions: widget.sortOptions,
-          onSortFieldChange: (value) {
-            if (value != null) {
-              setState(() {
-                _selectedSortField = value;
-              });
-            }
-          },
-        ),
-        const SizedBox(height: 16),
-        ListTile(
-          title: const Text('Ascending'),
-          trailing: Switch(
-            value: _isAscending,
-            onChanged: (value) {
-              setState(() {
-                _isAscending = value;
-              });
-            },
-          ),
-        ),
-        const SizedBox(height: 16),
-        CustomElevatedButton(
-          text: 'OK',
-          onPressed: _onOkPressed,
-        ),
-      ],
-    );
+    return SingleChildScrollView(
+        child: Padding(
+            padding: const EdgeInsets.all(AppPaddings.mediumPadding),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(widget.title,
+                    style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: 16),
+                CustomDropdownButton(
+                  labelText: "Sort by",
+                  selectedSortField: _selectedSortField,
+                  sortOptions: widget.sortOptions,
+                  onSortFieldChange: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _selectedSortField = value;
+                      });
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
+                ListTile(
+                  title: const Text('Ascending'),
+                  trailing: Switch(
+                    value: _isAscending,
+                    onChanged: (value) {
+                      setState(() {
+                        _isAscending = value;
+                      });
+                    },
+                  ),
+                ),
+                const SizedBox(height: 16),
+                CustomElevatedButton(
+                  text: 'OK',
+                  onPressed: _onOkPressed,
+                ),
+              ],
+            )));
   }
 }

@@ -6,19 +6,20 @@ import '../services/course_service.dart';
 import '../services/token_service.dart';
 
 class CourseProvider with ChangeNotifier {
+  CourseProvider(this._courseService, this._tokenService);
+
   final Map<String, List<Course>> _coursesMap = {
     'ongoing': [],
     'closed': [],
     'waitlist': [],
   };
 
-  List<OwnedBy> _eligibleStudents = [];
-  bool _hasEligibleStudents = false;
-
-  bool _isLoading = false;
   final CourseService _courseService;
   final TokenService _tokenService;
 
+  bool _isLoading = false;
+  List<OwnedBy> _eligibleStudents = [];
+  bool _hasEligibleStudents = false;
   int _currentPage = 1;
   int _totalPages = 1;
   int _currentEligibleStudentPage = 1;
@@ -27,14 +28,22 @@ class CourseProvider with ChangeNotifier {
   Map<String, List<Course>> get coursesMap => _coursesMap;
   List<OwnedBy> get eligibleStudents => _eligibleStudents;
   bool get hasEligibleStudents => _hasEligibleStudents;
-
   bool get isLoading => _isLoading;
   int get currentPage => _currentPage;
   int get totalPages => _totalPages;
   int get currentEligibleStudentPage => _currentEligibleStudentPage;
   int get totalEligibleStudentPages => _totalEligibleStudentPages;
 
-  CourseProvider(this._courseService, this._tokenService);
+  void clearData() {
+    _setLoading(true);
+    _eligibleStudents = [];
+    _hasEligibleStudents = false;
+    _currentPage = 1;
+    _totalPages = 1;
+    _currentEligibleStudentPage = 1;
+    _totalEligibleStudentPages = 1;
+    _setLoading(false);
+  }
 
   void _setLoading(bool value) {
     _isLoading = value;

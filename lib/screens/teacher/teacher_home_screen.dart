@@ -5,6 +5,7 @@ import 'course_screen.dart';
 import 'widgets/custom_drawer.dart';
 import 'student_screen.dart';
 import 'payment_screen.dart';
+import '../../widgets/navigation_bar.dart';
 
 class TeacherHomeScreen extends StatefulWidget {
   const TeacherHomeScreen({super.key});
@@ -15,25 +16,32 @@ class TeacherHomeScreen extends StatefulWidget {
 
 class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
   int _selectedIndex = 0;
-
-  final Map<int, IconData> _iconMap = {
-    1: Icons.payment,
-    2: Icons.check_circle_outline,
-    3: Icons.people,
-    4: Icons.book,
-  };
+  final List<NavItem> _navItems = [
+    const NavItem(icon: Icons.payment, label: 'Payments'),
+    const NavItem(icon: Icons.check_circle_outline, label: 'Attendance'),
+    const NavItem(icon: Icons.people, label: 'Students'),
+    const NavItem(icon: Icons.book, label: 'Courses'),
+  ];
 
   Widget _getViewer() {
     switch (_selectedIndex) {
-      case 1:
+      case 0:
         return const PaymentScreen();
-      case 3:
+      case 1:
+        return const AttendanceScreen();
+      case 2:
         return const StudentScreen();
-      case 4:
+      case 3:
         return const CourseScreen();
       default:
         return const AttendanceScreen();
     }
+  }
+
+  void _onItemSelected(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
   }
 
   @override
@@ -48,32 +56,10 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
       ),
       drawer: const CustomDrawer(),
       body: _getViewer(),
-      bottomNavigationBar: _buildBottomNavigationBar(),
-    );
-  }
-
-  Widget _buildBottomNavigationBar() {
-    return BottomAppBar(
-      shape: const CircularNotchedRectangle(),
-      notchMargin: 8.0,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: _iconMap.entries.map((entry) {
-          int index = entry.key;
-          IconData icon = entry.value;
-
-          return IconButton(
-            icon: Icon(icon),
-            color: _selectedIndex == index
-                ? Theme.of(context).colorScheme.primary
-                : null,
-            onPressed: () {
-              setState(() {
-                _selectedIndex = index;
-              });
-            },
-          );
-        }).toList(),
+      bottomNavigationBar: CustomBottomNavigationBar(
+        navItems: _navItems,
+        selectedIndex: _selectedIndex,
+        onItemSelected: _onItemSelected,
       ),
     );
   }

@@ -11,19 +11,20 @@ class AttendanceService {
 
   AttendanceService(this._client);
 
-  Future<List<Attendance>> getAttendances({
-    required String accessToken,
-    DateTime? startDate,
-    DateTime? endDate,
-  }) async {
+  Future<List<Attendance>> getAttendances(
+      {required String accessToken,
+      DateTime? startDate,
+      DateTime? endDate,
+      bool myAttendance = false}) async {
     Map<String, String> queryParams = {};
 
     if (startDate != null && endDate != null) {
-      queryParams['startDate'] = startDate.toIso8601String();
-      queryParams['endDate'] = endDate.toIso8601String();
+      queryParams['startDate'] = startDate.toIso8601String().split('T').first;
+      queryParams['endDate'] = endDate.toIso8601String().split('T').first;
     }
 
-    Uri uri = Uri.parse('$apiUrl/api/attendances')
+    Uri uri = Uri.parse(
+            '$apiUrl/api/attendances${myAttendance ? '/my_attendances' : ''}')
         .replace(queryParameters: queryParams);
 
     final response = await _client.get(uri, headers: {

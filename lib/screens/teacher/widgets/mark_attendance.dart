@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
+import '../../../constants/app_constants.dart';
 import '../../../models/attendance.dart';
 import '../../../models/owned_by.dart';
 import '../../../providers/attendance_provider.dart';
@@ -201,7 +202,7 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
 
     return SingleChildScrollView(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(AppPaddings.mediumPadding),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[

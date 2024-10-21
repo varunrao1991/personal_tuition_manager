@@ -1,0 +1,27 @@
+import 'payment_info.dart';
+
+class StudentCourse {
+  final int paymentId;
+  final DateTime? startDate;
+  final DateTime? endDate;
+  final int totalClasses;
+  final PaymentInfo payment;
+
+  StudentCourse(
+      {required this.paymentId,
+      required this.startDate,
+      required this.endDate,
+      required this.totalClasses,
+      required this.payment});
+
+  factory StudentCourse.fromJson(Map<String, dynamic> json) {
+    return StudentCourse(
+      paymentId: json['paymentId'],
+      startDate:
+          json['startDate'] != null ? DateTime.parse(json['startDate']) : null,
+      endDate: json['endDate'] != null ? DateTime.parse(json['endDate']) : null,
+      totalClasses: json['totalClasses'],
+      payment: PaymentInfo.fromJson(json['payment']),
+    );
+  }
+}

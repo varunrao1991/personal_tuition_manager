@@ -1,53 +1,45 @@
 import 'package:flutter/material.dart';
 import '../../../constants/app_constants.dart';
 import '../../../utils/time_ago.dart';
-import '../../../widgets/custom_elevated_button.dart';
-import '../../../widgets/custom_swipe_card.dart';
+import '../../../widgets/custom_card.dart';
 import '../../../widgets/icon_info_column.dart';
 import '../../../widgets/info_column.dart';
 
-class OngoingCourseCard extends StatelessWidget {
+class OngoingStudentCourseCard extends StatelessWidget {
   final DateTime startDate;
-  final String name;
   final DateTime paymentDate;
   final int totalClasses;
   final int completedDays;
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
-  final VoidCallback onUpdate;
-  final VoidCallback onClose;
+  final Widget? child;
   final VoidCallback? onTap;
-  final bool? noCredit;
 
-  const OngoingCourseCard({
+  const OngoingStudentCourseCard({
     super.key,
     required this.startDate,
-    required this.name,
     required this.paymentDate,
     required this.totalClasses,
     required this.completedDays,
-    required this.onEdit,
-    required this.onDelete,
-    required this.onUpdate,
-    required this.onClose,
+    this.child, // Optional child parameter
     this.onTap,
-    this.noCredit,
   });
 
   @override
   Widget build(BuildContext context) {
-    return CustomSwipeCard(
+    return CustomCard(
       onTap: onTap,
-      onSwipeLeft: onDelete,
-      onSwipeRight: onEdit,
       child: Padding(
         padding: const EdgeInsets.all(AppPaddings.smallPadding),
         child: Stack(
           children: [
             Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildStudentName(context),
+                Text(
+                  "Ongoing course",
+                  style: Theme.of(context).textTheme.titleLarge,
+                  textAlign: TextAlign.left,
+                ),
                 const SizedBox(height: 8),
                 IconInfoColumn(
                   icon: Icons.access_time,
@@ -56,27 +48,13 @@ class OngoingCourseCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 _buildInfo(),
-                const SizedBox(height: 8),
-                _buildButtons(),
+                const SizedBox(height: 4),
+                if (child != null) child!,
               ],
             ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildStudentName(BuildContext context) {
-    return Row(
-      children: [
-        Text(name, style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(width: 4),
-        if (noCredit == false)
-          const Icon(
-            Icons.check,
-            color: Colors.green,
-          ),
-      ],
     );
   }
 
@@ -115,28 +93,6 @@ class OngoingCourseCard extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildButtons() {
-    int remainingClasses =
-        (totalClasses - completedDays).clamp(0, totalClasses);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        _buildButton('Restart', onUpdate),
-        const SizedBox(width: 16),
-        _buildButton('Close', remainingClasses == 0 ? onClose : null),
-      ],
-    );
-  }
-
-  Widget _buildButton(String text, VoidCallback? onPressed) {
-    return Expanded(
-      child: CustomElevatedButton(
-        text: text,
-        onPressed: onPressed,
       ),
     );
   }

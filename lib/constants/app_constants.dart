@@ -1,4 +1,5 @@
 class AppPaddings {
+  static const double tinyPadding = 4.0;
   static const double smallPadding = 8.0;
   static const double mediumPadding = 16.0;
   static const double largePadding = 24.0;
@@ -15,6 +16,7 @@ class AppSizes {
 }
 
 class AppMargins {
+  static const double tinyMargin = 8.0;
   static const double smallMargin = 8.0;
   static const double mediumMargin = 16.0;
   static const double largeMargin = 24.0;
@@ -36,4 +38,12 @@ class Constants {
   static const String defaultNotificationChannelId = 'padma_yoga_channel';
   static const String defaultNotificationChannelName = 'Padmayoga';
   static const String defaultNotificationChannelDescription = "Nothing";
+}
+
+class RegularExpressions {
+  static final passwordRegex =
+      RegExp(r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$');
+  static final mobileRegex = RegExp(r'^\d{10}$');
+  static final otpRegex = RegExp(r'^\d{4}$');
+  static final nameRegex = RegExp(r'^[a-zA-Z\s]{3,}$');
 }

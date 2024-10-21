@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import '../../../models/profile_update.dart';
-import '../../../models/user_model.dart';
-import '../../../providers/auth_provider.dart';
-import '../../../utils/handle_errors.dart';
-import '../../../widgets/custom_elevated_button.dart';
-import '../../../widgets/custom_form_text_field.dart';
-import '../../../widgets/custom_snackbar.dart';
+import '../../constants/app_constants.dart';
+import '../../models/profile_update.dart';
+import '../../models/user_model.dart';
+import '../../providers/auth_provider.dart';
+import '../../utils/handle_errors.dart';
+import '../../widgets/custom_elevated_button.dart';
+import '../../widgets/custom_form_text_field.dart';
+import '../../widgets/custom_snackbar.dart';
+import '../../widgets/navigation_bar.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -16,27 +18,24 @@ class EditProfileScreen extends StatefulWidget {
   _EditProfileScreenState createState() => _EditProfileScreenState();
 }
 
-class _EditProfileScreenState extends State<EditProfileScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   final _passwordFormKey = GlobalKey<FormState>();
 
   final _nameController = TextEditingController();
   final _mobileController = TextEditingController();
   final _dobController = TextEditingController();
-
   final _oldPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _reenterPasswordController = TextEditingController();
 
   DateTime? _selectedDob;
   User? _originalUser;
+  int _selectedIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
     _loadUserData();
   }
 
@@ -109,8 +108,19 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     }
   }
 
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final List<Widget> _pages = [
+      _buildPersonalInfoForm(),
+      _buildPasswordForm(),
+    ];
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -118,22 +128,14 @@ class _EditProfileScreenState extends State<EditProfileScreen>
           style: Theme.of(context).textTheme.headlineSmall,
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildPersonalInfoForm(),
-          _buildPasswordForm(),
+      body: _pages[_selectedIndex],
+      bottomNavigationBar: CustomBottomNavigationBar(
+        selectedIndex: _selectedIndex,
+        onItemSelected: _onItemTapped,
+        navItems: const [
+          NavItem(icon: Icons.person, label: 'Personal Info'),
+          NavItem(icon: Icons.lock, label: 'Change Password'),
         ],
-      ),
-      bottomNavigationBar: TabBar(
-        controller: _tabController,
-        tabs: const [
-          Tab(text: 'Personal Info', icon: Icon(Icons.person)),
-          Tab(text: 'Change Password', icon: Icon(Icons.lock)),
-        ],
-        indicatorColor: Theme.of(context).colorScheme.primary,
-        labelColor: Theme.of(context).colorScheme.primary,
-        unselectedLabelColor: Colors.grey,
       ),
     );
   }
@@ -142,7 +144,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     return Form(
       key: _formKey,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(AppPaddings.smallPadding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -154,6 +156,9 @@ class _EditProfileScreenState extends State<EditProfileScreen>
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter your name';
+                }
+                if (!RegularExpressions.nameRegex.hasMatch(value)) {
+                  return 'Name must be at least 3 characters and can contain spaces only';
                 }
                 return null;
               },
@@ -168,8 +173,8 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                 if (value == null || value.isEmpty) {
                   return 'Please enter your mobile number';
                 }
-                if (value.length != 10) {
-                  return 'Mobile number must be 10 digits';
+                if (!RegularExpressions.mobileRegex.hasMatch(value)) {
+                  return 'Mobile number must be exactly 10 digits and contain only numbers';
                 }
                 return null;
               },
@@ -179,14 +184,13 @@ class _EditProfileScreenState extends State<EditProfileScreen>
               controller: _dobController,
               labelText: 'Date of Birth',
               prefixIcon: Icons.calendar_today,
-              obscureText: false,
+              onTap: () => _selectDob(context),
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please select your date of birth';
                 }
                 return null;
               },
-              onTap: () => _selectDob(context),
             ),
             const SizedBox(height: 30),
             SizedBox(
@@ -206,7 +210,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     return Form(
       key: _passwordFormKey,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(AppPaddings.smallPadding),
         child: Column(
           children: [
             const SizedBox(height: 20),
@@ -231,6 +235,9 @@ class _EditProfileScreenState extends State<EditProfileScreen>
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter your new password';
+                }
+                if (!RegularExpressions.passwordRegex.hasMatch(value)) {
+                  return 'Password must be at least 6 characters,\ncontain a letter, number, and special character';
                 }
                 return null;
               },

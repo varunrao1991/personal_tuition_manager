@@ -6,13 +6,15 @@ import '../services/payment_service.dart';
 import '../services/token_service.dart';
 
 class PaymentProvider with ChangeNotifier {
-  List<Payment> _payments = [];
-  bool _isLoading = false;
+  PaymentProvider(this._paymentService, this._tokenService);
+
   final PaymentService _paymentService;
   final TokenService _tokenService;
+
+  bool _isLoading = false;
+  List<Payment> _payments = [];
   int _currentPage = 1;
   int _totalPages = 1;
-
   Map<int, double> _cachedDailyTotals = {};
 
   Map<int, double> get dailyTotals => _cachedDailyTotals;
@@ -31,7 +33,14 @@ class PaymentProvider with ChangeNotifier {
   DateTime? get cachedStartDate => _cachedStartDate;
   DateTime? get cachedEndDate => _cachedEndDate;
 
-  PaymentProvider(this._paymentService, this._tokenService);
+  void clearData() {
+    _setLoading(true);
+    _payments = [];
+    _currentPage = 1;
+    _totalPages = 1;
+    _cachedDailyTotals = {};
+    _setLoading(false);
+  }
 
   void _setLoading(bool value) {
     _isLoading = value;

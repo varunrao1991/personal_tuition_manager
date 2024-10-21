@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../constants/app_constants.dart';
 import '../../../models/create_payment.dart';
 import '../../../widgets/custom_elevated_button.dart';
 import '../../../widgets/custom_form_date_field.dart';
@@ -49,7 +50,7 @@ class _EditPaymentWidgetState extends State<EditPaymentWidget> {
   Widget build(BuildContext context) {
     return Center(
       child: Container(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(AppPaddings.smallPadding),
         child: SingleChildScrollView(
           child: Form(
             key: _formKey,

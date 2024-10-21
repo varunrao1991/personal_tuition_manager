@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../constants/app_constants.dart';
 import '../../models/student_model.dart';
 import '../../models/student_update.dart';
 import '../../providers/student_provider.dart';
@@ -128,7 +129,7 @@ class _StudentScreenState extends State<StudentScreen> {
 
   Widget _buildSearchAndFilterRow(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(AppPaddings.mediumPadding),
       child: Row(
         children: [
           Expanded(
@@ -180,7 +181,7 @@ class _StudentScreenState extends State<StudentScreen> {
           }
 
           return Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(AppPaddings.smallPadding),
               child: RefreshIndicator(
                 onRefresh: _fetchStudents,
                 child: ListView.builder(

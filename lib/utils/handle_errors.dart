@@ -11,20 +11,27 @@ void handleErrors(BuildContext context, e) {
     _handleAuthError(context, e.message);
   } else if (e is InvalidTokenException) {
     _handleInvalidTokenError(context, e.message);
+  } else if (e is InvalidSessionException) {
+    _handleInvalidSessionError(context, e.message);
   } else if (e is TokenIsNullException) {
     _handleNullTokenError(context, e.message);
   } else if (e is BadRequestException) {
     _handleBadRequestError(context, e.message);
-  } else if (e is UnauthrosizedException) {
-    _handleUnauthorizedError(context, e.message);
-  } else if (e is BadRequestException) {
+  } else if (e is UnauthorizedException) {
     _handleUnauthorizedError(context, e.message);
   } else if (e is TimeoutException) {
     _handleTimeoutError(context, e.message);
   } else if (e is SocketException) {
-    showCustomSnackBar(context, "No Internet connection. Check your network.");
+    if (e.osError?.message == 'No route to host') {
+      showCustomSnackBar(
+          context, "Failed to connect to the server. Is it running?");
+    } else {
+      showCustomSnackBar(
+          context, "No Internet connection. Check your network.");
+    }
   } else if (e is HttpException) {
-    showCustomSnackBar(context, "Failed to connect to the server.");
+    showCustomSnackBar(
+        context, "Failed to connect to the server. Is it running?");
   } else if (e is FormatException) {
     showCustomSnackBar(context, "Invalid response format.");
   } else if (e is Error) {
@@ -44,6 +51,12 @@ void _handleTimeoutError(BuildContext context, String? message) {
 
 void _handleInvalidTokenError(BuildContext context, String? message) {
   showCustomSnackBar(context, 'Session expired; Login again.',
+      backgroundColor: Colors.orangeAccent);
+  Navigator.of(context).pushReplacementNamed('/login');
+}
+
+void _handleInvalidSessionError(BuildContext context, String? message) {
+  showCustomSnackBar(context, 'Session invalid; Login again.',
       backgroundColor: Colors.orangeAccent);
   Navigator.of(context).pushReplacementNamed('/login');
 }

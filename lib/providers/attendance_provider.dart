@@ -5,12 +5,14 @@ import '../services/attendance_service.dart';
 import '../services/token_service.dart';
 
 class AttendanceProvider with ChangeNotifier {
-  List<Attendance> _attendances = [];
-  List<DateTime> _attendanceDatesOfStudent = [];
-  bool _isLoading = false;
+  AttendanceProvider(this._attendanceService, this._tokenService);
+
   final AttendanceService _attendanceService;
   final TokenService _tokenService;
 
+  bool _isLoading = false;
+  List<Attendance> _attendances = [];
+  List<DateTime> _attendanceDatesOfStudent = [];
   DateTime? _cachedStartDate;
   DateTime? _cachedEndDate;
 
@@ -18,7 +20,14 @@ class AttendanceProvider with ChangeNotifier {
   List<DateTime> get attendanceDatesOfStudent => _attendanceDatesOfStudent;
   bool get isLoading => _isLoading;
 
-  AttendanceProvider(this._attendanceService, this._tokenService);
+  void clearData() {
+    _setLoading(true);
+    _attendances = [];
+    _attendanceDatesOfStudent = [];
+    _cachedStartDate = null;
+    _cachedEndDate = null;
+    _setLoading(false);
+  }
 
   void _setLoading(bool value) {
     _isLoading = value;
@@ -28,7 +37,8 @@ class AttendanceProvider with ChangeNotifier {
   Future<void> fetchAttendances(
       {DateTime? startDate,
       DateTime? endDate,
-      bool forceRefresh = false}) async {
+      bool forceRefresh = false,
+      bool myAttendance = false}) async {
     if (startDate == null || endDate == null) {
       return;
     }
@@ -68,10 +78,10 @@ class AttendanceProvider with ChangeNotifier {
       final String accessToken = await _tokenService.getToken();
       final List<Attendance> newAttendances =
           await _attendanceService.getAttendances(
-        accessToken: accessToken,
-        startDate: startDateNew,
-        endDate: endDateNew,
-      );
+              accessToken: accessToken,
+              startDate: startDateNew,
+              endDate: endDateNew,
+              myAttendance: myAttendance);
 
       if (shouldResetAttendances) {
         _attendances = newAttendances;

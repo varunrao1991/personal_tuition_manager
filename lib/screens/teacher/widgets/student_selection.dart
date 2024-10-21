@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../constants/app_constants.dart';
 import '../../../models/student_model.dart';
 import '../../../providers/student_provider.dart';
 import '../../../utils/handle_errors.dart';
@@ -111,7 +112,7 @@ class _StudentSelectorState extends State<StudentSelector> {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       child: Padding(
-        padding: const EdgeInsets.all(4.0),
+        padding: const EdgeInsets.all(AppPaddings.mediumPadding),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[

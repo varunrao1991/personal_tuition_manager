@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
+import '../../constants/app_constants.dart';
 import '../../models/holiday.dart';
 import '../../providers/holiday_provider.dart';
 import '../../providers/weekday_provider.dart';
@@ -134,7 +135,7 @@ class _HolidayScreenState extends State<HolidayScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.all(AppPaddings.smallPadding),
               child: Column(
                 children: [
                   TableCalendar(
@@ -317,9 +318,9 @@ class _HolidayScreenState extends State<HolidayScreen> {
               });
             },
             child: Container(
-              margin: const EdgeInsets.all(8.0),
+              margin: const EdgeInsets.all(AppMargins.smallMargin),
               child: Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: const EdgeInsets.all(AppPaddings.smallPadding),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

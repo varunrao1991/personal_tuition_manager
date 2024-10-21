@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:yoglogonline/widgets/custom_fab.dart';
+import '../../constants/app_constants.dart';
 import '../../models/create_payment.dart';
 import '../../models/fetch_payment.dart';
 import '../../providers/month_provider.dart';
@@ -185,7 +186,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   Widget _buildMonthlyPayments() {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(AppPaddings.smallPadding),
       child: MonthlyPaymentsWidget(
         onMonthChanged: _onMonthChanged,
         selectedMonth: _selectedMonth,
@@ -215,12 +216,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
         }
 
         return ListView.separated(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
           physics:
               const NeverScrollableScrollPhysics(), // Disable internal scroll
           shrinkWrap: true, // Let it take only needed space
           itemCount: paymentProvider.payments.length + (_isLoadingMore ? 1 : 0),
-          separatorBuilder: (context, index) => const SizedBox(height: 8),
+          separatorBuilder: (context, index) => const SizedBox(height: 2),
           itemBuilder: (context, index) {
             if (index == paymentProvider.payments.length) {
               return const Center(child: CircularProgressIndicator());
