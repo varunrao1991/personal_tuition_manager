@@ -21,7 +21,7 @@ Future<void> main() async {
   initializeLocalNotifications();
 
   const String userType =
-      String.fromEnvironment('USER_TYPE', defaultValue: 'teacher');
+      String.fromEnvironment('USER_TYPE', defaultValue: 'student');
 
   const String environment =
       String.fromEnvironment('ENV', defaultValue: 'development');
