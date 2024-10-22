@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../constants/app_constants.dart';
-import '../../../providers/student_provider.dart';
+import '../../../providers/teacher/student_provider.dart';
 import '../../../models/student_update.dart';
 import '../../../utils/handle_errors.dart';
 import '../../../widgets/custom_elevated_button.dart';

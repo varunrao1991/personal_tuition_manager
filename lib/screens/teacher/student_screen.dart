@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../../constants/app_constants.dart';
 import '../../models/student_model.dart';
 import '../../models/student_update.dart';
-import '../../providers/student_provider.dart';
+import '../../providers/teacher/student_provider.dart';
 import '../../utils/handle_errors.dart';
 import '../../widgets/custom_fab.dart';
 import '../../widgets/search_bar.dart';

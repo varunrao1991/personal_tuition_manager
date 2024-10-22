@@ -2,27 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../constants/app_constants.dart';
-import '../../models/attendance.dart';
-import '../../providers/teacher/attendance_provider.dart';
-import '../../providers/teacher/holiday_provider.dart';
-import '../../providers/teacher/weekday_provider.dart';
+import '../../providers/student/attendance_provider.dart';
+import '../../providers/student/holiday_provider.dart';
+import '../../providers/student/weekday_provider.dart';
 import '../../utils/handle_errors.dart';
-import '../../widgets/custom_card.dart';
-import '../../widgets/custom_fab.dart';
-import '../../utils/show_custom_bottom_modal.dart';
-import 'widgets/mark_attendance.dart';
 
 class AttendanceScreen extends StatefulWidget {
   const AttendanceScreen({super.key});
 
   @override
-  _AttendanceScreenState createState() => _AttendanceScreenState();
+  _AttendanceScreen createState() => _AttendanceScreen();
 }
 
-class _AttendanceScreenState extends State<AttendanceScreen> {
+class _AttendanceScreen extends State<AttendanceScreen> {
   DateTime _selectedDate = DateTime.now();
   DateTime _focusedDate = DateTime.now();
-  bool _loading = false;
 
   @override
   void initState() {
@@ -38,9 +32,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   }
 
   void _fetchForMonth(DateTime startDate, DateTime endDate) async {
-    setState(() {
-      _loading = true;
-    });
+    setState(() {});
 
     final attendanceProvider =
         Provider.of<AttendanceProvider>(context, listen: false);
@@ -50,14 +42,15 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       await holidayProvider.fetchHolidays(
           startDate: startDate, endDate: endDate);
       await attendanceProvider.fetchAttendances(
-          startDate: startDate, endDate: endDate, forceRefresh: true);
+          startDate: startDate,
+          endDate: endDate,
+          forceRefresh: true,
+          myAttendance: true);
     } catch (e) {
       handleErrors(context, e);
     } finally {
       if (mounted) {
-        setState(() {
-          _loading = false;
-        });
+        setState(() {});
       }
     }
   }
@@ -156,43 +149,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                 );
               },
             ),
-            const SizedBox(height: 16.0),
-            Consumer<AttendanceProvider>(
-              builder: (context, attendanceProvider, child) {
-                final attendancesForSelectedDate = attendanceProvider
-                    .attendances
-                    .where(
-                      (attendance) =>
-                          isSameDay(attendance.attendanceDate, _selectedDate),
-                    )
-                    .toList();
-
-                return Expanded(
-                  child: _loading
-                      ? const Center(child: CircularProgressIndicator())
-                      : _buildAttendanceList(attendancesForSelectedDate),
-                );
-              },
-            ),
           ],
         ),
-      ),
-      floatingActionButton: CustomFAB(
-        icon: Icons.calendar_today,
-        onPressed: () {
-          showCustomModalBottomSheet(
-            context: context,
-            child: MarkAttendanceScreen(selectedDate: _selectedDate),
-          ).then((success) async {
-            if (success != null && success) {
-              DateTime startDate =
-                  DateTime(_focusedDate.year, _focusedDate.month, 1);
-              DateTime endDate =
-                  DateTime(_focusedDate.year, _focusedDate.month + 1, 0);
-              _fetchForMonth(startDate, endDate);
-            }
-          });
-        },
       ),
     );
   }
@@ -200,15 +158,13 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   Widget _buildDayContainer(DateTime date,
       {bool isToday = false,
       bool isSelected = false,
-      bool isWeekday = true,
+      bool isWeekday = false,
       bool isHoliday = false}) {
     DateTime dateTrimmed = DateTime(date.year, date.month, date.day);
     final attendanceProvider =
         Provider.of<AttendanceProvider>(context, listen: false);
-    int attendanceCount = attendanceProvider.attendances
-        .where(
-            (attendance) => isSameDay(attendance.attendanceDate, dateTrimmed))
-        .length;
+    bool isAttended = attendanceProvider.attendances
+        .any((attendance) => isSameDay(attendance.attendanceDate, dateTrimmed));
 
     return Container(
       decoration: BoxDecoration(
@@ -233,49 +189,18 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
               ),
             ),
           ),
-          if (attendanceCount > 0)
+          if (isAttended)
             Positioned(
-              top: 0,
-              right: 0,
-              child: Container(
-                padding: const EdgeInsets.all(AppPaddings.tinyPadding),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '$attendanceCount',
-                  style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
+              right: 0.0,
+              top: 0.0,
+              child: Icon(
+                Icons.check_circle,
+                color: Colors.green[600],
+                size: 16.0,
               ),
             ),
         ],
       ),
-    );
-  }
-
-  Widget _buildAttendanceList(List<Attendance> attendanceList) {
-    if (attendanceList.isEmpty) {
-      return Center(
-        child: Text(
-          'No attendances for the selected date.',
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-      );
-    }
-
-    return ListView.builder(
-      itemCount: attendanceList.length,
-      itemBuilder: (context, index) {
-        final attendance = attendanceList[index];
-
-        return CustomCard(
-            child: Text(attendance.ownedBy.name,
-                style: Theme.of(context).textTheme.bodyLarge));
-      },
     );
   }
 }

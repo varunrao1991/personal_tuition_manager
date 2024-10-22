@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../constants/app_constants.dart';
 import '../../../models/student_model.dart';
-import '../../../providers/student_provider.dart';
+import '../../../providers/teacher/student_provider.dart';
 import '../../../utils/handle_errors.dart';
 import '../../../utils/show_custom_center_modal.dart';
 import '../../../widgets/custom_card.dart';

@@ -42,7 +42,7 @@ class Constants {
 
 class RegularExpressions {
   static final passwordRegex =
-      RegExp(r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$');
+      RegExp(r'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[!@#\$&*~]).{8,}$');
   static final mobileRegex = RegExp(r'^\d{10}$');
   static final otpRegex = RegExp(r'^\d{4}$');
   static final nameRegex = RegExp(r'^[a-zA-Z\s]{3,}$');

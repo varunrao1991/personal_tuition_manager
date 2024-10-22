@@ -3,11 +3,13 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import './app.dart';
 import 'firebase_options.dart';
 import 'utils/background_handler.dart';
 import 'utils/local_notification_handler.dart';
 import 'utils/shared_pref.dart';
+
+import 'student_app.dart' as student;
+import 'teacher_app.dart' as teacher;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,6 +19,9 @@ Future<void> main() async {
   );
   FirebaseMessaging.onBackgroundMessage(backgroundHandler);
   initializeLocalNotifications();
+
+  const String userType =
+      String.fromEnvironment('USER_TYPE', defaultValue: 'teacher');
 
   const String environment =
       String.fromEnvironment('ENV', defaultValue: 'development');
@@ -28,5 +33,9 @@ Future<void> main() async {
   }
   await sharedPrefs.init();
 
-  runApp(MyApp());
+  if (userType == 'teacher') {
+    runApp(const teacher.MyApp());
+  } else {
+    runApp(const student.MyApp());
+  }
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../providers/month_provider.dart';
+import '../../../providers/teacher/month_provider.dart';
 import '../../../utils/handle_errors.dart';
 import '../../../widgets/month_info_card.dart';
 

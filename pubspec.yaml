@@ -49,3 +49,5 @@ flutter:
     - .env.development
     - .env.production
     - assets/icon/app_icon.svg
+    - assets/icon/student_login.svg
+    - assets/icon/teacher_login.svg

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../constants/app_constants.dart';
 import '../../../models/owned_by.dart';
-import '../../../providers/course_provider.dart';
+import '../../../providers/teacher/course_provider.dart';
 import '../../../utils/handle_errors.dart';
 import '../../../widgets/custom_card.dart';
 import '../../../widgets/custom_elevated_button.dart';
