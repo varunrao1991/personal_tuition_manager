@@ -1,30 +1,30 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import '../../models/teacher/student_model.dart';
-import '../../models/teacher/student_update.dart';
-import '../../services/teacher/student_service.dart';
+import '../../models/admin/teacher_model.dart';
+import '../../models/admin/teacher_update.dart';
+import '../../services/admin/teacher_service.dart';
 import '../../services/token_service.dart';
 
-class StudentProvider with ChangeNotifier {
-  StudentProvider(this._studentService, this._tokenService);
+class TeacherProvider with ChangeNotifier {
+  TeacherProvider(this._teacherService, this._tokenService);
 
-  final StudentService _studentService;
+  final TeacherService _teacherService;
   final TokenService _tokenService;
 
   bool _isLoading = false;
-  List<Student> _students = [];
+  List<Teacher> _teachers = [];
   int _currentPage = 1;
   int _totalPages = 1;
 
-  List<Student> get students => _students;
+  List<Teacher> get teachers => _teachers;
   bool get isLoading => _isLoading;
   int get currentPage => _currentPage;
   int get totalPages => _totalPages;
 
   void clearData() {
     _setLoading(true);
-    _students = [];
+    _teachers = [];
     _currentPage = 1;
     _totalPages = 1;
     _setLoading(false);
@@ -35,7 +35,7 @@ class StudentProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> fetchStudents({
+  Future<void> fetchTeachers({
     int? page,
     String? sort,
     String? order,
@@ -45,7 +45,7 @@ class StudentProvider with ChangeNotifier {
 
     try {
       final accessToken = await _tokenService.getToken();
-      final response = await _studentService.getStudents(
+      final response = await _teacherService.getTeachers(
         accessToken: accessToken,
         page: page ?? _currentPage,
         sort: sort,
@@ -54,14 +54,14 @@ class StudentProvider with ChangeNotifier {
       );
 
       if (page == 1 || page == null) {
-        _students = response.students;
+        _teachers = response.teachers;
       } else {
-        _students.addAll(response.students);
+        _teachers.addAll(response.teachers);
       }
 
       _currentPage = response.currentPage;
       _totalPages = response.totalPages;
-      log('Students successfully fetched for $_currentPage: ${response.students.length}.');
+      log('Teachers successfully fetched for $_currentPage: ${response.teachers.length}.');
     } finally {
       _setLoading(false);
     }
@@ -73,17 +73,17 @@ class StudentProvider with ChangeNotifier {
     String? name,
   }) async {
     _currentPage = 1;
-    await fetchStudents(page: 1, sort: sort, order: order, name: name);
+    await fetchTeachers(page: 1, sort: sort, order: order, name: name);
   }
 
-  Future<void> createStudent(StudentUpdate studentUpdate) async {
+  Future<void> createTeacher(TeacherUpdate teacherUpdate) async {
     _setLoading(true);
 
     try {
       final accessToken = await _tokenService.getToken();
-      await _studentService.createStudent(
+      await _teacherService.createTeacher(
         accessToken: accessToken,
-        studentUpdate: studentUpdate,
+        teacherUpdate: teacherUpdate,
       );
       await resetAndFetch();
     } finally {
@@ -91,14 +91,14 @@ class StudentProvider with ChangeNotifier {
     }
   }
 
-  Future<void> updateStudent(StudentUpdate studentUpdate) async {
+  Future<void> updateTeacher(TeacherUpdate teacherUpdate) async {
     _setLoading(true);
 
     try {
       final accessToken = await _tokenService.getToken();
-      await _studentService.updateStudent(
+      await _teacherService.updateTeacher(
         accessToken: accessToken,
-        studentUpdate: studentUpdate,
+        teacherUpdate: teacherUpdate,
       );
       await resetAndFetch();
     } finally {
@@ -106,14 +106,14 @@ class StudentProvider with ChangeNotifier {
     }
   }
 
-  Future<void> deleteStudent(int studentId) async {
+  Future<void> deleteTeacher(int teacherId) async {
     _setLoading(true);
 
     try {
       final accessToken = await _tokenService.getToken();
-      await _studentService.deleteStudent(
+      await _teacherService.deleteTeacher(
         accessToken: accessToken,
-        studentId: studentId,
+        teacherId: teacherId,
       );
       await resetAndFetch();
     } finally {

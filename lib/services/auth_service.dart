@@ -16,32 +16,13 @@ class LoginResponse {
 class AuthService {
   final String apiUrl = Config().apiUrl;
   final http.Client _client;
+  final userType;
 
-  AuthService(this._client);
-
-  Future<void> sendTokenToBackend(
-      String accessToken, String? notificationToken) async {
-    final uri = Uri.parse('$apiUrl/api/notifications/token');
-    final headers = {'Authorization': 'Bearer $accessToken'};
-
-    final response = await _client.post(
-      uri,
-      headers: headers,
-      body: {'token': notificationToken ?? ''},
-    );
-
-    if (response.statusCode == 201) {
-      log('Token sent/updated successfully');
-    } else if (response.statusCode == 204) {
-      log('Token removed successfully');
-    } else {
-      throw responseToError(response.body);
-    }
-  }
+  AuthService(this._client, this.userType);
 
   Future<void> requestPasswordChange(String mobile) async {
     final response = await _client.post(
-      Uri.parse('$apiUrl/api/auth/request-password-change'),
+      Uri.parse('$apiUrl/api/auth/$userType/request-password-change'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'mobile': mobile}),
     );
@@ -56,7 +37,7 @@ class AuthService {
   Future<void> changePasswordWithOTP(
       String mobile, String otp, String newPassword) async {
     final response = await _client.post(
-      Uri.parse('$apiUrl/api/auth/change-password-with-otp'),
+      Uri.parse('$apiUrl/api/auth/$userType/change-password-with-otp'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(
           {'mobile': mobile, 'otp': otp, 'newPassword': newPassword}),
@@ -76,6 +57,21 @@ class AuthService {
     );
 
     if (response.statusCode != 200) {
+      throw responseToError(response.body);
+    }
+  }
+
+  Future<void> register(String name, String mobile, String password) async {
+    final response = await _client.post(
+      Uri.parse('$apiUrl/api/auth/register'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'name': name, 'mobile': mobile, 'password': password}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      log("Register: $data");
+    } else {
       throw responseToError(response.body);
     }
   }

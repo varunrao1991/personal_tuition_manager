@@ -34,6 +34,8 @@ void handleErrors(BuildContext context, e) {
         context, "Failed to connect to the server. Is it running?");
   } else if (e is FormatException) {
     showCustomSnackBar(context, "Invalid response format.");
+  } else if (e is CustomException) {
+    showCustomSnackBar(context, e.message);
   } else if (e is Error) {
     showCustomSnackBar(
         context, 'An unexpected error occurred: ${e.toString()}');
@@ -80,7 +82,7 @@ void _handleBadRequestError(BuildContext context, String message) {
 }
 
 void _handleGeneralError(BuildContext context, Exception e) {
-  showCustomSnackBar(context, 'An error occurred: ${e.toString()}',
+  showCustomSnackBar(context, 'An unknown error occurred: ${e.toString()}',
       backgroundColor: Colors.brown);
   log(e.toString());
 }

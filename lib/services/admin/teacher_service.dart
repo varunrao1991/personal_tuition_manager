@@ -2,31 +2,31 @@ import 'dart:convert';
 import 'dart:developer';
 import 'package:http/http.dart' as http;
 import '../../config/app_config.dart';
-import '../../models/teacher/student_model.dart';
-import '../../models/teacher/student_update.dart';
+import '../../models/admin/teacher_model.dart';
+import '../../models/admin/teacher_update.dart';
 import '../../utils/response_to_error.dart';
 
-class StudentResponse {
-  final List<Student> students;
+class TeacherResponse {
+  final List<Teacher> teachers;
   final int totalPages;
   final int totalRecords;
   final int currentPage;
 
-  StudentResponse({
-    required this.students,
+  TeacherResponse({
+    required this.teachers,
     required this.totalPages,
     required this.totalRecords,
     required this.currentPage,
   });
 }
 
-class StudentService {
+class TeacherService {
   final String apiUrl = Config().apiUrl;
   final http.Client _client;
 
-  StudentService(this._client);
+  TeacherService(this._client);
 
-  Future<StudentResponse> getStudents({
+  Future<TeacherResponse> getTeachers({
     required String accessToken,
     required int page,
     String? sort,
@@ -40,7 +40,7 @@ class StudentService {
       if (name != null && name.isNotEmpty) 'name': name,
     };
 
-    final uri = Uri.parse('$apiUrl/api/students')
+    final uri = Uri.parse('$apiUrl/api/admin/teachers')
         .replace(queryParameters: queryParameters);
 
     final response = await _client.get(
@@ -53,9 +53,9 @@ class StudentService {
 
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = jsonDecode(response.body);
-      return StudentResponse(
-        students: (data['data'] as List)
-            .map((student) => Student.fromJson(student))
+      return TeacherResponse(
+        teachers: (data['data'] as List)
+            .map((teacher) => Teacher.fromJson(teacher))
             .toList(),
         totalPages: data['totalPages'],
         totalRecords: data['totalRecords'],
@@ -66,52 +66,52 @@ class StudentService {
     }
   }
 
-  Future<void> createStudent({
+  Future<void> createTeacher({
     required String accessToken,
-    required StudentUpdate studentUpdate,
+    required TeacherUpdate teacherUpdate,
   }) async {
     final response = await _client.post(
-      Uri.parse('$apiUrl/api/students'),
+      Uri.parse('$apiUrl/api/admin/teachers'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $accessToken',
       },
-      body: jsonEncode(studentUpdate.toJson()),
+      body: jsonEncode(teacherUpdate.toJson()),
     );
 
     if (response.statusCode != 201) {
       throw responseToError(response.body);
     } else {
-      log("Student created.");
+      log("Teacher created.");
     }
   }
 
-  Future<void> updateStudent({
+  Future<void> updateTeacher({
     required String accessToken,
-    required StudentUpdate studentUpdate,
+    required TeacherUpdate teacherUpdate,
   }) async {
     final response = await _client.put(
-      Uri.parse('$apiUrl/api/students/${studentUpdate.id}'),
+      Uri.parse('$apiUrl/api/admin/teachers/${teacherUpdate.id}'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $accessToken',
       },
-      body: jsonEncode(studentUpdate.toJson()),
+      body: jsonEncode(teacherUpdate.toJson()),
     );
 
     if (response.statusCode != 200) {
       throw responseToError(response.body);
     } else {
-      log("Student updated.");
+      log("Teacher updated.");
     }
   }
 
-  Future<void> deleteStudent({
+  Future<void> deleteTeacher({
     required String accessToken,
-    required int studentId,
+    required int teacherId,
   }) async {
     final response = await _client.delete(
-      Uri.parse('$apiUrl/api/students/$studentId'),
+      Uri.parse('$apiUrl/api/admin/teachers/$teacherId'),
       headers: {
         'Authorization': 'Bearer $accessToken',
       },
@@ -120,7 +120,7 @@ class StudentService {
     if (response.statusCode != 200) {
       throw responseToError(response.body);
     } else {
-      log("Student deleted.");
+      log("Teacher deleted.");
     }
   }
 }

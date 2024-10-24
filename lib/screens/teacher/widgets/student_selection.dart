@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../constants/app_constants.dart';
-import '../../../models/student_model.dart';
+import '../../../models/teacher/student_model.dart';
 import '../../../providers/teacher/student_provider.dart';
 import '../../../utils/handle_errors.dart';
 import '../../../utils/show_custom_center_modal.dart';
@@ -62,8 +62,7 @@ class _StudentSelectorState extends State<StudentSelector> {
         sortOptions: const {
           'name': 'Name',
           'mobile': 'Mobile Number',
-          'dob': 'Date of Birth',
-          'joiningDate': 'Joining Date',
+          'createdAt': 'Joining Date',
         },
         isAscending: _isAscending,
       ),

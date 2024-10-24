@@ -6,6 +6,7 @@ import '../../../widgets/custom_elevated_button.dart';
 import '../../../widgets/custom_form_text_field.dart';
 import '../../../widgets/custom_text_button.dart';
 import '../../constants/app_constants.dart';
+import '../../widgets/password_form_field.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
@@ -62,11 +63,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 key: _formKey,
                 child: Column(
                   children: [
-                    CustomFormTextField(
+                    PasswordFormTextField(
                       controller: _oldPasswordController,
                       labelText: 'Old Password',
                       prefixIcon: Icons.lock_outline,
-                      obscureText: true,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter your old password';
@@ -75,11 +75,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       },
                     ),
                     const SizedBox(height: 20),
-                    CustomFormTextField(
+                    PasswordFormTextField(
                       controller: _newPasswordController,
                       labelText: 'New Password',
                       prefixIcon: Icons.lock,
-                      obscureText: true,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Provide new password';
@@ -91,11 +90,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       },
                     ),
                     const SizedBox(height: 20),
-                    CustomFormTextField(
+                    PasswordFormTextField(
                       controller: _confirmPasswordController,
                       labelText: 'Confirm Password',
                       prefixIcon: Icons.lock,
-                      obscureText: true,
                       validator: (value) {
                         if (value != _newPasswordController.text) {
                           return 'Passwords do not match';

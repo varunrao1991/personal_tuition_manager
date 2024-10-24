@@ -1,15 +1,13 @@
 class ProfileUpdate {
   String? name;
   String? mobile;
-  String? dob;
 
-  ProfileUpdate({this.name, this.mobile, this.dob});
+  ProfileUpdate({this.name, this.mobile});
 
   Map<String, dynamic> toJson() {
     return {
       if (name != null) 'name': name,
       if (mobile != null) 'mobile': mobile,
-      if (dob != null) 'dob': dob,
     };
   }
 }

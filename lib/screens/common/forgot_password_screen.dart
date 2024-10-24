@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:yoglogonline/constants/app_constants.dart';
+import 'package:yoglogonline/widgets/password_form_field.dart';
 import '../../widgets/custom_snackbar.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
@@ -141,6 +142,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     if (_isOtpSent) ...[
                       CustomFormTextField(
                         controller: _otpController,
+                        keyboardType: TextInputType.number,
                         labelText: 'Enter OTP',
                         prefixIcon: Icons.lock,
                         validator: (value) {
@@ -154,11 +156,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         },
                       ),
                       const SizedBox(height: 20),
-                      CustomFormTextField(
+                      PasswordFormTextField(
                         controller: _newPasswordController,
                         labelText: 'New Password',
                         prefixIcon: Icons.lock,
-                        obscureText: true,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Password must not be empty';
@@ -171,11 +172,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         },
                       ),
                       const SizedBox(height: 20),
-                      CustomFormTextField(
+                      PasswordFormTextField(
                         controller: _reEnterPasswordController,
                         labelText: 'Re-enter Password',
                         prefixIcon: Icons.lock_outline,
-                        obscureText: true,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please re-enter your password';

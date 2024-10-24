@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
-import '../../constants/app_constants.dart';
 import '../../models/holiday.dart';
 
 class StudentCalendar extends StatefulWidget {
@@ -38,7 +37,7 @@ class _StudentCalendarState extends State<StudentCalendar> {
 
   Widget _buildCalendar() {
     return TableCalendar(
-      focusedDay: widget.endDate,
+      focusedDay: _selectedDate,
       firstDay: widget.startDate,
       lastDay: widget.endDate,
       selectedDayPredicate: (day) => isSameDay(_selectedDate, day),

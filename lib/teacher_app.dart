@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:yoglogonline/screens/common/notification_screen.dart';
-import 'package:yoglogonline/services/firebase_service.dart';
 import 'providers/teacher/attendance_provider.dart';
 import 'providers/teacher/holiday_provider.dart';
 import 'providers/teacher/month_provider.dart';
@@ -10,6 +8,7 @@ import 'providers/teacher/course_provider.dart';
 import 'routes/navigator.dart';
 import 'screens/common/about_screen.dart';
 import 'screens/common/forgot_password_screen.dart';
+import 'screens/common/notification_screen.dart';
 import 'services/teacher/attendance_service.dart';
 import 'services/teacher/course_service.dart';
 import 'services/teacher/holiday_service.dart';
@@ -29,7 +28,9 @@ import 'services/token_service.dart';
 import 'utils/http_client.dart';
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final String userType;
+
+  const MyApp({super.key, required this.userType});
 
   @override
   Widget build(BuildContext context) {
@@ -42,8 +43,7 @@ class MyApp extends StatelessWidget {
         Provider(create: (_) => TokenService()),
         ChangeNotifierProvider(
           create: (context) => AuthProvider(
-              AuthService(context.read<HttpTimeoutClient>()),
-              FirebaseService(),
+              AuthService(context.read<HttpTimeoutClient>(), userType),
               context.read<TokenService>()),
         ),
         ChangeNotifierProvider(

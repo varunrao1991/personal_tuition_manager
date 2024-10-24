@@ -35,8 +35,8 @@ class _LoginScreenState extends State<LoginScreen> {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     try {
       await authProvider.loadUser();
-      if (authProvider.user != null && authProvider.user!.role == 'student') {
-        await Navigator.of(context).pushReplacementNamed('/student');
+      if (authProvider.user != null && authProvider.user!.role == 'admin') {
+        await Navigator.of(context).pushReplacementNamed('/admin');
       }
     } catch (e) {
       handleErrors(context, e);
@@ -75,12 +75,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: Theme.of(context).textTheme.headlineLarge,
                       ),
                       const SizedBox(height: 10),
-                      Text(
-                        'Login to student account',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Colors.grey,
-                            ),
-                      ),
+                      Text('Login to admin account',
+                          style: Theme.of(context).textTheme.bodyMedium),
                       const SizedBox(height: 40),
                       _buildLoginForm(authProvider),
                       const SizedBox(height: 100),
@@ -139,11 +135,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       try {
                         await authProvider.login(mobile, password);
                         if (authProvider.user != null &&
-                            authProvider.user!.role == 'student') {
+                            authProvider.user!.role == 'admin') {
                           await Navigator.of(context)
-                              .pushReplacementNamed('/student');
+                              .pushReplacementNamed('/admin');
                         } else {
-                          throw AuthException('Could not login as student');
+                          throw AuthException('Could not login as admin');
                         }
                       } catch (e) {
                         handleErrors(context, e);

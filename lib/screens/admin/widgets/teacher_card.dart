@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import '../../../constants/app_constants.dart';
-import '../../../models/teacher/student_model.dart';
+import '../../../models/admin/teacher_model.dart';
 import '../../../widgets/custom_swipe_card.dart';
 
-class StudentCard extends StatelessWidget {
-  final Student student;
+class TeacherCard extends StatelessWidget {
+  final Teacher teacher;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
-  const StudentCard({
+  const TeacherCard({
     super.key,
-    required this.student,
+    required this.teacher,
     required this.onEdit,
     required this.onDelete,
   });
@@ -27,13 +27,13 @@ class StudentCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(student.name, style: theme.textTheme.titleLarge),
+            Text(teacher.name, style: theme.textTheme.titleLarge),
             const SizedBox(height: 8),
             Row(
               children: [
                 Icon(Icons.phone, color: theme.colorScheme.secondary),
                 const SizedBox(width: 8),
-                Text(student.mobile, style: theme.textTheme.bodyMedium),
+                Text(teacher.mobile, style: theme.textTheme.bodyMedium),
               ],
             ),
           ],

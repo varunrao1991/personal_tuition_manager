@@ -4,7 +4,7 @@ import '../../../widgets/custom_form_date_field.dart';
 import '../../../widgets/custom_form_text_field.dart';
 import '../../../widgets/custom_elevated_button.dart';
 import '../../../models/create_payment.dart';
-import '../../../models/student_model.dart';
+import '../../../models/teacher/student_model.dart';
 import 'student_selection.dart';
 
 class PaymentProcessWidget extends StatefulWidget {

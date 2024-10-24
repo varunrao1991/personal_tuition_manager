@@ -1,27 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../constants/app_constants.dart';
-import '../../models/teacher/student_model.dart';
-import '../../models/teacher/student_update.dart';
-import '../../providers/teacher/student_provider.dart';
+import '../../models/admin/teacher_model.dart';
+import '../../models/admin/teacher_update.dart';
+import '../../providers/admin/teacher_provider.dart';
 import '../../utils/handle_errors.dart';
 import '../../widgets/custom_fab.dart';
 import '../../widgets/search_bar.dart';
 import '../../utils/show_custom_bottom_modal.dart';
 import '../../utils/show_custom_center_modal.dart';
 import '../../widgets/sort_modal.dart';
-import 'widgets/student_form.dart';
-import 'widgets/student_card.dart';
+import 'widgets/teacher_form.dart';
+import 'widgets/teacher_card.dart';
 import '../../widgets/confirmation_modal.dart';
 
-class StudentScreen extends StatefulWidget {
-  const StudentScreen({super.key});
+class TeacherScreen extends StatefulWidget {
+  const TeacherScreen({super.key});
 
   @override
-  _StudentScreenState createState() => _StudentScreenState();
+  _TeacherScreenState createState() => _TeacherScreenState();
 }
 
-class _StudentScreenState extends State<StudentScreen> {
+class _TeacherScreenState extends State<TeacherScreen> {
   late ScrollController _scrollController;
   final TextEditingController _searchController = TextEditingController();
 
@@ -41,15 +41,15 @@ class _StudentScreenState extends State<StudentScreen> {
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _fetchStudents();
+      _fetchTeachers();
     });
   }
 
-  Future<void> _fetchStudents() async {
-    final studentProvider =
-        Provider.of<StudentProvider>(context, listen: false);
+  Future<void> _fetchTeachers() async {
+    final teacherProvider =
+        Provider.of<TeacherProvider>(context, listen: false);
     try {
-      await studentProvider.fetchStudents(
+      await teacherProvider.fetchTeachers(
           page: 1,
           sort: _selectedSortField,
           order: _isAscending ? 'ASC' : 'DESC',
@@ -60,16 +60,16 @@ class _StudentScreenState extends State<StudentScreen> {
   }
 
   void _onScroll() {
-    final studentProvider =
-        Provider.of<StudentProvider>(context, listen: false);
+    final teacherProvider =
+        Provider.of<TeacherProvider>(context, listen: false);
 
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 100) {
-      if (!studentProvider.isLoading &&
-          studentProvider.currentPage < studentProvider.totalPages) {
+      if (!teacherProvider.isLoading &&
+          teacherProvider.currentPage < teacherProvider.totalPages) {
         try {
-          studentProvider.fetchStudents(
-            page: studentProvider.currentPage + 1,
+          teacherProvider.fetchTeachers(
+            page: teacherProvider.currentPage + 1,
             sort: _selectedSortField,
             order: _isAscending ? 'ASC' : 'DESC',
             name: _searchController.text.isNotEmpty
@@ -83,21 +83,21 @@ class _StudentScreenState extends State<StudentScreen> {
     }
   }
 
-  Future<void> _openStudentForm({StudentUpdate? student}) async {
+  Future<void> _openTeacherForm({TeacherUpdate? teacher}) async {
     await showCustomModalBottomSheet(
       context: context,
-      child: StudentForm(
-        student: student,
+      child: TeacherForm(
+        teacher: teacher,
       ),
     );
-    _fetchStudents();
+    _fetchTeachers();
   }
 
-  Future<void> _deleteStudent(int studentId) async {
-    final studentProvider =
-        Provider.of<StudentProvider>(context, listen: false);
+  Future<void> _deleteTeacher(int teacherId) async {
+    final teacherProvider =
+        Provider.of<TeacherProvider>(context, listen: false);
     try {
-      await studentProvider.deleteStudent(studentId);
+      await teacherProvider.deleteTeacher(teacherId);
     } catch (e) {
       handleErrors(context, e);
     }
@@ -116,12 +116,12 @@ class _StudentScreenState extends State<StudentScreen> {
       body: Column(
         children: [
           _buildSearchAndFilterRow(context),
-          _buildStudentList(),
+          _buildTeacherList(),
         ],
       ),
       floatingActionButton: CustomFAB(
         icon: Icons.add,
-        onPressed: _openStudentForm,
+        onPressed: _openTeacherForm,
       ),
     );
   }
@@ -153,46 +153,46 @@ class _StudentScreenState extends State<StudentScreen> {
       _selectedName = null;
     });
     _searchController.clear();
-    await _fetchStudentsWithCurrentFilters(context);
+    await _fetchTeachersWithCurrentFilters(context);
   }
 
   Future<void> _performSearch(BuildContext context, String value) async {
     setState(() {
       _selectedName = value;
     });
-    await _fetchStudentsWithCurrentFilters(context);
+    await _fetchTeachersWithCurrentFilters(context);
   }
 
-  Future<void> _fetchStudentsWithCurrentFilters(BuildContext context) async {
-    await Provider.of<StudentProvider>(context, listen: false).resetAndFetch(
+  Future<void> _fetchTeachersWithCurrentFilters(BuildContext context) async {
+    await Provider.of<TeacherProvider>(context, listen: false).resetAndFetch(
       name: _selectedName,
       sort: _selectedSortField,
       order: _isAscending ? 'ASC' : 'DESC',
     );
   }
 
-  Widget _buildStudentList() {
+  Widget _buildTeacherList() {
     return Expanded(
-      child: Consumer<StudentProvider>(
-        builder: (context, studentProvider, child) {
-          if (studentProvider.isLoading && studentProvider.students.isEmpty) {
+      child: Consumer<TeacherProvider>(
+        builder: (context, teacherProvider, child) {
+          if (teacherProvider.isLoading && teacherProvider.teachers.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
 
           return Padding(
               padding: const EdgeInsets.all(AppPaddings.smallPadding),
               child: RefreshIndicator(
-                onRefresh: _fetchStudents,
+                onRefresh: _fetchTeachers,
                 child: ListView.builder(
                   controller: _scrollController,
-                  itemCount: studentProvider.students.length +
-                      (studentProvider.isLoading ? 1 : 0),
+                  itemCount: teacherProvider.teachers.length +
+                      (teacherProvider.isLoading ? 1 : 0),
                   itemBuilder: (context, index) {
-                    if (index == studentProvider.students.length) {
+                    if (index == teacherProvider.teachers.length) {
                       return const Center(child: CircularProgressIndicator());
                     }
 
-                    return _buildStudentCard(studentProvider.students[index]);
+                    return _buildTeacherCard(teacherProvider.teachers[index]);
                   },
                 ),
               ));
@@ -201,15 +201,15 @@ class _StudentScreenState extends State<StudentScreen> {
     );
   }
 
-  Widget _buildStudentCard(Student student) {
-    StudentUpdate studentUpdate = StudentUpdate.fromStudent(student);
-    return StudentCard(
-      student: student,
-      onEdit: () => _openStudentForm(student: studentUpdate),
+  Widget _buildTeacherCard(Teacher teacher) {
+    TeacherUpdate teacherUpdate = TeacherUpdate.fromTeacher(teacher);
+    return TeacherCard(
+      teacher: teacher,
+      onEdit: () => _openTeacherForm(teacher: teacherUpdate),
       onDelete: () async {
         bool? success = await _showDeleteConfirmationDialog(context);
         if (success == true) {
-          _deleteStudent(student.id);
+          _deleteTeacher(teacher.id);
         }
       },
     );
@@ -219,7 +219,7 @@ class _StudentScreenState extends State<StudentScreen> {
     return showCustomDialog(
       context: context,
       child: const ConfirmationDialog(
-        message: 'Delete this student?',
+        message: 'Delete this teacher?',
         confirmButtonText: 'Delete',
         cancelButtonText: 'Cancel',
       ),
@@ -230,7 +230,7 @@ class _StudentScreenState extends State<StudentScreen> {
     final result = await showCustomDialog(
       context: context,
       child: SortModal(
-        title: 'Sort Students',
+        title: 'Sort Teachers',
         selectedSortField: _selectedSortField,
         sortOptions: _sortFieldLabels,
         isAscending: _isAscending,
@@ -243,10 +243,10 @@ class _StudentScreenState extends State<StudentScreen> {
         _isAscending = result['order'];
       });
 
-      final studentProvider =
-          Provider.of<StudentProvider>(context, listen: false);
+      final teacherProvider =
+          Provider.of<TeacherProvider>(context, listen: false);
       try {
-        studentProvider.resetAndFetch(
+        teacherProvider.resetAndFetch(
           name: _selectedName,
           sort: _selectedSortField,
           order: _isAscending ? 'ASC' : 'DESC',

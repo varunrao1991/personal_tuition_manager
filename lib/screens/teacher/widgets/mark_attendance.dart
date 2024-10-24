@@ -41,8 +41,7 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
   static const Map<String, String> _sortFieldLabels = {
     'name': 'Name',
     'mobile': 'Mobile Number',
-    'dob': 'Date of Birth',
-    'joiningDate': 'Joining Date',
+    'createdAt': 'Joining Date',
   };
 
   @override

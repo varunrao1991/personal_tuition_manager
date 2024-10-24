@@ -8,6 +8,7 @@ import '../../providers/auth_provider.dart';
 import '../../utils/handle_errors.dart';
 import '../../widgets/custom_elevated_button.dart';
 import '../../widgets/custom_form_text_field.dart';
+import '../../widgets/password_form_field.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -55,13 +56,6 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          // Use SVG image as background
-          SvgPicture.asset(
-            'assets/icon/teacher_login.svg', // Change this to your SVG file
-            width: double.infinity,
-            height: double.infinity,
-            fit: BoxFit.cover, // Ensure the SVG covers the entire area
-          ),
           _isCheckingLoginStatus
               ? const Center(child: CircularProgressIndicator())
               : SingleChildScrollView(
@@ -81,12 +75,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: Theme.of(context).textTheme.headlineLarge,
                       ),
                       const SizedBox(height: 10),
-                      Text(
-                        'Login to your account',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Colors.grey,
-                            ),
-                      ),
+                      Text('Login to teacher account',
+                          style: Theme.of(context).textTheme.bodyMedium),
                       const SizedBox(height: 40),
                       _buildLoginForm(authProvider),
                       const SizedBox(height: 100),
@@ -119,11 +109,10 @@ class _LoginScreenState extends State<LoginScreen> {
             },
           ),
           const SizedBox(height: 20),
-          CustomFormTextField(
+          PasswordFormTextField(
             controller: _passwordController,
             labelText: 'Password',
             prefixIcon: Icons.lock,
-            obscureText: true,
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Password is required';
@@ -164,6 +153,13 @@ class _LoginScreenState extends State<LoginScreen> {
               Navigator.pushNamed(context, '/forgot-password');
             },
             text: 'Forgot your password?',
+          ),
+          const SizedBox(height: 20),
+          CustomTextButton(
+            onPressed: () {
+              Navigator.pushNamed(context, '/register');
+            },
+            text: 'Register',
           ),
         ],
       ),

@@ -10,6 +10,7 @@ import '../../widgets/custom_elevated_button.dart';
 import '../../widgets/custom_form_text_field.dart';
 import '../../widgets/custom_snackbar.dart';
 import '../../widgets/navigation_bar.dart';
+import '../../widgets/password_form_field.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -24,12 +25,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   final _nameController = TextEditingController();
   final _mobileController = TextEditingController();
-  final _dobController = TextEditingController();
   final _oldPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _reenterPasswordController = TextEditingController();
 
-  DateTime? _selectedDob;
   User? _originalUser;
   int _selectedIndex = 0;
 
@@ -45,23 +44,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       _originalUser = user;
       _nameController.text = user.name;
       _mobileController.text = user.mobile;
-      _selectedDob = user.dob;
-      _dobController.text = DateFormat('yyyy-MM-dd').format(_selectedDob!);
-    }
-  }
-
-  Future<void> _selectDob(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDob ?? DateTime.now(),
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
-    );
-    if (picked != null && picked != _selectedDob) {
-      setState(() {
-        _selectedDob = picked;
-        _dobController.text = DateFormat('yyyy-MM-dd').format(_selectedDob!);
-      });
     }
   }
 
@@ -73,11 +55,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             : null,
         mobile: _mobileController.text != _originalUser!.mobile
             ? _mobileController.text
-            : null,
-        dob: _selectedDob != null &&
-                DateFormat('yyyy-MM-dd').format(_selectedDob!) !=
-                    DateFormat('yyyy-MM-dd').format(_originalUser!.dob)
-            ? DateFormat('yyyy-MM-dd').format(_selectedDob!)
             : null,
       );
 
@@ -116,7 +93,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final List<Widget> _pages = [
+    final List<Widget> pages = [
       _buildPersonalInfoForm(),
       _buildPasswordForm(),
     ];
@@ -128,7 +105,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           style: Theme.of(context).textTheme.headlineSmall,
         ),
       ),
-      body: _pages[_selectedIndex],
+      body: pages[_selectedIndex],
       bottomNavigationBar: CustomBottomNavigationBar(
         selectedIndex: _selectedIndex,
         onItemSelected: _onItemTapped,
@@ -180,19 +157,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               },
             ),
             const SizedBox(height: 20),
-            CustomFormTextField(
-              controller: _dobController,
-              labelText: 'Date of Birth',
-              prefixIcon: Icons.calendar_today,
-              onTap: () => _selectDob(context),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please select your date of birth';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 30),
             SizedBox(
               width: double.infinity,
               child: CustomElevatedButton(
@@ -214,11 +178,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         child: Column(
           children: [
             const SizedBox(height: 20),
-            CustomFormTextField(
+            PasswordFormTextField(
               controller: _oldPasswordController,
               labelText: 'Old Password',
               prefixIcon: Icons.lock_outline,
-              obscureText: true,
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter your old password';
@@ -227,11 +190,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               },
             ),
             const SizedBox(height: 20),
-            CustomFormTextField(
+            PasswordFormTextField(
               controller: _newPasswordController,
               labelText: 'New Password',
               prefixIcon: Icons.lock,
-              obscureText: true,
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter your new password';
@@ -239,15 +201,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 if (!RegularExpressions.passwordRegex.hasMatch(value)) {
                   return 'Password must be at least 6 characters,\ncontain a letter, number, and special character';
                 }
+                if (value == _oldPasswordController.text) {
+                  return 'New password cannot be the same as the old password';
+                }
                 return null;
               },
             ),
             const SizedBox(height: 20),
-            CustomFormTextField(
+            PasswordFormTextField(
               controller: _reenterPasswordController,
               labelText: 'Re-enter New Password',
               prefixIcon: Icons.lock,
-              obscureText: true,
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please re-enter your new password';
