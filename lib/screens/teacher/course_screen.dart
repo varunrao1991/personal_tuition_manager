@@ -67,7 +67,11 @@ class _CourseScreenState extends State<CourseScreen>
       await _fetchCourses(_tabController.index);
       final weekdayProvider =
           Provider.of<WeekdayProvider>(context, listen: false);
-      await weekdayProvider.fetchWeekdays();
+      try {
+        await weekdayProvider.fetchWeekdays();
+      } catch (e) {
+        handleErrors(context, e);
+      }
     });
 
     _scrollController.addListener(_onScroll);

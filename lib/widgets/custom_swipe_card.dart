@@ -5,6 +5,7 @@ import 'custom_card.dart';
 class CustomSwipeCard extends StatefulWidget {
   final Widget child;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
   final VoidCallback onSwipeLeft;
   final VoidCallback onSwipeRight;
   final bool isSelected;
@@ -13,6 +14,7 @@ class CustomSwipeCard extends StatefulWidget {
     super.key,
     required this.child,
     this.onTap,
+    this.onLongPress,
     required this.onSwipeLeft,
     required this.onSwipeRight,
     this.isSelected = false,
@@ -90,6 +92,7 @@ class _CustomSwipeCardState extends State<CustomSwipeCard> {
               margin: margin,
               isSelected: widget.isSelected,
               onTap: widget.onTap,
+              onLongPress: widget.onLongPress,
               onHorizontalDragUpdate: (details) {
                 setState(() {
                   _dragExtent += details.delta.dx;

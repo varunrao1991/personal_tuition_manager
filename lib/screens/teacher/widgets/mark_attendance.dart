@@ -165,7 +165,7 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
       });
 
       try {
-        studentProvider.resetAndFetch(
+        await studentProvider.resetAndFetch(
           name: _selectedName,
           sort: _selectedSortField,
           order: _isAscending ? 'ASC' : 'DESC',

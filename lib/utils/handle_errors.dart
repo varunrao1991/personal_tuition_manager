@@ -42,6 +42,7 @@ void handleErrors(BuildContext context, e) {
     log(e.stackTrace.toString());
   } else {
     _handleGeneralError(context, e);
+    log(e.stackTrace.toString());
   }
 }
 
@@ -51,15 +52,14 @@ void _handleTimeoutError(BuildContext context, String? message) {
       backgroundColor: Colors.orangeAccent);
 }
 
-void _handleInvalidTokenError(BuildContext context, String? message) {
+void _handleInvalidTokenError(BuildContext context, String message) {
   showCustomSnackBar(context, 'Session expired; Login again.',
       backgroundColor: Colors.orangeAccent);
   Navigator.of(context).pushReplacementNamed('/login');
 }
 
-void _handleInvalidSessionError(BuildContext context, String? message) {
-  showCustomSnackBar(context, 'Session invalid; Login again.',
-      backgroundColor: Colors.orangeAccent);
+void _handleInvalidSessionError(BuildContext context, String message) {
+  showCustomSnackBar(context, message, backgroundColor: Colors.orangeAccent);
   Navigator.of(context).pushReplacementNamed('/login');
 }
 

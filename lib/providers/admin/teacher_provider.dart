@@ -67,6 +67,18 @@ class TeacherProvider with ChangeNotifier {
     }
   }
 
+  Future<void> enableTeacher(int id, bool enable) async {
+    _setLoading(true);
+    try {
+      final accessToken = await _tokenService.getToken();
+      await _teacherService.enableDisable(
+          accessToken: accessToken, id: id, enable: enable);
+      await resetAndFetch();
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   Future<void> resetAndFetch({
     String? sort,
     String? order,

@@ -91,6 +91,18 @@ class StudentProvider with ChangeNotifier {
     }
   }
 
+  Future<void> enableStudent(int id, bool enable) async {
+    _setLoading(true);
+    try {
+      final accessToken = await _tokenService.getToken();
+      await _studentService.enableDisable(
+          accessToken: accessToken, id: id, enable: enable);
+      await resetAndFetch();
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   Future<void> updateStudent(StudentUpdate studentUpdate) async {
     _setLoading(true);
 

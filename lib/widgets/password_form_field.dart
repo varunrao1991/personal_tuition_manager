@@ -33,6 +33,7 @@ class _PasswordFormTextFieldState extends State<PasswordFormTextField> {
       controller: widget.controller,
       obscureText: _obscureText,
       validator: widget.validator,
+      enableInteractiveSelection: false,
       decoration: InputDecoration(
         labelText: widget.labelText,
         prefixIcon: Icon(widget.prefixIcon),

@@ -17,7 +17,6 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _mobileController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -73,7 +72,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
             prefixIcon: Icons.person,
             validator: (value) {
               if (value == null || value.isEmpty) {
-                return 'Name is required';
+                return 'Please enter your name';
+              }
+              if (!RegularExpressions.nameRegex.hasMatch(value)) {
+                return 'Name must be at least 3 characters and can contain spaces only';
               }
               return null;
             },

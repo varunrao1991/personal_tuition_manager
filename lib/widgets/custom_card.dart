@@ -9,11 +9,13 @@ class CustomCard extends StatelessWidget {
   final Function(DragEndDetails)? onHorizontalDragEnd;
   final EdgeInsetsGeometry padding;
   final EdgeInsetsGeometry margin;
+  final VoidCallback? onLongPress;
 
   const CustomCard(
       {super.key,
       required this.child,
       this.onTap,
+      this.onLongPress,
       this.isSelected = false,
       this.onHorizontalDragUpdate,
       this.onHorizontalDragEnd,
@@ -26,6 +28,7 @@ class CustomCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: onTap,
+      onLongPress: onLongPress,
       onHorizontalDragUpdate: onHorizontalDragUpdate,
       onHorizontalDragEnd: onHorizontalDragEnd,
       child: Card(

@@ -3,7 +3,6 @@ class NotificationItem {
   final String title;
   final String body;
   final String status;
-  final DateTime expiryDate;
   final DateTime createdAt;
 
   NotificationItem({
@@ -11,7 +10,6 @@ class NotificationItem {
     required this.title,
     required this.body,
     required this.status,
-    required this.expiryDate,
     required this.createdAt,
   });
 
@@ -21,7 +19,6 @@ class NotificationItem {
       title: json['title'] as String,
       body: json['body'] as String,
       status: json['status'] as String,
-      expiryDate: DateTime.parse(json['expiryDate'] as String),
       createdAt: DateTime.parse(json['createdAt'] as String),
     );
   }

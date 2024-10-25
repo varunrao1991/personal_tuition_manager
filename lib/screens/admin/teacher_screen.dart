@@ -153,22 +153,34 @@ class _TeacherScreenState extends State<TeacherScreen> {
       _selectedName = null;
     });
     _searchController.clear();
-    await _fetchTeachersWithCurrentFilters(context);
+    try {
+      await _fetchTeachersWithCurrentFilters(context);
+    } catch (e) {
+      handleErrors(context, e);
+    }
   }
 
   Future<void> _performSearch(BuildContext context, String value) async {
     setState(() {
       _selectedName = value;
     });
-    await _fetchTeachersWithCurrentFilters(context);
+    try {
+      await _fetchTeachersWithCurrentFilters(context);
+    } catch (e) {
+      handleErrors(context, e);
+    }
   }
 
   Future<void> _fetchTeachersWithCurrentFilters(BuildContext context) async {
-    await Provider.of<TeacherProvider>(context, listen: false).resetAndFetch(
-      name: _selectedName,
-      sort: _selectedSortField,
-      order: _isAscending ? 'ASC' : 'DESC',
-    );
+    try {
+      await Provider.of<TeacherProvider>(context, listen: false).resetAndFetch(
+        name: _selectedName,
+        sort: _selectedSortField,
+        order: _isAscending ? 'ASC' : 'DESC',
+      );
+    } catch (e) {
+      handleErrors(context, e);
+    }
   }
 
   Widget _buildTeacherList() {
@@ -205,12 +217,44 @@ class _TeacherScreenState extends State<TeacherScreen> {
     TeacherUpdate teacherUpdate = TeacherUpdate.fromTeacher(teacher);
     return TeacherCard(
       teacher: teacher,
+      onLongPress: () => _onLongPress(context, teacher.id, teacher.enabled),
       onEdit: () => _openTeacherForm(teacher: teacherUpdate),
       onDelete: () async {
         bool? success = await _showDeleteConfirmationDialog(context);
         if (success == true) {
           _deleteTeacher(teacher.id);
         }
+      },
+    );
+  }
+
+  Future<void> _onLongPress(
+      BuildContext context, int teacherId, bool enabled) async {
+    await showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: Text(enabled ? 'Disable Teacher' : 'Enable Teacher'),
+                onTap: () async {
+                  final teacherProvider =
+                      Provider.of<TeacherProvider>(context, listen: false);
+                  try {
+                    await teacherProvider.enableTeacher(teacherId, !enabled);
+                  } catch (e) {
+                    handleErrors(context, e);
+                  }
+                  _fetchTeachers();
+                  Navigator.of(context).pop(true);
+                },
+              ),
+            ],
+          ),
+        );
       },
     );
   }
@@ -246,17 +290,13 @@ class _TeacherScreenState extends State<TeacherScreen> {
       final teacherProvider =
           Provider.of<TeacherProvider>(context, listen: false);
       try {
-        teacherProvider.resetAndFetch(
+        await teacherProvider.resetAndFetch(
           name: _selectedName,
           sort: _selectedSortField,
           order: _isAscending ? 'ASC' : 'DESC',
         );
       } catch (e) {
-        if (e is Exception) {
-          handleErrors(context, e);
-        } else {
-          handleErrors(context, Exception('An unexpected error occurred'));
-        }
+        handleErrors(context, e);
       }
     }
   }

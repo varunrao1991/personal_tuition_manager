@@ -7,13 +7,14 @@ class StudentCard extends StatelessWidget {
   final Student student;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final VoidCallback onLongPress;
 
-  const StudentCard({
-    super.key,
-    required this.student,
-    required this.onEdit,
-    required this.onDelete,
-  });
+  const StudentCard(
+      {super.key,
+      required this.student,
+      required this.onEdit,
+      required this.onDelete,
+      required this.onLongPress});
 
   @override
   Widget build(BuildContext context) {
@@ -22,12 +23,23 @@ class StudentCard extends StatelessWidget {
     return CustomSwipeCard(
       onSwipeLeft: onDelete,
       onSwipeRight: onEdit,
+      onLongPress: onLongPress,
       child: Padding(
         padding: const EdgeInsets.all(AppPaddings.smallPadding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(student.name, style: theme.textTheme.titleLarge),
+            Row(
+              children: [
+                Text(student.name, style: theme.textTheme.titleLarge),
+                const SizedBox(width: 8),
+                Icon(
+                  student.enabled ? Icons.check_circle : Icons.cancel,
+                  color: student.enabled ? theme.primaryColor : Colors.red,
+                  size: 24,
+                ),
+              ],
+            ),
             const SizedBox(height: 8),
             Row(
               children: [

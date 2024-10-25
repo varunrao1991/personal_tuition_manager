@@ -83,6 +83,37 @@ class _StudentScreenState extends State<StudentScreen> {
     }
   }
 
+  Future<void> _onLongPress(
+      BuildContext context, int teacherId, bool enabled) async {
+    await showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: Text(enabled ? 'Disable Teacher' : 'Enable Teacher'),
+                onTap: () async {
+                  final studentProvider =
+                      Provider.of<StudentProvider>(context, listen: false);
+                  try {
+                    await studentProvider.enableStudent(teacherId, !enabled);
+                  } catch (e) {
+                    handleErrors(context, e);
+                  }
+                  _fetchStudents();
+                  Navigator.of(context).pop(true);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _openStudentForm({StudentUpdate? student}) async {
     await showCustomModalBottomSheet(
       context: context,
@@ -160,15 +191,23 @@ class _StudentScreenState extends State<StudentScreen> {
     setState(() {
       _selectedName = value;
     });
-    await _fetchStudentsWithCurrentFilters(context);
+    try {
+      await _fetchStudentsWithCurrentFilters(context);
+    } catch (e) {
+      handleErrors(context, e);
+    }
   }
 
   Future<void> _fetchStudentsWithCurrentFilters(BuildContext context) async {
-    await Provider.of<StudentProvider>(context, listen: false).resetAndFetch(
-      name: _selectedName,
-      sort: _selectedSortField,
-      order: _isAscending ? 'ASC' : 'DESC',
-    );
+    try {
+      await Provider.of<StudentProvider>(context, listen: false).resetAndFetch(
+        name: _selectedName,
+        sort: _selectedSortField,
+        order: _isAscending ? 'ASC' : 'DESC',
+      );
+    } catch (e) {
+      handleErrors(context, e);
+    }
   }
 
   Widget _buildStudentList() {
@@ -205,6 +244,7 @@ class _StudentScreenState extends State<StudentScreen> {
     StudentUpdate studentUpdate = StudentUpdate.fromStudent(student);
     return StudentCard(
       student: student,
+      onLongPress: () => _onLongPress(context, student.id, student.enabled),
       onEdit: () => _openStudentForm(student: studentUpdate),
       onDelete: () async {
         bool? success = await _showDeleteConfirmationDialog(context);
@@ -246,17 +286,13 @@ class _StudentScreenState extends State<StudentScreen> {
       final studentProvider =
           Provider.of<StudentProvider>(context, listen: false);
       try {
-        studentProvider.resetAndFetch(
+        await studentProvider.resetAndFetch(
           name: _selectedName,
           sort: _selectedSortField,
           order: _isAscending ? 'ASC' : 'DESC',
         );
       } catch (e) {
-        if (e is Exception) {
-          handleErrors(context, e);
-        } else {
-          handleErrors(context, Exception('An unexpected error occurred'));
-        }
+        handleErrors(context, e);
       }
     }
   }

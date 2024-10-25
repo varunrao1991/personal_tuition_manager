@@ -92,7 +92,10 @@ class _AddStudentFormState extends State<StudentForm> {
                   prefixIcon: Icons.person,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter a name';
+                      return 'Please enter your name';
+                    }
+                    if (!RegularExpressions.nameRegex.hasMatch(value)) {
+                      return 'Name must be at least 3 characters and can contain spaces only';
                     }
                     return null;
                   },

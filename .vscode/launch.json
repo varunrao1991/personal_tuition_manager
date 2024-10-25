@@ -10,6 +10,10 @@
       "args": [
         "--dart-define=ENV=development",
         "--dart-define=USER_TYPE=admin"
+      ],
+      "toolArgs": [
+        "--flavor",
+        "admin"
       ]
     },
     {
@@ -21,16 +25,25 @@
       "args": [
         "--dart-define=ENV=development",
         "--dart-define=USER_TYPE=teacher"
+      ],
+      "toolArgs": [
+        "--flavor",
+        "teacher"
       ]
     },
     {
-      "name": "Flutter Release",
+      "name": "Flutter Dev Student",
       "request": "launch",
       "type": "dart",
-      "flutterMode": "release",
+      "flutterMode": "debug",
       "program": "lib/main.dart",
       "args": [
-        "--dart-define=ENV=production"
+        "--dart-define=ENV=development",
+        "--dart-define=USER_TYPE=student"
+      ],
+      "toolArgs": [
+        "--flavor",
+        "student"
       ]
     }
   ]

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:yoglogonline/providers/auth_provider.dart';
-import 'package:yoglogonline/widgets/custom_fab.dart';
 import '../../providers/notification_provider.dart';
 import '../../utils/handle_errors.dart';
 import '../../widgets/custom_card.dart';
@@ -171,20 +170,16 @@ class _NotificationScreenState extends State<NotificationScreen> {
   Widget _buildNotificationList() {
     return Consumer<NotificationProvider>(
       builder: (context, notificationProvider, child) {
-        // Check if the list is loading and empty
         if (notificationProvider.isLoading &&
             notificationProvider.notifications.isEmpty) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        // Check if there are no notifications
         if (notificationProvider.notifications.isEmpty) {
           return const Center(
             child: Text(
-              'No notifications to show', // Message when no notifications
-              style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold), // Style the text as needed
+              'No notifications to show',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           );
         }

@@ -86,6 +86,27 @@ class TeacherService {
     }
   }
 
+  Future<void> enableDisable({
+    required String accessToken,
+    required int id,
+    required bool enable,
+  }) async {
+    final response = await _client.post(
+      Uri.parse('$apiUrl/api/admin/teachers/enable'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $accessToken',
+      },
+      body: jsonEncode({'id': id, 'enabled': enable}),
+    );
+
+    if (response.statusCode != 200) {
+      throw responseToError(response.body);
+    } else {
+      log("Teacher updated.");
+    }
+  }
+
   Future<void> updateTeacher({
     required String accessToken,
     required TeacherUpdate teacherUpdate,
