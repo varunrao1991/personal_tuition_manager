@@ -9,7 +9,11 @@ class TotalGraph extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (arrayToDisplay.isEmpty) {
-      return const Center(child: Text('No data available'));
+      return Center(
+          child: Text(
+        'No data available',
+        style: Theme.of(context).textTheme.bodyMedium,
+      ));
     }
 
     final sortedDailyTotals = arrayToDisplay.entries.toList()

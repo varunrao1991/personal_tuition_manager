@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:yoglogonline/widgets/icon_info_column.dart';
+import '../../../widgets/icon_info_column.dart';
 import '../../../constants/app_constants.dart';
 import '../../../widgets/custom_card.dart';
 

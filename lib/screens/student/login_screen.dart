@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../../constants/app_constants.dart';
 import '../../exceptions/auth_exception.dart';
 import '../../widgets/custom_text_button.dart';
@@ -64,8 +63,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const SizedBox(height: 100),
-                      SvgPicture.asset(
-                        'assets/icon/app_icon.svg',
+                      Image.asset(
+                        'assets/icon/app_icon.png',
                         width: 100,
                         height: 100,
                       ),

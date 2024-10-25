@@ -1,10 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:yoglogonline/constants/app_constants.dart';
-import 'package:yoglogonline/widgets/password_form_field.dart';
-import '../../widgets/custom_snackbar.dart';
 import 'package:provider/provider.dart';
+import '../../constants/app_constants.dart';
+import '../../widgets/password_form_field.dart';
+import '../../widgets/custom_snackbar.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/handle_errors.dart';
 import '../../widgets/custom_elevated_button.dart';
@@ -103,8 +102,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const SizedBox(height: 100),
-              SvgPicture.asset('assets/icon/app_icon.svg',
-                  width: 100, height: 100),
+              Image.asset(
+                'assets/icon/app_icon.png',
+                width: 100,
+                height: 100,
+              ),
               const SizedBox(height: 20),
               Text(
                 'Reset Your Password',

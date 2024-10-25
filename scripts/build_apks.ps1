@@ -26,7 +26,7 @@ function Build-APK {
     Write-Host "Building APK for $userType..."
 
     # Build the APK with the specified flavor, debug info, and dart define for user type and environment
-    $buildCommand = "flutter build apk --flavor $userType --release --obfuscate --split-debug-info=`"$userDebugInfoDir`" --dart-define=`"USER_TYPE=$userType`" --dart-define=`"ENV=production`" --build-name=`"1.0.0`" --build-number=`"1`""
+    $buildCommand = "flutter build apk --flavor $userType --release --obfuscate --split-debug-info=`"$userDebugInfoDir`" --dart-define=`"USER_TYPE=$userType`" --dart-define=`"ENV=production`" --build-name=`"1.0.0`" --build-number=`"1`" --target-platform android-arm,android-arm64"
     Write-Host "Running command: $buildCommand"
 
     Invoke-Expression $buildCommand

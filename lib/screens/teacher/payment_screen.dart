@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:yoglogonline/widgets/custom_fab.dart';
+import '../../widgets/custom_fab.dart';
 import '../../constants/app_constants.dart';
 import '../../models/create_payment.dart';
 import '../../models/fetch_payment.dart';

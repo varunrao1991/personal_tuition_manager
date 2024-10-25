@@ -288,7 +288,7 @@ class _HolidayScreenState extends State<HolidayScreen> {
       return Center(
         child: Text(
           'No holidays in this month.',
-          style: Theme.of(context).textTheme.bodyLarge,
+          style: Theme.of(context).textTheme.bodyMedium,
         ),
       );
     }

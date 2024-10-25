@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../../constants/app_constants.dart';
 import '../../widgets/custom_text_button.dart';
 import 'package:provider/provider.dart';
@@ -35,8 +34,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const SizedBox(height: 100),
-                SvgPicture.asset(
-                  'assets/icon/app_icon.svg',
+                Image.asset(
+                  'assets/icon/app_icon.png',
                   width: 100,
                   height: 100,
                 ),

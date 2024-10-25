@@ -239,7 +239,7 @@ class _TeacherScreenState extends State<TeacherScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                title: Text(enabled ? 'Disable Teacher' : 'Enable Teacher'),
+                title: Text(enabled ? 'Disable teacher' : 'Enable teacher'),
                 onTap: () async {
                   final teacherProvider =
                       Provider.of<TeacherProvider>(context, listen: false);

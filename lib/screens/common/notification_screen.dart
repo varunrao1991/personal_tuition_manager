@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:yoglogonline/providers/auth_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../utils/handle_errors.dart';
 import '../../widgets/custom_card.dart';
@@ -176,10 +176,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
         }
 
         if (notificationProvider.notifications.isEmpty) {
-          return const Center(
+          return Center(
             child: Text(
-              'No notifications to show',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              'No notifications to show.',
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
           );
         }
