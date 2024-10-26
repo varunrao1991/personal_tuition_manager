@@ -42,10 +42,7 @@ class _AttendanceScreen extends State<AttendanceScreen> {
       await holidayProvider.fetchHolidays(
           startDate: startDate, endDate: endDate);
       await attendanceProvider.fetchAttendances(
-          startDate: startDate,
-          endDate: endDate,
-          forceRefresh: true,
-          myAttendance: true);
+          startDate: startDate, endDate: endDate, forceRefresh: true);
     } catch (e) {
       handleErrors(context, e);
     } finally {

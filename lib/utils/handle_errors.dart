@@ -42,7 +42,6 @@ void handleErrors(BuildContext context, e) {
     log(e.stackTrace.toString());
   } else {
     _handleGeneralError(context, e);
-    log(e.stackTrace.toString());
   }
 }
 

@@ -45,13 +45,8 @@ class _CourseScreenState extends State<CourseScreen> {
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _initializeData();
+      _fetchCourses();
     });
-  }
-
-  Future<void> _initializeData() async {
-    await _fetchCourses();
-    await Provider.of<WeekdayProvider>(context, listen: false).fetchWeekdays();
   }
 
   Future<void> _fetchCourses() async {
@@ -59,6 +54,8 @@ class _CourseScreenState extends State<CourseScreen> {
     setState(() => _isLoading = true);
 
     try {
+      await Provider.of<WeekdayProvider>(context, listen: false)
+          .fetchWeekdays();
       final studentCourseProvider =
           Provider.of<CourseProvider>(context, listen: false);
       await studentCourseProvider.fetchCourses(
@@ -87,6 +84,9 @@ class _CourseScreenState extends State<CourseScreen> {
     DateTime highestEndDate = _calculatePossibleEndDate(courses.first);
 
     for (var course in courses.skip(1)) {
+      if (course.startDate == null) {
+        continue;
+      }
       if (course.startDate!.isBefore(lowestStartDate)) {
         lowestStartDate = course.startDate!;
       }
@@ -370,10 +370,7 @@ class _CourseScreenState extends State<CourseScreen> {
         );
 
     await attendanceProvider.fetchAttendances(
-      startDate: course.startDate!,
-      endDate: endDate,
-      myAttendance: true,
-    );
+        startDate: course.startDate!, endDate: endDate);
   }
 
   Future<void> _openSortModal(BuildContext context) async {

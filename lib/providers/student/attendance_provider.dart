@@ -33,8 +33,7 @@ class AttendanceProvider with ChangeNotifier {
   Future<void> fetchAttendances(
       {DateTime? startDate,
       DateTime? endDate,
-      bool forceRefresh = false,
-      bool myAttendance = false}) async {
+      bool forceRefresh = false}) async {
     if (startDate == null || endDate == null) {
       return;
     }

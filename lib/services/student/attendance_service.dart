@@ -22,7 +22,7 @@ class AttendanceService {
       queryParams['endDate'] = endDate.toIso8601String().split('T').first;
     }
 
-    Uri uri = Uri.parse('$apiUrl/api/attendances/student')
+    Uri uri = Uri.parse('$apiUrl/api/attendances/my_attendances')
         .replace(queryParameters: queryParams);
 
     final response = await _client.get(uri, headers: {
