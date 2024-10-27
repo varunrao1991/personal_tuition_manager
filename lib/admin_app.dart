@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import './routes/admin_routes.dart';
+import 'providers/theme_provider.dart';
 import 'routes/navigator.dart';
 import 'screens/common/about_screen.dart';
 import 'screens/common/forgot_password_screen.dart';
@@ -27,39 +28,49 @@ class MyApp extends StatelessWidget {
     MaterialTheme theme = const MaterialTheme();
 
     return MultiProvider(
-      providers: [
-        Provider(create: (_) => HttpTimeoutClient()),
-        Provider(create: (_) => TokenService()),
-        ChangeNotifierProvider(
-          create: (context) => AuthProvider(
-              AuthService(context.read<HttpTimeoutClient>(), 'admin'),
-              context.read<TokenService>()),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => TeacherProvider(
-              TeacherService(context.read<HttpTimeoutClient>()),
-              context.read<TokenService>()),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => NotificationProvider(
-              NotificationService(context.read<HttpTimeoutClient>()),
-              context.read<TokenService>()),
-        ),
-      ],
-      child: MaterialApp(
-        navigatorKey: navigatorKey,
-        navigatorObservers: [RouteObserver()],
-        title: 'Teacher & Student App',
-        theme: brightness == Brightness.light ? theme.light() : theme.dark(),
-        initialRoute: '/login',
-        routes: {
-          ...adminRoutes,
-          '/forgot-password': (context) => const ForgotPasswordScreen(),
-          '/about': (context) => const AboutScreen(),
-          '/notification': (context) => const NotificationScreen(),
-          '/change-password': (context) => const ChangePasswordScreen(),
-        },
-      ),
-    );
+        providers: [
+          Provider(create: (_) => HttpTimeoutClient()),
+          Provider(create: (_) => TokenService()),
+          ChangeNotifierProvider(
+            create: (context) => AuthProvider(
+                AuthService(context.read<HttpTimeoutClient>(), 'admin'),
+                context.read<TokenService>()),
+          ),
+          ChangeNotifierProvider(
+            create: (context) => TeacherProvider(
+                TeacherService(context.read<HttpTimeoutClient>()),
+                context.read<TokenService>()),
+          ),
+          ChangeNotifierProvider(
+            create: (context) => NotificationProvider(
+                NotificationService(context.read<HttpTimeoutClient>()),
+                context.read<TokenService>()),
+          ),
+          ChangeNotifierProvider(
+            create: (context) {
+              final themeProvider = ThemeProvider();
+              themeProvider.loadThemePreference();
+              return themeProvider;
+            },
+          )
+        ],
+        child:
+            Consumer<ThemeProvider>(builder: (context, themeProvider, child) {
+          return MaterialApp(
+              navigatorKey: navigatorKey,
+              navigatorObservers: [RouteObserver()],
+              title: 'Admin App',
+              themeMode: themeProvider.themeMode,
+              theme: const MaterialTheme().light(),
+              darkTheme: const MaterialTheme().dark(),
+              initialRoute: '/login',
+              routes: {
+                ...adminRoutes,
+                '/forgot-password': (context) => const ForgotPasswordScreen(),
+                '/about': (context) => const AboutScreen(),
+                '/notification': (context) => const NotificationScreen(),
+                '/change-password': (context) => const ChangePasswordScreen(),
+              });
+        }));
   }
 }

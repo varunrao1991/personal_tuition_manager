@@ -9,6 +9,7 @@ import '../../providers/teacher/attendance_provider.dart';
 import '../../providers/teacher/course_provider.dart';
 import '../../providers/teacher/holiday_provider.dart';
 import '../../providers/teacher/weekday_provider.dart';
+import '../../utils/calculate_enddate.dart';
 import '../../utils/handle_errors.dart';
 import '../../utils/show_custom_center_modal.dart';
 import '../../widgets/custom_fab.dart';
@@ -244,35 +245,6 @@ class _CourseScreenState extends State<CourseScreen>
     );
   }
 
-  DateTime _calculateEndDate({
-    required DateTime startDate,
-    required int totalClasses,
-    required List<DateTime> holidays,
-    required List<int> weekdays,
-  }) {
-    DateTime endDate = startDate.subtract(const Duration(days: 1));
-    int classesCount = 0;
-
-    DateTime maxEndDate = startDate.add(Duration(days: totalClasses * 2));
-
-    while (classesCount < totalClasses) {
-      endDate = endDate.add(const Duration(days: 1));
-      if (!_isHolidayOrInvalidWeekday(endDate, holidays, weekdays)) {
-        classesCount++;
-      }
-      if (endDate.isAfter(maxEndDate)) {
-        return maxEndDate;
-      }
-    }
-    return endDate;
-  }
-
-  bool _isHolidayOrInvalidWeekday(
-      DateTime date, List<DateTime> holidays, List<int> weekdays) {
-    return holidays.any((holiday) => isSameDay(holiday, date)) ||
-        !weekdays.contains(date.weekday);
-  }
-
   Future<void> _viewCourseCalender(Course course) async {
     try {
       final holidayProvider =
@@ -452,14 +424,11 @@ class _CourseScreenState extends State<CourseScreen>
     final weekdayProvider =
         Provider.of<WeekdayProvider>(context, listen: false);
 
-    final holidayList =
-        holidayProvider.holidays.map((holiday) => holiday.holidayDate).toList();
-
     _endDateToUse = endDate ??
-        _calculateEndDate(
+        calculateEndDate(
           startDate: startDate,
           totalClasses: totalClasses,
-          holidays: holidayList,
+          holidays: holidayProvider.holidays,
           weekdays: weekdayProvider.weekdays,
         );
 
@@ -554,14 +523,10 @@ class _CourseScreenState extends State<CourseScreen>
       final weekdayProvider =
           Provider.of<WeekdayProvider>(context, listen: false);
 
-      final holidayList = holidayProvider.holidays
-          .map((holiday) => holiday.holidayDate)
-          .toList();
-
-      final endDateToUse = _calculateEndDate(
+      final endDateToUse = calculateEndDate(
         startDate: courseStartDate,
         totalClasses: totalClasses,
-        holidays: holidayList,
+        holidays: holidayProvider.holidays,
         weekdays: weekdayProvider.weekdays,
       );
 

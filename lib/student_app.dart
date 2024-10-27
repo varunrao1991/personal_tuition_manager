@@ -4,6 +4,7 @@ import 'providers/student/holiday_provider.dart';
 import 'providers/student/weekday_provider.dart';
 import './routes/student_routes.dart';
 import 'providers/student/course_provider.dart';
+import 'providers/theme_provider.dart';
 import 'routes/navigator.dart';
 import 'screens/common/about_screen.dart';
 import 'screens/common/forgot_password_screen.dart';
@@ -29,9 +30,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final brightness = View.of(context).platformDispatcher.platformBrightness;
-    MaterialTheme theme = const MaterialTheme();
-
     return MultiProvider(
       providers: [
         Provider(create: (_) => HttpTimeoutClient()),
@@ -62,19 +60,31 @@ class MyApp extends StatelessWidget {
             create: (context) => CourseProvider(
                 CourseService(context.read<HttpTimeoutClient>()),
                 context.read<TokenService>())),
+        ChangeNotifierProvider(
+          create: (context) {
+            final themeProvider = ThemeProvider();
+            themeProvider.loadThemePreference();
+            return themeProvider;
+          },
+        )
       ],
-      child: MaterialApp(
-        navigatorKey: navigatorKey,
-        navigatorObservers: [RouteObserver()],
-        title: 'Student App',
-        theme: brightness == Brightness.light ? theme.light() : theme.dark(),
-        initialRoute: '/login',
-        routes: {
-          ...studentRoutes,
-          '/forgot-password': (context) => const ForgotPasswordScreen(),
-          '/about': (context) => const AboutScreen(),
-          '/notification': (context) => const NotificationScreen(),
-          '/change-password': (context) => const ChangePasswordScreen(),
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
+          return MaterialApp(
+              navigatorKey: navigatorKey,
+              navigatorObservers: [RouteObserver()],
+              title: 'Student App',
+              themeMode: themeProvider.themeMode,
+              theme: const MaterialTheme().light(),
+              darkTheme: const MaterialTheme().dark(),
+              initialRoute: '/login',
+              routes: {
+                ...studentRoutes,
+                '/forgot-password': (context) => const ForgotPasswordScreen(),
+                '/about': (context) => const AboutScreen(),
+                '/notification': (context) => const NotificationScreen(),
+                '/change-password': (context) => const ChangePasswordScreen(),
+              });
         },
       ),
     );

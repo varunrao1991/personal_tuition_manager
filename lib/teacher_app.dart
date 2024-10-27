@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:padmayoga/providers/theme_provider.dart';
+import 'package:provider/provider.dart';
 import 'providers/teacher/attendance_provider.dart';
 import 'providers/teacher/holiday_provider.dart';
 import 'providers/teacher/month_provider.dart';
@@ -17,7 +19,6 @@ import 'constants/app_theme.dart';
 import 'providers/notification_provider.dart';
 import 'providers/teacher/payment_provider.dart';
 import 'providers/teacher/student_provider.dart';
-import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
 import 'screens/common/change_password_screen.dart';
 import 'services/auth_service.dart';
@@ -34,9 +35,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final brightness = View.of(context).platformDispatcher.platformBrightness;
-    MaterialTheme theme = const MaterialTheme();
-
     return MultiProvider(
       providers: [
         Provider(create: (_) => HttpTimeoutClient()),
@@ -82,19 +80,32 @@ class MyApp extends StatelessWidget {
             create: (context) => CourseProvider(
                 CourseService(context.read<HttpTimeoutClient>()),
                 context.read<TokenService>())),
+        ChangeNotifierProvider(
+          create: (context) {
+            final themeProvider = ThemeProvider();
+            themeProvider.loadThemePreference();
+            return themeProvider;
+          },
+        ),
       ],
-      child: MaterialApp(
-        navigatorKey: navigatorKey,
-        navigatorObservers: [RouteObserver()],
-        title: 'Teacher & Student App',
-        theme: brightness == Brightness.light ? theme.light() : theme.dark(),
-        initialRoute: '/login',
-        routes: {
-          ...teacherRoutes,
-          '/forgot-password': (context) => const ForgotPasswordScreen(),
-          '/about': (context) => const AboutScreen(),
-          '/notification': (context) => const NotificationScreen(),
-          '/change-password': (context) => const ChangePasswordScreen(),
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
+          return MaterialApp(
+            navigatorKey: navigatorKey,
+            navigatorObservers: [RouteObserver()],
+            title: 'Teacher App',
+            themeMode: themeProvider.themeMode,
+            theme: const MaterialTheme().light(),
+            darkTheme: const MaterialTheme().dark(),
+            initialRoute: '/login',
+            routes: {
+              ...teacherRoutes,
+              '/forgot-password': (context) => const ForgotPasswordScreen(),
+              '/about': (context) => const AboutScreen(),
+              '/notification': (context) => const NotificationScreen(),
+              '/change-password': (context) => const ChangePasswordScreen(),
+            },
+          );
         },
       ),
     );

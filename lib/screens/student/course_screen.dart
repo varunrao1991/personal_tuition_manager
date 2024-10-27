@@ -8,6 +8,7 @@ import '../../providers/student/attendance_provider.dart';
 import '../../providers/student/holiday_provider.dart';
 import '../../providers/student/course_provider.dart';
 import '../../providers/student/weekday_provider.dart';
+import '../../utils/calculate_enddate.dart';
 import '../../utils/handle_errors.dart';
 import '../../utils/show_custom_center_modal.dart';
 import '../../widgets/sort_modal.dart';
@@ -233,10 +234,10 @@ class _CourseScreenState extends State<CourseScreen> {
             course, holidayProvider.holidays, weekdayProvider.weekdays),
         paymentDate: course.payment.paymentDate,
         totalClasses: course.totalClasses,
+        onTap: () async => await _handleCourseTap(course),
         child: _showCourseId == course.paymentId
             ? _buildCourseCalendar(course)
             : null,
-        onTap: () => _handleCourseTap(course),
       );
     } else if (course.startDate != null && course.endDate != null) {
       return ClosedCourseCard(
@@ -244,10 +245,10 @@ class _CourseScreenState extends State<CourseScreen> {
         endDate: course.endDate!,
         paymentDate: course.payment.paymentDate,
         totalClasses: course.totalClasses,
+        onTap: () async => await _handleCourseTap(course),
         child: _showCourseId == course.paymentId
             ? _buildCourseCalendar(course)
             : null,
-        onTap: () => _handleCourseTap(course),
       );
     } else {
       return WaitlistCourseCard(
@@ -292,7 +293,7 @@ class _CourseScreenState extends State<CourseScreen> {
         .toList();
 
     DateTime endDate = course.endDate ??
-        _calculateEndDate(
+        calculateEndDate(
           startDate: course.startDate!,
           totalClasses: course.totalClasses,
           holidays: holidays,
@@ -309,31 +310,6 @@ class _CourseScreenState extends State<CourseScreen> {
         attendanceRecords: attendanceRecords,
       ),
     );
-  }
-
-  DateTime _calculateEndDate({
-    required DateTime startDate,
-    required int totalClasses,
-    required List<Holiday> holidays,
-    required List<int> weekdays,
-  }) {
-    DateTime endDate = startDate.subtract(const Duration(days: 1));
-    int classesCount = 0;
-    DateTime maxEndDate = startDate.add(Duration(days: totalClasses * 2));
-
-    while (classesCount < totalClasses && endDate.isBefore(maxEndDate)) {
-      endDate = endDate.add(const Duration(days: 1));
-      if (!_isHolidayOrInvalidWeekday(endDate, holidays, weekdays)) {
-        classesCount++;
-      }
-    }
-    return endDate;
-  }
-
-  bool _isHolidayOrInvalidWeekday(
-      DateTime date, List<Holiday> holidays, List<int> weekdays) {
-    return holidays.any((holiday) => isSameDay(holiday.holidayDate, date)) ||
-        !weekdays.contains(date.weekday);
   }
 
   Future<void> _handleCourseTap(Course course) async {
@@ -362,7 +338,7 @@ class _CourseScreenState extends State<CourseScreen> {
         Provider.of<WeekdayProvider>(context, listen: false);
 
     DateTime endDate = course.endDate ??
-        _calculateEndDate(
+        calculateEndDate(
           startDate: course.startDate!,
           totalClasses: course.totalClasses,
           holidays: holidayProvider.holidays,

@@ -10,6 +10,7 @@ import '../../../utils/handle_errors.dart';
 import '../../../widgets/confirmation_modal.dart';
 import '../../../utils/show_custom_center_modal.dart';
 import '../../common/edit_profile_screen.dart';
+import '../../../providers/theme_provider.dart'; // Import ThemeProvider
 
 class StudentCustomDrawer extends StatelessWidget {
   const StudentCustomDrawer({super.key});
@@ -45,6 +46,7 @@ class StudentCustomDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
 
     return Drawer(
       child: ListView(
@@ -112,6 +114,36 @@ class StudentCustomDrawer extends StatelessWidget {
             onTap: () {
               _logout(context);
             },
+          ),
+          const Divider(), // Add a divider for better organization
+          Padding(
+            padding: const EdgeInsets.all(8.0), // Add some padding around icons
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.light_mode),
+                  tooltip: 'Light Theme',
+                  onPressed: () {
+                    themeProvider.toggleTheme(ThemeMode.light);
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.dark_mode),
+                  tooltip: 'Dark Theme',
+                  onPressed: () {
+                    themeProvider.toggleTheme(ThemeMode.dark);
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.brightness_auto),
+                  tooltip: 'System Default',
+                  onPressed: () {
+                    themeProvider.toggleTheme(ThemeMode.system);
+                  },
+                ),
+              ],
+            ),
           ),
         ],
       ),
