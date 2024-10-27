@@ -1,14 +1,5 @@
-# Create a directory for the output APKs if it doesn't exist
-$outputDir = "output_apks"
-if (-not (Test-Path $outputDir)) {
-    New-Item -ItemType Directory -Path $outputDir
-}
-
 # Create a base directory for debug info
 $debugInfoBaseDir = "debug_info"
-if (-not (Test-Path $debugInfoBaseDir)) {
-    New-Item -ItemType Directory -Path $debugInfoBaseDir
-}
 
 # Function to build APK for a specific user type
 function Build-APK {
@@ -19,9 +10,6 @@ function Build-APK {
 
     # Create a directory for user-specific debug info if it doesn't exist
     $userDebugInfoDir = Join-Path -Path $debugInfoBaseDir -ChildPath $userType
-    if (-not (Test-Path $userDebugInfoDir)) {
-        New-Item -ItemType Directory -Path $userDebugInfoDir
-    }
 
     Write-Host "Building APK for $userType..."
 
