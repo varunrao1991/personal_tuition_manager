@@ -19,14 +19,12 @@ import 'utils/http_client.dart';
 
 class MyApp extends StatelessWidget {
   final String userType;
+  final materialTheme = const MaterialTheme();
 
   const MyApp({super.key, required this.userType});
 
   @override
   Widget build(BuildContext context) {
-    final brightness = View.of(context).platformDispatcher.platformBrightness;
-    MaterialTheme theme = const MaterialTheme();
-
     return MultiProvider(
         providers: [
           Provider(create: (_) => HttpTimeoutClient()),
@@ -61,8 +59,8 @@ class MyApp extends StatelessWidget {
               navigatorObservers: [RouteObserver()],
               title: 'Admin App',
               themeMode: themeProvider.themeMode,
-              theme: const MaterialTheme().light(),
-              darkTheme: const MaterialTheme().dark(),
+              theme: materialTheme.light(),
+              darkTheme: materialTheme.dark(),
               initialRoute: '/login',
               routes: {
                 ...adminRoutes,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:padmayoga/constants/app_constants.dart';
 
 class NavItem {
   final IconData icon;
@@ -24,7 +25,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
       shape: const CircularNotchedRectangle(),
       notchMargin: 8.0,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8.0), // Avoid overflow
+        padding: const EdgeInsets.symmetric(vertical: AppPaddings.tinyPadding),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: navItems.asMap().entries.map((entry) {
@@ -43,7 +44,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
                     children: [
                       Icon(
                         item.icon,
-                        size: 18,
+                        size: 16,
                         color: isSelected
                             ? Theme.of(context).colorScheme.primary
                             : Colors.grey,
@@ -53,7 +54,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
                         item.label,
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 12,
                           color: isSelected
                               ? Theme.of(context).colorScheme.primary
                               : Colors.grey,

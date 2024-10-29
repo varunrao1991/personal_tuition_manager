@@ -109,90 +109,87 @@ class _StudentSelectorState extends State<StudentSelector> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(AppPaddings.mediumPadding),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Text('Select Student',
-                style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: GenericSearchBar(
-                    controller: _searchController,
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedName = value;
-                      });
-                      _fetchStudents();
-                    },
-                    onClear: () {
-                      setState(() {
-                        _selectedName = null;
-                        _searchController.clear();
-                      });
-                      _fetchStudents();
-                    },
-                  ),
+    return Center(
+        child: SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Text('Select Student', style: Theme.of(context).textTheme.bodyLarge),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: GenericSearchBar(
+                  controller: _searchController,
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedName = value;
+                    });
+                    _fetchStudents();
+                  },
+                  onClear: () {
+                    setState(() {
+                      _selectedName = null;
+                      _searchController.clear();
+                    });
+                    _fetchStudents();
+                  },
                 ),
-                const SizedBox(width: 10),
-                IconButton(
-                  icon: const Icon(Icons.filter_alt),
-                  onPressed: () => _openSortModal(context),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 200,
-              child: Consumer<StudentProvider>(
-                builder: (context, studentProvider, _) {
-                  return studentProvider.isLoading &&
-                          studentProvider.students.isEmpty
-                      ? const Center(child: CircularProgressIndicator())
-                      : GridView.builder(
-                          controller: _scrollController,
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3,
-                            crossAxisSpacing: 4.0,
-                            mainAxisSpacing: 16.0,
-                            childAspectRatio: 1.3,
-                          ),
-                          itemCount: studentProvider.students.length +
-                              (studentProvider.isLoading ? 1 : 0),
-                          itemBuilder: (context, index) {
-                            if (index == studentProvider.students.length) {
-                              return const Center(
-                                  child: CircularProgressIndicator());
-                            }
-                            final student = studentProvider.students[index];
-                            return _buildStudentCard(student);
-                          },
-                        );
-                },
               ),
-            ),
-            const SizedBox(height: 20),
-            if (_selectedStudent != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10.0),
-                child: Text('Selected Student: ${_selectedStudent!.name}',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyMedium),
+              const SizedBox(width: 10),
+              IconButton(
+                icon: const Icon(Icons.filter_alt),
+                onPressed: () => _openSortModal(context),
               ),
-            const SizedBox(height: 10),
-            CustomElevatedButton(
-              onPressed: _handleNext,
-              text: 'Next',
+            ],
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 200,
+            child: Consumer<StudentProvider>(
+              builder: (context, studentProvider, _) {
+                return studentProvider.isLoading &&
+                        studentProvider.students.isEmpty
+                    ? const Center(child: CircularProgressIndicator())
+                    : GridView.builder(
+                        controller: _scrollController,
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          crossAxisSpacing: 4.0,
+                          mainAxisSpacing: 16.0,
+                          childAspectRatio: 1.3,
+                        ),
+                        itemCount: studentProvider.students.length +
+                            (studentProvider.isLoading ? 1 : 0),
+                        itemBuilder: (context, index) {
+                          if (index == studentProvider.students.length) {
+                            return const Center(
+                                child: CircularProgressIndicator());
+                          }
+                          final student = studentProvider.students[index];
+                          return _buildStudentCard(student);
+                        },
+                      );
+              },
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 20),
+          if (_selectedStudent != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10.0),
+              child: Text('Selected Student: ${_selectedStudent!.name}',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium),
+            ),
+          const SizedBox(height: 10),
+          CustomElevatedButton(
+            onPressed: _handleNext,
+            text: 'Next',
+          ),
+        ],
       ),
-    );
+    ));
   }
 
   Widget _buildStudentCard(Student student) {

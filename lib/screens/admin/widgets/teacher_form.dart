@@ -5,7 +5,6 @@ import '../../../providers/admin/teacher_provider.dart';
 import '../../../models/admin/teacher_update.dart';
 import '../../../utils/handle_errors.dart';
 import '../../../widgets/custom_elevated_button.dart';
-import '../../../widgets/custom_form_date_field.dart';
 import '../../../widgets/custom_form_text_field.dart';
 import '../../../widgets/custom_snackbar.dart';
 
@@ -76,7 +75,7 @@ class _AddTeacherFormState extends State<TeacherForm> {
   Widget build(BuildContext context) {
     return Center(
       child: Container(
-        padding: const EdgeInsets.all(AppPaddings.mediumPadding),
+        padding: const EdgeInsets.all(AppPaddings.smallPadding),
         child: SingleChildScrollView(
           child: Form(
             key: _formKey,
@@ -84,7 +83,7 @@ class _AddTeacherFormState extends State<TeacherForm> {
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 Text(widget.teacher != null ? 'Edit Teacher' : 'Add Teacher',
-                    style: Theme.of(context).textTheme.titleLarge),
+                    style: Theme.of(context).textTheme.bodyLarge),
                 const SizedBox(height: 20),
                 CustomFormTextField(
                   controller: _nameController,

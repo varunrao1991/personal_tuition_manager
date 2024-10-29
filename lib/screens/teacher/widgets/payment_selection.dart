@@ -65,14 +65,15 @@ class _PaymentOwnerSelectorState extends State<PaymentOwnerSelector> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-        child: Padding(
+    return Center(
+        child: Container(
             padding: const EdgeInsets.all(AppPaddings.mediumPadding),
-            child: Column(
+            child: SingleChildScrollView(
+                child: Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 Text('Select Paid Student',
-                    style: Theme.of(context).textTheme.titleLarge),
+                    style: Theme.of(context).textTheme.bodyLarge),
                 const SizedBox(height: 20),
                 SizedBox(
                   height: 200,
@@ -129,7 +130,7 @@ class _PaymentOwnerSelectorState extends State<PaymentOwnerSelector> {
                   text: 'Next',
                 ),
               ],
-            )));
+            ))));
   }
 
   Widget _buildStudentCard(OwnedBy student) {

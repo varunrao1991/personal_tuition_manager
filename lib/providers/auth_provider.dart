@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../exceptions/custom_exception.dart';
 import '../models/profile_update.dart';
@@ -16,16 +17,22 @@ class AuthProvider with ChangeNotifier {
   User? _user;
   bool _newNotification = false;
   bool _onMessageOpenedStatus = false;
+  Uint8List? _thumbnail;
+  Uint8List? _largeImage;
 
   bool get newNotification => _newNotification;
   bool get onMessageOpenedStatus => _onMessageOpenedStatus;
   User? get user => _user;
   bool get isLoading => _isLoading;
+  Uint8List? get thumbnail => _thumbnail;
+  Uint8List? get largeImage => _largeImage;
   bool get isTemporaryPassword => _user?.isTemporaryPassword ?? false;
 
   void clearData() {
     _setLoading(true);
     _user = null;
+    _thumbnail = null;
+    _largeImage = null;
     _newNotification = false;
     _onMessageOpenedStatus = false;
     _setLoading(false);
@@ -60,6 +67,45 @@ class AuthProvider with ChangeNotifier {
         log("Failed to load user: $e");
         rethrow;
       }
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<void> loadMyThumbnail() async {
+    _setLoading(true);
+    try {
+      final accessToken = await _tokenService.getToken();
+      final response = await _authService.fetchMyProfileThumbnail(accessToken);
+      _thumbnail = response.bodyBytes;
+      notifyListeners();
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<void> loadMyLargeImage() async {
+    _setLoading(true);
+    try {
+      final accessToken = await _tokenService.getToken();
+      final response = await _authService.fetchMyProfileLargeImage(accessToken);
+      _largeImage = response.bodyBytes;
+      notifyListeners();
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<void> uploadProfilePicture(
+      Uint8List imageData, String fileType, String mimeType) async {
+    _setLoading(true);
+    try {
+      final accessToken = await _tokenService.getToken();
+      await _authService.uploadProfilePicture(
+          accessToken, imageData, fileType, mimeType);
+      log("Profile picture uploaded successfully.");
+      await loadMyThumbnail();
+      await loadMyLargeImage();
     } finally {
       _setLoading(false);
     }

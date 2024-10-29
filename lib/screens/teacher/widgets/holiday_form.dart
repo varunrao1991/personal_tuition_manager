@@ -40,7 +40,7 @@ class _HolidayFormState extends State<HolidayForm> {
   Widget build(BuildContext context) {
     return Center(
       child: Container(
-        padding: const EdgeInsets.all(AppPaddings.mediumPadding),
+        padding: const EdgeInsets.all(AppPaddings.smallPadding),
         child: SingleChildScrollView(
           child: Form(
             key: _formKey,
@@ -48,7 +48,7 @@ class _HolidayFormState extends State<HolidayForm> {
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 Text('Add Holiday',
-                    style: Theme.of(context).textTheme.titleLarge),
+                    style: Theme.of(context).textTheme.bodyLarge),
                 const SizedBox(height: 20),
                 CustomDateInputField(
                   title: 'Holiday Date',

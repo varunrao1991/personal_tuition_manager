@@ -199,14 +199,15 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
 
     final rearrangedStudents = [...markedStudents, ...unmarkedStudents];
 
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(AppPaddings.mediumPadding),
+    return Center(
+        child: Container(
+      padding: const EdgeInsets.all(AppPaddings.smallPadding),
+      child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             Text('Mark attendance',
-                style: Theme.of(context).textTheme.titleLarge),
+                style: Theme.of(context).textTheme.bodyLarge),
             const SizedBox(height: 16),
             _buildSearchBar(context, studentProvider),
             const SizedBox(height: 16),
@@ -219,7 +220,7 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
           ],
         ),
       ),
-    );
+    ));
   }
 
   Widget _buildSearchBar(

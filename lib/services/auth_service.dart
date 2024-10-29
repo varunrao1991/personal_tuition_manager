@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import '../models/profile_update.dart';
 import '../models/user_model.dart';
 import '../config/app_config.dart';
@@ -16,7 +18,7 @@ class LoginResponse {
 class AuthService {
   final String apiUrl = Config().apiUrl;
   final http.Client _client;
-  final userType;
+  final String userType;
 
   AuthService(this._client, this.userType);
 
@@ -142,6 +144,66 @@ class AuthService {
     if (response.statusCode == 200) {
       final userData = jsonDecode(response.body);
       return User.fromJson(userData);
+    } else {
+      throw responseToError(response.body);
+    }
+  }
+
+  Future<void> uploadProfilePicture(String accessToken, Uint8List imageData,
+      String extension, String mimeType) async {
+    final uri = Uri.parse('$apiUrl/api/profile/upload');
+    final request = http.MultipartRequest('POST', uri);
+
+    request.headers['Authorization'] = 'Bearer $accessToken';
+    request.headers['Content-Type'] = 'multipart/form-data';
+
+    String filename = 'profile_picture$extension';
+
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'largeImage',
+        imageData,
+        filename: filename,
+        contentType: MediaType.parse(mimeType),
+      ),
+    );
+
+    final response = await request.send();
+    if (response.statusCode == 200) {
+    } else {
+      final responseBody =
+          await response.stream.bytesToString(); // Read response body
+      final errorMessage = jsonDecode(responseBody); // Decode if JSON
+      log('Error: ${errorMessage['error']}'); // Adjust based on your API's response structure
+      responseToError(errorMessage);
+    }
+  }
+
+  Future<http.Response> fetchMyProfileThumbnail(String accessToken) async {
+    final response = await _client.get(
+      Uri.parse('$apiUrl/api/profile/my_thumbnail'),
+      headers: {
+        'Authorization': 'Bearer $accessToken',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return response;
+    } else {
+      throw responseToError(response.body);
+    }
+  }
+
+  Future<http.Response> fetchMyProfileLargeImage(String accessToken) async {
+    final response = await _client.get(
+      Uri.parse('$apiUrl/api/profile/my_large'),
+      headers: {
+        'Authorization': 'Bearer $accessToken',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return response;
     } else {
       throw responseToError(response.body);
     }

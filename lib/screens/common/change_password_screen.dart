@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../utils/handle_errors.dart';
 import '../../../widgets/custom_elevated_button.dart';
-import '../../../widgets/custom_form_text_field.dart';
 import '../../../widgets/custom_text_button.dart';
 import '../../constants/app_constants.dart';
 import '../../widgets/password_form_field.dart';

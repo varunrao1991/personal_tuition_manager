@@ -25,7 +25,7 @@ import 'utils/http_client.dart';
 
 class MyApp extends StatelessWidget {
   final String userType;
-
+  final materialTheme = const MaterialTheme();
   const MyApp({super.key, required this.userType});
 
   @override
@@ -75,8 +75,8 @@ class MyApp extends StatelessWidget {
               navigatorObservers: [RouteObserver()],
               title: 'Student App',
               themeMode: themeProvider.themeMode,
-              theme: const MaterialTheme().light(),
-              darkTheme: const MaterialTheme().dark(),
+              theme: materialTheme.light(),
+              darkTheme: materialTheme.dark(),
               initialRoute: '/login',
               routes: {
                 ...studentRoutes,

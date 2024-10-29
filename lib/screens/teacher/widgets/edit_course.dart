@@ -32,39 +32,41 @@ class _EditCourseWidgetState extends State<EditCourseWidget> {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Padding(
+      child: Container(
         padding: const EdgeInsets.all(AppPaddings.smallPadding),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              Text('Edit Course', style: Theme.of(context).textTheme.bodyLarge),
-              const SizedBox(height: 8),
-              CustomFormTextField(
-                controller: _totalClassesController,
-                labelText: 'Total Classes',
-                prefixIcon: Icons.class_,
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter the total number of classes';
-                  }
-                  if (int.tryParse(value) == null) {
-                    return 'Enter a valid number';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 8),
-              CustomElevatedButton(
-                text: 'Update',
-                onPressed: () async {
-                  await _saveForm(context);
-                },
-              ),
-            ],
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Text('Edit Course',
+                    style: Theme.of(context).textTheme.bodyLarge),
+                const SizedBox(height: 20),
+                CustomFormTextField(
+                  controller: _totalClassesController,
+                  labelText: 'Total Classes',
+                  prefixIcon: Icons.class_,
+                  keyboardType: TextInputType.number,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter the total number of classes';
+                    }
+                    if (int.tryParse(value) == null) {
+                      return 'Enter a valid number';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 20),
+                CustomElevatedButton(
+                  text: 'Update',
+                  onPressed: () async {
+                    await _saveForm(context);
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),

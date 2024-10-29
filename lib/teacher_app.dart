@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:padmayoga/providers/theme_provider.dart';
+import 'package:padmayoga/providers/thumbnail_provider.dart';
+import 'package:padmayoga/services/thumbnail_service.dart';
 import 'package:provider/provider.dart';
 import 'providers/teacher/attendance_provider.dart';
 import 'providers/teacher/holiday_provider.dart';
@@ -30,6 +32,7 @@ import 'utils/http_client.dart';
 
 class MyApp extends StatelessWidget {
   final String userType;
+  final materialTheme = const MaterialTheme();
 
   const MyApp({super.key, required this.userType});
 
@@ -81,6 +84,10 @@ class MyApp extends StatelessWidget {
                 CourseService(context.read<HttpTimeoutClient>()),
                 context.read<TokenService>())),
         ChangeNotifierProvider(
+            create: (context) => ThumbnailProvider(
+                ThumbnailService(context.read<HttpTimeoutClient>()),
+                context.read<TokenService>())),
+        ChangeNotifierProvider(
           create: (context) {
             final themeProvider = ThemeProvider();
             themeProvider.loadThemePreference();
@@ -95,8 +102,8 @@ class MyApp extends StatelessWidget {
             navigatorObservers: [RouteObserver()],
             title: 'Teacher App',
             themeMode: themeProvider.themeMode,
-            theme: const MaterialTheme().light(),
-            darkTheme: const MaterialTheme().dark(),
+            theme: materialTheme.light(),
+            darkTheme: materialTheme.dark(),
             initialRoute: '/login',
             routes: {
               ...teacherRoutes,

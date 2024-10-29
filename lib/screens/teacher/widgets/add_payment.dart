@@ -70,7 +70,7 @@ class _PaymentProcessWidgetState extends State<PaymentProcessWidget> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
-        Text('Payment Details', style: Theme.of(context).textTheme.titleLarge),
+        Text('Payment Details', style: Theme.of(context).textTheme.bodyLarge),
         const SizedBox(height: 20),
         Form(
           key: _formKey,

@@ -340,7 +340,7 @@ class _CourseScreenState extends State<CourseScreen>
               course.payment.student.id,
               course.totalClasses,
             );
-            _viewCourseCalender(course);
+            await _viewCourseCalender(course);
           },
         );
 
