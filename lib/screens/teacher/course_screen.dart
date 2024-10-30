@@ -4,7 +4,6 @@ import 'package:table_calendar/table_calendar.dart';
 import '../../constants/app_constants.dart';
 import '../../models/teacher/course.dart';
 import '../../models/create_course.dart';
-import '../../models/holiday.dart';
 import '../../providers/teacher/attendance_provider.dart';
 import '../../providers/teacher/course_provider.dart';
 import '../../providers/teacher/holiday_provider.dart';
@@ -245,7 +244,7 @@ class _CourseScreenState extends State<CourseScreen>
     );
   }
 
-  Future<void> _viewCourseCalender(Course course) async {
+  Future<void> _viewCourseCalender(DateTime startDate) async {
     try {
       final holidayProvider =
           Provider.of<HolidayProvider>(context, listen: false);
@@ -263,7 +262,7 @@ class _CourseScreenState extends State<CourseScreen>
         child: Container(
             margin: const EdgeInsets.all(AppMargins.smallMargin),
             child: StudentCalendar(
-              startDate: course.startDate!,
+              startDate: startDate,
               endDate: _endDateToUse!,
               holidays: holidays,
               weekdays: weekdays,
@@ -275,18 +274,21 @@ class _CourseScreenState extends State<CourseScreen>
     }
   }
 
-  int calculateDaysPassedSinceStartToTodayExcludeOffs({
-    required DateTime startDate,
-    required List<Holiday> holidays,
-    required List<int> excludedWeekdays,
-  }) {
+  int calculateDaysPassedSinceStartToTodayExcludeOffs(DateTime startDate) {
+    final weekdayProvider =
+        Provider.of<WeekdayProvider>(context, listen: false);
+    final holidayProvider =
+        Provider.of<HolidayProvider>(context, listen: false);
+
+    final holidays = holidayProvider.holidays;
+    final weekdays = weekdayProvider.weekdays;
     int totalDays = 0;
     DateTime endDate = DateTime.now();
     for (DateTime date = startDate;
         !date.isAfter(endDate);
         date = date.add(const Duration(days: 1))) {
       if (holidays.any((holiday) => isSameDay(date, holiday.holidayDate)) ||
-          !excludedWeekdays.contains(date.weekday)) {
+          !weekdays.contains(date.weekday)) {
         continue;
       }
       totalDays++;
@@ -305,18 +307,8 @@ class _CourseScreenState extends State<CourseScreen>
     final selectedTabFilter = _getFilterByTabIndex(tabIndex);
     switch (selectedTabFilter) {
       case 'ongoing':
-        final weekdayProvider =
-            Provider.of<WeekdayProvider>(context, listen: false);
-        final holidayProvider =
-            Provider.of<HolidayProvider>(context, listen: false);
-
-        final holidays = holidayProvider.holidays;
-        final weekdays = weekdayProvider.weekdays;
-        int completedDays = calculateDaysPassedSinceStartToTodayExcludeOffs(
-          startDate: course.startDate!,
-          holidays: holidays,
-          excludedWeekdays: weekdays,
-        );
+        int completedDays =
+            calculateDaysPassedSinceStartToTodayExcludeOffs(course.startDate!);
         return OngoingCourseCard(
           name: studentName,
           startDate: course.startDate!,
@@ -340,7 +332,6 @@ class _CourseScreenState extends State<CourseScreen>
               course.payment.student.id,
               course.totalClasses,
             );
-            await _viewCourseCalender(course);
           },
         );
 
@@ -359,7 +350,6 @@ class _CourseScreenState extends State<CourseScreen>
               course.payment.student.id,
               course.totalClasses,
             );
-            _viewCourseCalender(course);
           },
         );
 
@@ -435,6 +425,7 @@ class _CourseScreenState extends State<CourseScreen>
     try {
       await attendanceProvider.fetchAttendancesForStudent(
           startDate: startDate, endDate: _endDateToUse!, studentId: studentId);
+      await _viewCourseCalender(startDate);
     } catch (e) {
       handleErrors(context, e);
     }

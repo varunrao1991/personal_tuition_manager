@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../constants/app_constants.dart';
-import '../../models/holiday.dart';
 import '../../models/student/course.dart';
 import '../../providers/student/attendance_provider.dart';
 import '../../providers/student/holiday_provider.dart';
@@ -222,34 +221,26 @@ class _CourseScreenState extends State<CourseScreen> {
   }
 
   Widget _buildCourseCard(Course course) {
-    final holidayProvider =
-        Provider.of<HolidayProvider>(context, listen: false);
-    final weekdayProvider =
-        Provider.of<WeekdayProvider>(context, listen: false);
-
+    Widget? courseCalendar;
+    if (_showCourseId == course.paymentId) {
+      courseCalendar = _buildCourseCalendar(course);
+    }
     if (course.startDate != null && course.endDate == null) {
       return OngoingCourseCard(
-        startDate: course.startDate!,
-        completedDays: _calculateCompletedDays(
-            course, holidayProvider.holidays, weekdayProvider.weekdays),
-        paymentDate: course.payment.paymentDate,
-        totalClasses: course.totalClasses,
-        onTap: () async => await _handleCourseTap(course),
-        child: _showCourseId == course.paymentId
-            ? _buildCourseCalendar(course)
-            : null,
-      );
+          startDate: course.startDate!,
+          completedDays: _calculateCompletedDays(course),
+          paymentDate: course.payment.paymentDate,
+          totalClasses: course.totalClasses,
+          onTap: () async => await _handleCourseTap(course),
+          child: courseCalendar);
     } else if (course.startDate != null && course.endDate != null) {
       return ClosedCourseCard(
-        startDate: course.startDate!,
-        endDate: course.endDate!,
-        paymentDate: course.payment.paymentDate,
-        totalClasses: course.totalClasses,
-        onTap: () async => await _handleCourseTap(course),
-        child: _showCourseId == course.paymentId
-            ? _buildCourseCalendar(course)
-            : null,
-      );
+          startDate: course.startDate!,
+          endDate: course.endDate!,
+          paymentDate: course.payment.paymentDate,
+          totalClasses: course.totalClasses,
+          onTap: () async => await _handleCourseTap(course),
+          child: courseCalendar);
     } else {
       return WaitlistCourseCard(
         totalClasses: course.totalClasses,
@@ -258,8 +249,11 @@ class _CourseScreenState extends State<CourseScreen> {
     }
   }
 
-  int _calculateCompletedDays(
-      Course course, List<Holiday> holidays, List<int> weekdays) {
+  int _calculateCompletedDays(Course course) {
+    final holidays =
+        Provider.of<HolidayProvider>(context, listen: false).holidays;
+    final weekdays =
+        Provider.of<WeekdayProvider>(context, listen: false).weekdays;
     int totalDays = 0;
     DateTime endDate = DateTime.now();
     for (DateTime date = course.startDate!;

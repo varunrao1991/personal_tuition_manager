@@ -3,7 +3,6 @@ import '../../../constants/app_constants.dart';
 import '../../../utils/time_ago.dart';
 import '../../../widgets/custom_elevated_button.dart';
 import '../../../widgets/custom_swipe_card.dart';
-import '../../../widgets/icon_info_column.dart';
 import '../../../widgets/info_column.dart';
 
 class OngoingCourseCard extends StatelessWidget {
@@ -41,18 +40,21 @@ class OngoingCourseCard extends StatelessWidget {
       onSwipeLeft: onDelete,
       onSwipeRight: onEdit,
       child: Padding(
-        padding: const EdgeInsets.all(AppPaddings.smallPadding),
+        padding: const EdgeInsets.all(AppPaddings.tinyPadding),
         child: Stack(
           children: [
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildStudentName(context),
                 const SizedBox(height: 8),
-                IconInfoColumn(
-                  icon: Icons.access_time,
-                  label1: 'Started',
-                  label2: timeAgoString(startDate),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    timeAgoString(startDate),
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 _buildInfo(),
@@ -67,16 +69,19 @@ class OngoingCourseCard extends StatelessWidget {
   }
 
   Widget _buildStudentName(BuildContext context) {
-    return Row(
-      children: [
-        Text(name, style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(width: 4),
-        if (noCredit == false)
-          const Icon(
-            Icons.check,
-            color: Colors.green,
-          ),
-      ],
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Row(
+        children: [
+          Text(name, style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(width: 4),
+          if (noCredit == false)
+            const Icon(
+              Icons.check,
+              color: Colors.green,
+            ),
+        ],
+      ),
     );
   }
 
@@ -86,36 +91,34 @@ class OngoingCourseCard extends StatelessWidget {
     int completedValue =
         completedDays >= totalClasses ? totalClasses : completedDays;
 
-    return Center(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Expanded(
-            child: InfoColumn(
-              value: completedValue.toString(),
-              label: 'Completed',
-              color: Colors.blueAccent,
-            ),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: InfoColumn(
+            value: completedValue.toString(),
+            mainAxisAlignment: MainAxisAlignment.start,
+            label: 'Completed',
+            color: Colors.blueAccent,
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: InfoColumn(
-              value: remainingClasses.toString(),
-              label: 'Remaining',
-              color: Colors.red,
-            ),
+        ),
+        Expanded(
+          child: InfoColumn(
+            value: remainingClasses.toString(),
+            mainAxisAlignment: MainAxisAlignment.center,
+            label: 'Remaining',
+            color: Colors.red,
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: InfoColumn(
-              value: totalClasses.toString(),
-              label: 'Credit',
-              color: Colors.green,
-            ),
+        ),
+        Expanded(
+          child: InfoColumn(
+            value: totalClasses.toString(),
+            mainAxisAlignment: MainAxisAlignment.end,
+            label: 'Credit',
+            color: Colors.green,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -126,7 +129,7 @@ class OngoingCourseCard extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         _buildButton('Restart', onUpdate),
-        const SizedBox(width: 16),
+        const SizedBox(width: 32),
         _buildButton('Close', remainingClasses == 0 ? onClose : null),
       ],
     );

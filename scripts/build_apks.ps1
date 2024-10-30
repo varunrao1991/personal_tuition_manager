@@ -1,5 +1,6 @@
 # Create a base directory for debug info
-$debugInfoBaseDir = "debug_info"
+$debugInfoDir = "debug_info"
+$buildBaseDir = "build"
 
 # Function to build APK for a specific user type
 function Build-APK {
@@ -7,14 +8,16 @@ function Build-APK {
         [string]$userType,
         [string]$apkName
     )
+    $buildNumber = 3  # Starting build number
 
     # Create a directory for user-specific debug info if it doesn't exist
+    $debugInfoBaseDir = Join-Path -Path $buildBaseDir -ChildPath $debugInfoDir
     $userDebugInfoDir = Join-Path -Path $debugInfoBaseDir -ChildPath $userType
 
     Write-Host "Building APK for $userType..."
 
     # Build the APK with the specified flavor, debug info, and dart define for user type and environment
-    $buildCommand = "flutter build apk --flavor $userType --release --obfuscate --split-debug-info=`"$userDebugInfoDir`" --dart-define=`"USER_TYPE=$userType`" --dart-define=`"ENV=production`" --build-name=`"1.0.0`" --build-number=`"1`" --target-platform android-arm,android-arm64"
+    $buildCommand = "flutter build apk --flavor $userType --release --obfuscate --split-debug-info=`"$userDebugInfoDir`" --dart-define=`"USER_TYPE=$userType`" --dart-define=`"ENV=production`" --build-name=`"1.0.0`" --build-number=`"$buildNumber`" --target-platform android-arm,android-arm64"
     Write-Host "Running command: $buildCommand"
 
     Invoke-Expression $buildCommand

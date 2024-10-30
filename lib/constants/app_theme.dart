@@ -125,19 +125,15 @@ class MaterialTheme {
         canvasColor: colorScheme.surface,
         cardTheme: CardTheme(
           color: colorScheme.surfaceContainerHighest,
-          shadowColor: colorScheme.onSurface.withOpacity(0.2),
-          elevation: 4,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shadowColor: colorScheme.onSurface,
         ),
         buttonTheme: ButtonThemeData(
           buttonColor: colorScheme.primary,
           textTheme: ButtonTextTheme.primary,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        ),
+        floatingActionButtonTheme: FloatingActionButtonThemeData(
+          backgroundColor: colorScheme.primary,
+          foregroundColor: colorScheme.onPrimary,
         ),
       );
 

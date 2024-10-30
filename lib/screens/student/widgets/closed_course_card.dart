@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../../constants/app_constants.dart';
 import '../../../utils/time_ago.dart';
 import '../../../widgets/custom_card.dart';
-import '../../../widgets/icon_info_column.dart';
 import '../../../widgets/info_column.dart';
 
 class ClosedCourseCard extends StatelessWidget {
@@ -11,7 +10,7 @@ class ClosedCourseCard extends StatelessWidget {
   final DateTime paymentDate;
   final DateTime startDate;
   final DateTime endDate;
-  final Widget? child; // Add optional child parameter
+  final Widget? child;
   final void Function()? onTap;
 
   const ClosedCourseCard({
@@ -21,7 +20,7 @@ class ClosedCourseCard extends StatelessWidget {
     required this.paymentDate,
     required this.startDate,
     required this.endDate,
-    this.child, // Optional child parameter
+    this.child,
     this.onTap,
   });
 
@@ -31,22 +30,18 @@ class ClosedCourseCard extends StatelessWidget {
       onTap: onTap,
       isSelected: isSelected,
       child: Padding(
-        padding: const EdgeInsets.all(AppPaddings.smallPadding),
+        padding: const EdgeInsets.all(AppPaddings.tinyPadding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Completed', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
-            IconInfoColumn(
-              icon: Icons.close_rounded,
-              label1: 'Completed',
-              label2: timeAgoString(endDate),
-            ),
+            Text('Completed ${timeAgoString(endDate)}',
+                style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: 8),
             _buildInfoRowClosed(totalClasses, startDate, endDate, context),
-            const SizedBox(height: 16), // Space between info and child
-            if (child != null)
-              child!, // Display the child widget if it's not null
+            const SizedBox(height: 16),
+            if (child != null) child!,
           ],
         ),
       ),
@@ -60,6 +55,7 @@ class ClosedCourseCard extends StatelessWidget {
       children: [
         Expanded(
           child: InfoColumn(
+            mainAxisAlignment: MainAxisAlignment.start,
             value: totalClasses.toString(),
             label: 'Credit',
             color: Colors.blue,
@@ -68,6 +64,7 @@ class ClosedCourseCard extends StatelessWidget {
         const SizedBox(width: 16),
         Expanded(
           child: InfoColumn(
+            mainAxisAlignment: MainAxisAlignment.end,
             value: '${endDate.difference(startDate).inDays + 1}',
             label: 'Duration',
             color: Colors.red,

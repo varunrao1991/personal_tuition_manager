@@ -34,7 +34,7 @@ class NotificationHandlerWidget extends StatelessWidget {
                   width: 10,
                   height: 10,
                   decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor,
+                    color: Theme.of(context).colorScheme.onPrimary,
                     shape: BoxShape.circle,
                   ),
                 ),

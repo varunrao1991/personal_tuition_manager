@@ -28,7 +28,7 @@ class OngoingCourseCard extends StatelessWidget {
     return CustomCard(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.all(AppPaddings.smallPadding),
+        padding: const EdgeInsets.all(AppPaddings.tinyPadding),
         child: Stack(
           children: [
             Column(
@@ -41,10 +41,10 @@ class OngoingCourseCard extends StatelessWidget {
                   textAlign: TextAlign.left,
                 ),
                 const SizedBox(height: 8),
-                IconInfoColumn(
-                  icon: Icons.access_time,
-                  label1: 'Started',
-                  label2: timeAgoString(startDate),
+                InfoColumn(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  value: 'Started',
+                  label: timeAgoString(startDate),
                 ),
                 const SizedBox(height: 8),
                 _buildInfo(),
@@ -71,6 +71,7 @@ class OngoingCourseCard extends StatelessWidget {
         children: [
           Expanded(
             child: InfoColumn(
+              mainAxisAlignment: MainAxisAlignment.start,
               value: completedValue.toString(),
               label: 'Completed',
               color: Colors.blueAccent,
@@ -87,6 +88,7 @@ class OngoingCourseCard extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: InfoColumn(
+              mainAxisAlignment: MainAxisAlignment.end,
               value: totalClasses.toString(),
               label: 'Credit',
               color: Colors.green,

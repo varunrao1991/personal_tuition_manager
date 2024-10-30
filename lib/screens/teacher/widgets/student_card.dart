@@ -44,7 +44,7 @@ class StudentCard extends StatelessWidget {
                           student.name,
                           style: theme.textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.onBackground,
+                            color: theme.colorScheme.onSurface,
                             fontSize: 18,
                           ),
                           overflow: TextOverflow.ellipsis,
@@ -54,8 +54,8 @@ class StudentCard extends StatelessWidget {
                       Icon(
                         student.enabled ? Icons.check_circle : Icons.cancel,
                         color: student.enabled
-                            ? theme.primaryColor
-                            : theme.colorScheme.error,
+                            ? theme.colorScheme.onPrimary
+                            : theme.colorScheme.onError,
                         size: 24,
                       ),
                     ],
@@ -65,14 +65,7 @@ class StudentCard extends StatelessWidget {
                     children: [
                       Icon(Icons.phone, color: theme.colorScheme.secondary),
                       const SizedBox(width: 8),
-                      Text(
-                        student.mobile,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color:
-                              theme.colorScheme.onBackground.withOpacity(0.7),
-                          fontSize: 14,
-                        ),
-                      ),
+                      Text(student.mobile, style: theme.textTheme.bodyMedium),
                     ],
                   ),
                 ],

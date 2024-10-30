@@ -95,7 +95,7 @@ class AttendanceProvider with ChangeNotifier {
       {required DateTime startDate,
       required DateTime endDate,
       required int studentId}) async {
-    _manageAttendanceLoading(() async {
+    await _manageAttendanceLoading(() async {
       final String accessToken = await _tokenService.getToken();
       _attendanceDatesOfStudent =
           await _attendanceService.getAttendancesForStudent(

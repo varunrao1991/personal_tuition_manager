@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../../widgets/icon_info_column.dart';
 import '../../../constants/app_constants.dart';
 import '../../../widgets/custom_elevated_button.dart';
 import '../../../widgets/custom_swipe_card.dart';
+import '../../../widgets/info_column.dart';
+import '../../../utils/time_ago.dart';
 
 class WaitlistCourseCard extends StatelessWidget {
   final String studentName;
@@ -31,38 +32,45 @@ class WaitlistCourseCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CustomSwipeCard(
-        onTap: onTap,
-        onSwipeLeft: onDelete,
-        onSwipeRight: onEdit,
-        child: Padding(
-          padding: const EdgeInsets.all(AppPaddings.smallPadding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(studentName, style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: Center(
-                      child: IconInfoColumn(
-                        icon: Icons.date_range,
-                        label1: '$totalClasses',
-                        label2: 'Total Classes',
+      onTap: onTap,
+      onSwipeLeft: onDelete,
+      onSwipeRight: onEdit,
+      child: Padding(
+        padding: const EdgeInsets.all(AppPaddings.tinyPadding),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(studentName, style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 8),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Paid ${timeAgoString(paymentDate)}',
+                        style: Theme.of(context).textTheme.bodyMedium,
                       ),
-                    ),
+                      const SizedBox(height: 4),
+                      InfoColumn(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        value: '$totalClasses',
+                        label: 'Classes',
+                      ),
+                    ],
                   ),
-                  Align(
-                    alignment: Alignment.bottomRight,
-                    child: CustomElevatedButton(
-                      text: 'Start Course',
-                      onPressed: canStart ? onStart : null,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ));
+                ),
+                CustomElevatedButton(
+                  text: 'Start Course',
+                  onPressed: canStart ? onStart : null,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

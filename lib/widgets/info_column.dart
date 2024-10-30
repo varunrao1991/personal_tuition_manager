@@ -3,22 +3,23 @@ import 'package:flutter/material.dart';
 class InfoColumn extends StatelessWidget {
   final String value;
   final String label;
+  final MainAxisAlignment mainAxisAlignment;
   final Color? color;
 
-  const InfoColumn({
-    super.key,
-    required this.value,
-    required this.label,
-    this.color,
-  });
+  const InfoColumn(
+      {super.key,
+      required this.value,
+      required this.label,
+      this.color,
+      this.mainAxisAlignment = MainAxisAlignment.center});
 
   @override
   Widget build(BuildContext context) {
     final textColor = color ?? Theme.of(context).colorScheme.onSurface;
 
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: mainAxisAlignment,
+      mainAxisSize: MainAxisSize.max,
       children: [
         Text(value,
             style: Theme.of(context)

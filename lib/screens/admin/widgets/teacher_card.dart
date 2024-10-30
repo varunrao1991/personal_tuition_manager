@@ -35,7 +35,9 @@ class TeacherCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Icon(
                   teacher.enabled ? Icons.check_circle : Icons.cancel,
-                  color: teacher.enabled ? theme.primaryColor : Colors.red,
+                  color: teacher.enabled
+                      ? Theme.of(context).colorScheme.onPrimary
+                      : Theme.of(context).colorScheme.error,
                   size: 24,
                 ),
               ],

@@ -15,20 +15,23 @@ class IconInfoColumn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Icon(icon, color: Theme.of(context).iconTheme.color),
         const SizedBox(width: 8),
-        Text(
-          label1,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodyLarge,
-        ),
-        const SizedBox(width: 4),
-        Text(
-          label2,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodyMedium,
+        Column(
+          crossAxisAlignment:
+              CrossAxisAlignment.start, // Align labels to the start
+          children: [
+            Text(
+              label1,
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            Text(
+              label2,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ],
         ),
       ],
     );

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import '../../../widgets/icon_info_column.dart';
+import '../../../utils/time_ago.dart';
 import '../../../constants/app_constants.dart';
 import '../../../widgets/custom_card.dart';
+import '../../../widgets/info_column.dart';
 
 class WaitlistCourseCard extends StatelessWidget {
   final int totalClasses;
@@ -21,28 +21,20 @@ class WaitlistCourseCard extends StatelessWidget {
     return CustomCard(
         onTap: onTap,
         child: Padding(
-            padding: const EdgeInsets.all(AppPaddings.smallPadding),
+            padding: const EdgeInsets.all(AppPaddings.tinyPadding),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Yet to start',
                     style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 8),
-                Text(DateFormat('Paid on yyyy-MM-dd').format(paymentDate),
+                Text('Paid ${timeAgoString(paymentDate)}',
                     style: Theme.of(context).textTheme.bodyMedium),
                 const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Center(
-                        child: IconInfoColumn(
-                          icon: Icons.date_range,
-                          label1: '$totalClasses',
-                          label2: 'Total Classes',
-                        ),
-                      ),
-                    ),
-                  ],
+                InfoColumn(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  value: '$totalClasses',
+                  label: 'Classes',
                 ),
               ],
             )));

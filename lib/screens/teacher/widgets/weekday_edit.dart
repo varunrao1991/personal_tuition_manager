@@ -49,7 +49,9 @@ class _WeekdayEditorDialogState extends State<WeekdayEditorDialog> {
             Text(
               'Note: Changing these selections may affect the ongoing courses end date calculation.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.red,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .error, // Set to error color
                   ),
               textAlign: TextAlign.center,
             ),

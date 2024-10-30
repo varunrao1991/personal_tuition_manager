@@ -23,11 +23,18 @@ class StudentCalendar extends StatefulWidget {
 }
 
 class _StudentCalendarState extends State<StudentCalendar> {
-  DateTime _selectedDate = DateTime.now();
+  DateTime? _selectedDate;
 
   @override
   void initState() {
     super.initState();
+    _selectedDate = _getValidFocusedDate(DateTime.now());
+  }
+
+  DateTime _getValidFocusedDate(DateTime date) {
+    if (date.isBefore(widget.startDate)) return widget.startDate;
+    if (date.isAfter(widget.endDate)) return widget.endDate;
+    return date;
   }
 
   @override
@@ -37,7 +44,7 @@ class _StudentCalendarState extends State<StudentCalendar> {
 
   Widget _buildCalendar() {
     return TableCalendar(
-      focusedDay: _selectedDate,
+      focusedDay: _selectedDate!,
       firstDay: widget.startDate,
       lastDay: widget.endDate,
       selectedDayPredicate: (day) => isSameDay(_selectedDate, day),

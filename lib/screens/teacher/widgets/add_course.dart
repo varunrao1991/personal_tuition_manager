@@ -87,7 +87,7 @@ class _AddStudentCourseProcessWidgetState
               const SizedBox(height: 20),
               CustomFormTextField(
                 controller: _totalClassesController,
-                labelText: 'Total Classes',
+                labelText: 'Classes',
                 keyboardType: TextInputType.number,
                 prefixIcon: Icons.class_,
                 validator: (value) {

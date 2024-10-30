@@ -2,7 +2,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Flutter Dev Admin",
+      "name": "Dev Admin",
       "request": "launch",
       "type": "dart",
       "flutterMode": "debug",
@@ -17,7 +17,7 @@
       ]
     },
     {
-      "name": "Flutter Dev Teacher",
+      "name": "Dev Teacher",
       "request": "launch",
       "type": "dart",
       "flutterMode": "debug",
@@ -32,7 +32,7 @@
       ]
     },
     {
-      "name": "Flutter Dev Student",
+      "name": "Dev Student",
       "request": "launch",
       "type": "dart",
       "flutterMode": "debug",

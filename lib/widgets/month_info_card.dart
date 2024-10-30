@@ -7,6 +7,7 @@ class MonthInfoCard extends StatelessWidget {
   final bool isSelected;
   final Widget child;
   final Future<void> Function() onTap;
+  final bool showYear;
 
   const MonthInfoCard({
     super.key,
@@ -14,6 +15,7 @@ class MonthInfoCard extends StatelessWidget {
     required this.isSelected,
     required this.child,
     required this.onTap,
+    this.showYear = true,
   });
 
   @override
@@ -33,8 +35,9 @@ class MonthInfoCard extends StatelessWidget {
             Text(DateFormat('MMM').format(month),
                 style: Theme.of(context).textTheme.bodyLarge),
             const SizedBox(height: 4),
-            Text(DateFormat('y').format(month),
-                style: Theme.of(context).textTheme.labelSmall),
+            if (showYear)
+              Text(DateFormat('y').format(month),
+                  style: Theme.of(context).textTheme.labelSmall),
             const SizedBox(height: 4),
             child,
           ],

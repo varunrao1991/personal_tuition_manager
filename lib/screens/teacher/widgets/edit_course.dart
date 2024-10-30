@@ -45,7 +45,7 @@ class _EditCourseWidgetState extends State<EditCourseWidget> {
                 const SizedBox(height: 20),
                 CustomFormTextField(
                   controller: _totalClassesController,
-                  labelText: 'Total Classes',
+                  labelText: 'Classes',
                   prefixIcon: Icons.class_,
                   keyboardType: TextInputType.number,
                   validator: (value) {

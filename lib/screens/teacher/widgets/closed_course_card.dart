@@ -31,17 +31,15 @@ class ClosedCourseCard extends StatelessWidget {
       onTap: onTap,
       isSelected: isSelected,
       child: Padding(
-          padding: const EdgeInsets.all(AppPaddings.smallPadding),
+          padding: const EdgeInsets.all(AppPaddings.tinyPadding),
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(name, style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 8),
-              IconInfoColumn(
-                icon: Icons.close_rounded,
-                label1: 'Completed',
-                label2: timeAgoString(endDate),
-              ),
+              Text('Completed ${timeAgoString(endDate)}',
+                  style: Theme.of(context).textTheme.bodyMedium),
               const SizedBox(height: 8),
               _buildInfoRowClosed(totalClasses, startDate, endDate, context),
             ],
@@ -56,6 +54,7 @@ class ClosedCourseCard extends StatelessWidget {
       children: [
         Expanded(
           child: InfoColumn(
+            mainAxisAlignment: MainAxisAlignment.start,
             value: totalClasses.toString(),
             label: 'Credit',
             color: Colors.blue,
@@ -64,6 +63,7 @@ class ClosedCourseCard extends StatelessWidget {
         const SizedBox(width: 16),
         Expanded(
           child: InfoColumn(
+            mainAxisAlignment: MainAxisAlignment.end,
             value: '${endDate.difference(startDate).inDays + 1}',
             label: 'Duration',
             color: Colors.red,

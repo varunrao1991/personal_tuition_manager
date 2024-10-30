@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../models/fetch_payment.dart';
+import '../../../utils/time_ago.dart';
 import '../../../widgets/custom_swipe_card.dart';
 
 class PaymentCard extends StatelessWidget {
@@ -51,18 +52,11 @@ class PaymentCard extends StatelessWidget {
                   Text('₹ ${payment.amount}',
                       style: Theme.of(context).textTheme.headlineSmall),
                   const SizedBox(height: 8),
-                  Text(payment.ownedBy.name,
+                  Text(timeAgoString(payment.paymentDate),
                       style: Theme.of(context).textTheme.bodyMedium),
                   const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(Icons.date_range),
-                      const SizedBox(width: 8),
-                      Text(
-                          DateFormat('dd-MMM-yyyy').format(payment.paymentDate),
-                          style: Theme.of(context).textTheme.bodyMedium),
-                    ],
-                  ),
+                  Text(payment.ownedBy.name,
+                      style: Theme.of(context).textTheme.bodyMedium),
                 ],
               ),
             ),

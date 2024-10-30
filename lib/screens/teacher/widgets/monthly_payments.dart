@@ -113,15 +113,12 @@ class _MonthlyPaymentsWidgetState extends State<MonthlyPaymentsWidget> {
 
               return MonthInfoCard(
                 month: month,
+                showYear: month.year != DateTime.now().year,
                 isSelected: month == _selectedMonth,
                 onTap: () async => await _onMonthTap(month),
                 child: totalPayments != null && totalPayments != 0
-                    ? Text(
-                        '₹$totalPayments',
-                        style: month == _selectedMonth
-                            ? Theme.of(context).textTheme.bodyMedium
-                            : Theme.of(context).textTheme.bodyMedium,
-                      )
+                    ? Text('₹$totalPayments',
+                        style: Theme.of(context).textTheme.bodyLarge)
                     : const SizedBox.shrink(),
               );
             },
