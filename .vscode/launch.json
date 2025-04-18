@@ -2,21 +2,6 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Dev Admin",
-      "request": "launch",
-      "type": "dart",
-      "flutterMode": "debug",
-      "program": "lib/main.dart",
-      "args": [
-        "--dart-define=ENV=development",
-        "--dart-define=USER_TYPE=admin"
-      ],
-      "toolArgs": [
-        "--flavor",
-        "admin"
-      ]
-    },
-    {
       "name": "Dev Teacher",
       "request": "launch",
       "type": "dart",
@@ -29,21 +14,6 @@
       "toolArgs": [
         "--flavor",
         "teacher"
-      ]
-    },
-    {
-      "name": "Dev Student",
-      "request": "launch",
-      "type": "dart",
-      "flutterMode": "debug",
-      "program": "lib/main.dart",
-      "args": [
-        "--dart-define=ENV=development",
-        "--dart-define=USER_TYPE=student"
-      ],
-      "toolArgs": [
-        "--flavor",
-        "student"
       ]
     }
   ]

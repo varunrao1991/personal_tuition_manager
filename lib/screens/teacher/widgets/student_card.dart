@@ -2,20 +2,17 @@ import 'package:flutter/material.dart';
 import '../../../constants/app_constants.dart';
 import '../../../models/teacher/student_model.dart';
 import '../../../widgets/custom_swipe_card.dart';
-import '../../common/thumbnail_loader.dart';
 
 class StudentCard extends StatelessWidget {
   final Student student;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
-  final VoidCallback onLongPress;
 
   const StudentCard({
     super.key,
     required this.student,
     required this.onEdit,
     required this.onDelete,
-    required this.onLongPress,
   });
 
   @override
@@ -25,13 +22,11 @@ class StudentCard extends StatelessWidget {
     return CustomSwipeCard(
       onSwipeLeft: onDelete,
       onSwipeRight: onEdit,
-      onLongPress: onLongPress,
       child: Padding(
         padding: const EdgeInsets.all(AppPaddings.smallPadding),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ThumbnailLoader(userId: student.id),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -49,14 +44,6 @@ class StudentCard extends StatelessWidget {
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Icon(
-                        student.enabled ? Icons.check_circle : Icons.cancel,
-                        color: student.enabled
-                            ? theme.colorScheme.onPrimary
-                            : theme.colorScheme.onError,
-                        size: 24,
                       ),
                     ],
                   ),

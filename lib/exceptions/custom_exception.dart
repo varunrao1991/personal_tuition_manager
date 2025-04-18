@@ -7,6 +7,11 @@ class ErrorCodes {
   static const String unauthorized = 'UNAUTHORIZED';
   static const String badRequest = 'BAD_REQUEST';
   static const String notFound = 'NOT_FOUND';
+  static const String pinNotSet = "PIN_NOT_SET";
+  static const String pinIncorrect = "PIN_INCORRECT";
+  static const String pinMismatch = "PIN_MISMATCH";
+  static const String securityNotSet = "SECURITY_NOT_SET";
+  static const String securityAnswerIncorrect = "SECURITY_ANSWER_INCORRECT";
   static const String conflict = 'CONFLICT';
   static const String unknownError = 'UNKNOWN_ERROR';
   static const String internalServerError = 'INTERNAL_SERVER_ERROR';
@@ -63,4 +68,29 @@ class ConflictException extends CustomException {
 class InternalServerErrorException extends CustomException {
   InternalServerErrorException(String message)
       : super(message, ErrorCodes.internalServerError);
+}
+
+class PinMismatchException extends CustomException {
+  PinMismatchException(String message)
+      : super(message, ErrorCodes.pinMismatch);
+}
+
+class PinNotSetException extends CustomException {
+  PinNotSetException(String message)
+      : super(message, ErrorCodes.pinNotSet);
+}
+
+class PinIncorrectException extends CustomException {
+  PinIncorrectException(String message)
+      : super(message, ErrorCodes.pinIncorrect);
+}
+
+class PinSecurityNotSetException extends CustomException {
+  PinSecurityNotSetException(String message)
+      : super(message, ErrorCodes.securityNotSet);
+}
+
+class PinSecurityAnswerNotCorrectException extends CustomException {
+  PinSecurityAnswerNotCorrectException(String message)
+      : super(message, ErrorCodes.securityAnswerIncorrect);
 }

@@ -4,23 +4,23 @@ import 'package:flutter/material.dart';
 import '../../models/teacher/student_model.dart';
 import '../../models/teacher/student_update.dart';
 import '../../services/teacher/student_service.dart';
-import '../../services/token_service.dart';
 
 class StudentProvider with ChangeNotifier {
-  StudentProvider(this._studentService, this._tokenService);
+  StudentProvider(this._studentService);
 
   final StudentService _studentService;
-  final TokenService _tokenService;
 
   bool _isLoading = false;
   List<Student> _students = [];
   int _currentPage = 1;
   int _totalPages = 1;
+  bool _anyUserExists = false;
 
   List<Student> get students => _students;
   bool get isLoading => _isLoading;
   int get currentPage => _currentPage;
   int get totalPages => _totalPages;
+  bool get anyUserExists => _anyUserExists;
 
   void clearData() {
     _setLoading(true);
@@ -44,9 +44,7 @@ class StudentProvider with ChangeNotifier {
     _setLoading(true);
 
     try {
-      final accessToken = await _tokenService.getToken();
       final response = await _studentService.getStudents(
-        accessToken: accessToken,
         page: page ?? _currentPage,
         sort: sort,
         order: order,
@@ -80,24 +78,12 @@ class StudentProvider with ChangeNotifier {
     _setLoading(true);
 
     try {
-      final accessToken = await _tokenService.getToken();
       await _studentService.createStudent(
-        accessToken: accessToken,
         studentUpdate: studentUpdate,
       );
       await resetAndFetch();
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  Future<void> enableStudent(int id, bool enable) async {
-    _setLoading(true);
-    try {
-      final accessToken = await _tokenService.getToken();
-      await _studentService.enableDisable(
-          accessToken: accessToken, id: id, enable: enable);
-      await resetAndFetch();
+      bool userExists = await _studentService.anyUserExists();
+      _anyUserExists = userExists;
     } finally {
       _setLoading(false);
     }
@@ -107,9 +93,7 @@ class StudentProvider with ChangeNotifier {
     _setLoading(true);
 
     try {
-      final accessToken = await _tokenService.getToken();
       await _studentService.updateStudent(
-        accessToken: accessToken,
         studentUpdate: studentUpdate,
       );
       await resetAndFetch();
@@ -122,12 +106,23 @@ class StudentProvider with ChangeNotifier {
     _setLoading(true);
 
     try {
-      final accessToken = await _tokenService.getToken();
       await _studentService.deleteStudent(
-        accessToken: accessToken,
         studentId: studentId,
       );
       await resetAndFetch();
+      bool userExists = await _studentService.anyUserExists();
+      _anyUserExists = userExists;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<void> anyStudentExists() async {
+    _setLoading(true);
+
+    try {
+      bool userExists = await _studentService.anyUserExists();
+      _anyUserExists = userExists;
     } finally {
       _setLoading(false);
     }

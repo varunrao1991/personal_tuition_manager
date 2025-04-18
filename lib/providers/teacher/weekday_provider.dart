@@ -1,13 +1,11 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import '../../services/teacher/weekday_service.dart';
-import '../../services/token_service.dart';
 
 class WeekdayProvider with ChangeNotifier {
-  WeekdayProvider(this._weekdayService, this._tokenService);
+  WeekdayProvider(this._weekdayService);
 
   final WeekdayService _weekdayService;
-  final TokenService _tokenService;
 
   bool _isLoading = false;
   List<int> _weekdays = [];
@@ -31,8 +29,7 @@ class WeekdayProvider with ChangeNotifier {
 
     _setLoading(true);
     try {
-      final accessToken = await _tokenService.getToken();
-      _weekdays = await _weekdayService.getWeekdays(accessToken);
+      _weekdays = await _weekdayService.getWeekdays();
       log('Weekdays successfully fetched: $_weekdays');
     } finally {
       _setLoading(false);
@@ -42,8 +39,7 @@ class WeekdayProvider with ChangeNotifier {
   Future<void> setWeekdays(List<int> days) async {
     _setLoading(true);
     try {
-      final accessToken = await _tokenService.getToken();
-      await _weekdayService.setWeekdays(accessToken, days);
+      await _weekdayService.setWeekdays(days);
       _weekdays = days;
       log('Weekdays successfully set: $_weekdays');
     } finally {

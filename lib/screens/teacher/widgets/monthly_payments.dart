@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../../providers/teacher/month_provider.dart';
 import '../../../utils/handle_errors.dart';
 import '../../../widgets/month_info_card.dart';
 
 class MonthlyPaymentsWidget extends StatefulWidget {
   final Function(DateTime)? onMonthChanged;
   final DateTime selectedMonth;
+  final Map<DateTime, int> monthlyPayments;
+  final bool isLoading;
+  final Function() onLoadMore;
 
   const MonthlyPaymentsWidget({
     super.key,
     this.onMonthChanged,
     required this.selectedMonth,
+    required this.monthlyPayments,
+    required this.isLoading,
+    required this.onLoadMore,
   });
 
   @override
@@ -20,7 +24,6 @@ class MonthlyPaymentsWidget extends StatefulWidget {
 
 class _MonthlyPaymentsWidgetState extends State<MonthlyPaymentsWidget> {
   late ScrollController _scrollController;
-  bool _isLoadingMore = false;
   late DateTime _selectedMonth;
 
   @override
@@ -29,9 +32,14 @@ class _MonthlyPaymentsWidgetState extends State<MonthlyPaymentsWidget> {
     _selectedMonth = widget.selectedMonth;
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadInitialPayments();
-    });
+  }
+
+  @override
+  void didUpdateWidget(MonthlyPaymentsWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selectedMonth != widget.selectedMonth) {
+      _selectedMonth = widget.selectedMonth;
+    }
   }
 
   @override
@@ -43,33 +51,8 @@ class _MonthlyPaymentsWidgetState extends State<MonthlyPaymentsWidget> {
   void _onScroll() {
     if (_scrollController.position.pixels >=
             _scrollController.position.maxScrollExtent - 100 &&
-        !_isLoadingMore) {
-      _loadMoreMonths();
-    }
-  }
-
-  Future<void> _loadInitialPayments() async {
-    try {
-      await Provider.of<MonthlyProvider>(context, listen: false)
-          .fetchPaymentsForMoreMonths();
-    } catch (e) {
-      handleErrors(context, e);
-    }
-  }
-
-  Future<void> _loadMoreMonths() async {
-    setState(() {
-      _isLoadingMore = true;
-    });
-    try {
-      await Provider.of<MonthlyProvider>(context, listen: false)
-          .fetchPaymentsForMoreMonths();
-    } catch (e) {
-      handleErrors(context, e);
-    } finally {
-      setState(() {
-        _isLoadingMore = false;
-      });
+        !widget.isLoading) {
+      widget.onLoadMore();
     }
   }
 
@@ -81,50 +64,42 @@ class _MonthlyPaymentsWidgetState extends State<MonthlyPaymentsWidget> {
       await widget.onMonthChanged?.call(month);
     } catch (e) {
       handleErrors(context, e);
-    } finally {
-      setState(() {
-        _isLoadingMore = false;
-      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<MonthlyProvider>(
-      builder: (context, provider, child) {
-        if (provider.isLoading && provider.monthlyPayments.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
-        }
+    if (widget.isLoading && widget.monthlyPayments.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-        return SizedBox(
-          height: 150,
-          child: ListView.builder(
-            controller: _scrollController,
-            scrollDirection: Axis.horizontal,
-            itemCount:
-                provider.monthlyPayments.length + (_isLoadingMore ? 1 : 0),
-            itemBuilder: (context, index) {
-              if (index == provider.monthlyPayments.length) {
-                return const Center(child: CircularProgressIndicator());
-              }
+    return SizedBox(
+      height: 150,
+      child: ListView.builder(
+        controller: _scrollController,
+        scrollDirection: Axis.horizontal,
+        itemCount:
+            widget.monthlyPayments.length + (widget.isLoading ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index == widget.monthlyPayments.length) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-              final month = provider.monthlyPayments.keys.elementAt(index);
-              final totalPayments = provider.monthlyPayments[month];
+          final month = widget.monthlyPayments.keys.elementAt(index);
+          final totalPayments = widget.monthlyPayments[month];
 
-              return MonthInfoCard(
-                month: month,
-                showYear: month.year != DateTime.now().year,
-                isSelected: month == _selectedMonth,
-                onTap: () async => await _onMonthTap(month),
-                child: totalPayments != null && totalPayments != 0
-                    ? Text('₹$totalPayments',
-                        style: Theme.of(context).textTheme.bodyLarge)
-                    : const SizedBox.shrink(),
-              );
-            },
-          ),
-        );
-      },
+          return MonthInfoCard(
+            month: month,
+            showYear: month.year != DateTime.now().year,
+            isSelected: month == _selectedMonth,
+            onTap: () async => await _onMonthTap(month),
+            child: totalPayments != null && totalPayments != 0
+                ? Text('₹$totalPayments',
+                    style: Theme.of(context).textTheme.bodyLarge)
+                : const SizedBox.shrink(),
+          );
+        },
+      ),
     );
   }
 }

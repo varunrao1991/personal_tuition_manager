@@ -1,55 +1,47 @@
-import 'dart:convert';
 import 'dart:developer';
-import 'package:http/http.dart' as http;
+import 'dart:convert';
 import '../../exceptions/weekday_exception.dart';
-import '../../config/app_config.dart';
-import '../../utils/response_to_error.dart';
+import '../../utils/shared_pref.dart';
 
 class WeekdayService {
-  String apiUrl = Config().apiUrl;
-  final http.Client _client;
+  static const String _weekdaysKey = 'weekdays';
 
-  WeekdayService(this._client);
+  WeekdayService();
 
-  Future<void> setWeekdays(String accessToken, List<int> days) async {
+  Future<void> setWeekdays(List<int> days) async {
     if (days.any((day) => day < 0 || day > 6)) {
       throw WeekdayException(
           'Days must be integers between 0 (Sunday) and 6 (Saturday).');
     }
 
-    String daysBody = jsonEncode({'days': days});
+    // Convert the list to a JSON string for storage
+    String daysJson = jsonEncode(days);
+    await sharedPrefs.saveString(_weekdaysKey, daysJson);
+    
+    log('Weekdays successfully saved: $days');
+  }
 
-    final response = await _client.post(
-      Uri.parse('$apiUrl/api/weekdays'),
-      headers: {
-        'Authorization': 'Bearer $accessToken',
-        'Content-Type': 'application/json',
-      },
-      body: daysBody,
-    );
-
-    if (response.statusCode != 201) {
-      throw responseToError(response.body);
-    } else {
-      log('Weekdays successfully set.');
+  Future<List<int>> getWeekdays() async {
+    final daysJson = await sharedPrefs.getString(_weekdaysKey);
+    
+    if (daysJson == null || daysJson.isEmpty) {
+      // Return default value (all days) if no preference is saved
+      return [0, 1, 2, 3, 4, 5, 6]; // All days of the week
+    }
+    
+    try {
+      final List<dynamic> decoded = jsonDecode(daysJson);
+      List<int> weekdays = decoded.map((day) => day as int).toList();
+      return weekdays;
+    } catch (e) {
+      log('Error parsing weekdays from shared preferences: $e');
+      // Return default value on error
+      return [0, 1, 2, 3, 4, 5, 6];
     }
   }
 
-  Future<List<int>> getWeekdays(String accessToken) async {
-    final response = await _client.get(
-      Uri.parse('$apiUrl/api/weekdays'),
-      headers: {
-        'Authorization': 'Bearer $accessToken',
-        'Content-Type': 'application/json',
-      },
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      List<int> weekdays = List<int>.from(data);
-      return weekdays;
-    } else {
-      throw responseToError(response.body);
-    }
+  Future<void> clearWeekdays() async {
+    await sharedPrefs.clear(_weekdaysKey);
+    log("Cleared weekdays preference");
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:padmayoga/providers/teacher/student_provider.dart';
 import 'package:provider/provider.dart';
 import '../../widgets/custom_fab.dart';
 import '../../constants/app_constants.dart';
@@ -169,6 +170,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
         ],
       ),
       floatingActionButton: CustomFAB(
+        isEnabled:
+            Provider.of<StudentProvider>(context, listen: false).anyUserExists,
         onPressed: () {
           showCustomModalBottomSheet(
             context: context,
@@ -185,12 +188,19 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   Widget _buildMonthlyPayments() {
-    return Padding(
-      padding: const EdgeInsets.all(AppPaddings.smallPadding),
-      child: MonthlyPaymentsWidget(
-        onMonthChanged: _onMonthChanged,
-        selectedMonth: _selectedMonth,
-      ),
+    return Consumer<MonthlyProvider>(
+      builder: (context, monthProvider, child) {
+        return Padding(
+          padding: const EdgeInsets.all(AppPaddings.smallPadding),
+          child: MonthlyPaymentsWidget(
+            onMonthChanged: _onMonthChanged,
+            selectedMonth: _selectedMonth,
+            monthlyPayments: monthProvider.monthlyPayments,
+            isLoading: monthProvider.isLoading,
+            onLoadMore: () => monthProvider.fetchPaymentsForMoreMonths(),
+          ),
+        );
+      },
     );
   }
 

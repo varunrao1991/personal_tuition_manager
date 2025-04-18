@@ -1,41 +1,91 @@
-import 'dart:developer';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import '../exceptions/custom_exception.dart';
-import '../models/profile_update.dart';
-import '../models/user_model.dart';
 import '../services/auth_service.dart';
-import '../services/token_service.dart';
 
 class AuthProvider with ChangeNotifier {
-  AuthProvider(this._authService, this._tokenService);
-
   final AuthService _authService;
-  final TokenService _tokenService;
+
+  AuthProvider(this._authService);
 
   bool _isLoading = false;
-  User? _user;
-  bool _newNotification = false;
-  bool _onMessageOpenedStatus = false;
-  Uint8List? _thumbnail;
-  Uint8List? _largeImage;
+  bool _isLoggedIn = false;
 
-  bool get newNotification => _newNotification;
-  bool get onMessageOpenedStatus => _onMessageOpenedStatus;
-  User? get user => _user;
   bool get isLoading => _isLoading;
-  Uint8List? get thumbnail => _thumbnail;
-  Uint8List? get largeImage => _largeImage;
-  bool get isTemporaryPassword => _user?.isTemporaryPassword ?? false;
+  bool get isLoggedIn => _isLoggedIn;
 
-  void clearData() {
+  Future<void> initialize() async {
+    _isLoggedIn = await _authService.isLoggedIn();
+    notifyListeners();
+  }
+
+  Future<bool> doesPinExist() async {
+    return await _authService.doesPinExist();
+  }
+
+  Future<bool> login(String pin) async {
     _setLoading(true);
-    _user = null;
-    _thumbnail = null;
-    _largeImage = null;
-    _newNotification = false;
-    _onMessageOpenedStatus = false;
-    _setLoading(false);
+    try {
+      final isValid = await _authService.verifyPin(pin);
+      if (isValid) {
+        await _authService.login();
+        _isLoggedIn = true;
+        notifyListeners();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      rethrow;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<void> register(String pin, String question, String answer) async {
+    _setLoading(true);
+    try {
+      await _authService.setPin(pin, question, answer);
+      await _authService.login();
+      _isLoggedIn = true;
+      notifyListeners();
+    } catch (e) {
+      rethrow;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<void> changePin(String newPin) async {
+    _setLoading(true);
+    try {
+      await _authService.changePin(newPin);
+      notifyListeners();
+    } catch (e) {
+      rethrow;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<Map<String, String>> getSecurityQuestions() async {
+    return await _authService.getSecurityQuestions();
+  }
+
+  Future<bool> verifySecurityQuestionAnswer(String question, String answer) async {
+    return (await _authService.verifySecurityQuestion(question) && await _authService.verifySecurityAnswer(answer));
+  }
+
+  Future<bool> hasSecurityQuestions() async {
+    return await _authService.hasSecurityQuestions();
+  }
+
+  Future<void> logout() async {
+    _setLoading(true);
+    try {
+      await _authService.logout();
+      _isLoggedIn = false;
+      notifyListeners();
+    } finally {
+      _setLoading(false);
+    }
   }
 
   void _setLoading(bool value) {
@@ -45,147 +95,9 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  void resetNotification() {
-    _newNotification = false;
-    _onMessageOpenedStatus = false;
-    notifyListeners();
-  }
-
-  Future<void> loadUser() async {
+  void clearData() {
     _setLoading(true);
-    try {
-      final accessToken = await _tokenService.getToken();
-      final user = await _authService.getUserFromToken(accessToken);
-      _user = user;
-    } catch (e) {
-      _user = null;
-      if (e is InvalidTokenException || e is InvalidSessionException) {
-        await _tokenService.clearToken();
-      } else if (e is TokenIsNullException) {
-        log("Token is null");
-      } else {
-        log("Failed to load user: $e");
-        rethrow;
-      }
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  Future<void> loadMyThumbnail() async {
-    _setLoading(true);
-    try {
-      final accessToken = await _tokenService.getToken();
-      final response = await _authService.fetchMyProfileThumbnail(accessToken);
-      _thumbnail = response.bodyBytes;
-      notifyListeners();
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  Future<void> loadMyLargeImage() async {
-    _setLoading(true);
-    try {
-      final accessToken = await _tokenService.getToken();
-      final response = await _authService.fetchMyProfileLargeImage(accessToken);
-      _largeImage = response.bodyBytes;
-      notifyListeners();
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  Future<void> uploadProfilePicture(
-      Uint8List imageData, String fileType, String mimeType) async {
-    _setLoading(true);
-    try {
-      final accessToken = await _tokenService.getToken();
-      await _authService.uploadProfilePicture(
-          accessToken, imageData, fileType, mimeType);
-      log("Profile picture uploaded successfully.");
-      await loadMyThumbnail();
-      await loadMyLargeImage();
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  Future<void> register(String name, String mobile, String password) async {
-    _setLoading(true);
-    try {
-      await _authService.register(name, mobile, password);
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  Future<void> login(String mobile, String password) async {
-    _setLoading(true);
-    try {
-      final userData = await _authService.login(mobile, password);
-      _user = userData.user;
-      await _tokenService.saveToken(userData.accessToken);
-      log("Saved access token");
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  Future<void> requestPasswordChange(String mobile) async {
-    _setLoading(true);
-    try {
-      await _authService.requestPasswordChange(mobile);
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  Future<void> changePasswordWithOTP(
-      String mobile, String otp, String newPassword) async {
-    _setLoading(true);
-    try {
-      await _authService.changePasswordWithOTP(mobile, otp, newPassword);
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  Future<void> changePassword(String oldPassword, String newPassword) async {
-    _setLoading(true);
-    try {
-      final accessToken = await _tokenService.getToken();
-      final accessTokenNew = await _authService.changePassword(
-          accessToken, oldPassword, newPassword);
-      await _tokenService.saveToken(accessTokenNew);
-      _user?.isTemporaryPassword = false;
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  Future<void> changeProfileInfo(ProfileUpdate profile) async {
-    _setLoading(true);
-    try {
-      final accessToken = await _tokenService.getToken();
-      final userData =
-          await _authService.changeProfileInfo(accessToken, profile);
-      _user = User.copyFrom(userData);
-      _user?.isTemporaryPassword = false;
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  Future<void> logout() async {
-    _setLoading(true);
-    final accessToken = await _tokenService.getToken();
-
-    await Future.wait([
-      _authService.logout(accessToken),
-      _tokenService.clearToken(),
-    ]);
-
+    _isLoggedIn = false;
     _setLoading(false);
   }
 }

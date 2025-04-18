@@ -5,8 +5,8 @@ class Course {
   final DateTime? startDate;
   final DateTime? endDate;
   final int totalClasses;
-  final bool? canStart;
-  final bool? noCreatit;
+  bool? canStart;
+  bool? noCredit;
   final PaymentInfo payment;
 
   Course(
@@ -16,13 +16,13 @@ class Course {
       required this.totalClasses,
       required this.payment,
       this.canStart,
-      this.noCreatit});
+      this.noCredit});
 
   factory Course.fromJson(Map<String, dynamic> json) {
     return Course(
       paymentId: json['paymentId'],
       canStart: json['canStart'] ?? false,
-      noCreatit: json['noCreatit'] ?? false,
+      noCredit: json['noCredit'] ?? false,
       startDate:
           json['startDate'] != null ? DateTime.parse(json['startDate']) : null,
       endDate: json['endDate'] != null ? DateTime.parse(json['endDate']) : null,

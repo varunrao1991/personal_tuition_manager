@@ -3,13 +3,11 @@ import 'package:flutter/material.dart';
 import '../../models/create_payment.dart';
 import '../../models/fetch_payment.dart';
 import '../../services/teacher/payment_service.dart';
-import '../../services/token_service.dart';
 
 class PaymentProvider with ChangeNotifier {
-  PaymentProvider(this._paymentService, this._tokenService);
+  PaymentProvider(this._paymentService);
 
   final PaymentService _paymentService;
-  final TokenService _tokenService;
 
   bool _isLoading = false;
   List<Payment> _payments = [];
@@ -62,9 +60,7 @@ class PaymentProvider with ChangeNotifier {
     _cachedEndDate = endDate ?? _cachedEndDate;
 
     try {
-      final String accessToken = await _tokenService.getToken();
       final PaymentResponse response = await _paymentService.getPayments(
-        accessToken: accessToken,
         page: page ?? _currentPage,
         sort: _cachedSort,
         order: _cachedOrder,
@@ -106,9 +102,7 @@ class PaymentProvider with ChangeNotifier {
     _setLoading(true);
 
     try {
-      final String accessToken = await _tokenService.getToken();
       await _paymentService.addPayment(
-        accessToken: accessToken,
         createPayment: createPayment,
       );
       log('Payment successfully added.');
@@ -122,9 +116,7 @@ class PaymentProvider with ChangeNotifier {
     _setLoading(true);
 
     try {
-      final String accessToken = await _tokenService.getToken();
       await _paymentService.updatePayment(
-        accessToken: accessToken,
         updatePayment: payment,
       );
       log('Payment successfully updated.');
@@ -140,10 +132,8 @@ class PaymentProvider with ChangeNotifier {
       DateTime startDate = DateTime(monthToFetch.year, monthToFetch.month, 1);
       DateTime endDate = DateTime(monthToFetch.year, monthToFetch.month + 1, 0);
 
-      final String accessToken = await _tokenService.getToken();
 
       _cachedDailyTotals = await _paymentService.getDailyTotalPayments(
-        accessToken: accessToken,
         startDate: startDate,
         endDate: endDate,
       );
@@ -155,9 +145,7 @@ class PaymentProvider with ChangeNotifier {
   Future<void> deletePayment(int paymentId) async {
     _setLoading(true);
     try {
-      final String accessToken = await _tokenService.getToken();
       await _paymentService.deletePayment(
-        accessToken: accessToken,
         paymentId: paymentId,
       );
       log('Payment successfully deleted.');

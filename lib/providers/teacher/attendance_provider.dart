@@ -2,13 +2,11 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import '../../models/attendance.dart';
 import '../../services/teacher/attendance_service.dart';
-import '../../services/token_service.dart';
 
 class AttendanceProvider with ChangeNotifier {
-  AttendanceProvider(this._attendanceService, this._tokenService);
+  AttendanceProvider(this._attendanceService);
 
   final AttendanceService _attendanceService;
-  final TokenService _tokenService;
 
   bool _isLoading = false;
   List<Attendance> _attendances = [];
@@ -75,13 +73,10 @@ class AttendanceProvider with ChangeNotifier {
       _cachedEndDate = endDate;
     }
     await _manageAttendanceLoading(() async {
-      final String accessToken = await _tokenService.getToken();
       final List<Attendance> newAttendances =
-          await _attendanceService.getAttendances(
-              accessToken: accessToken,
+          await _attendanceService.getAllAttendances(
               startDate: startDateNew,
-              endDate: endDateNew,
-              myAttendance: myAttendance);
+              endDate: endDateNew);
 
       if (shouldResetAttendances) {
         _attendances = newAttendances;
@@ -96,10 +91,8 @@ class AttendanceProvider with ChangeNotifier {
       required DateTime endDate,
       required int studentId}) async {
     await _manageAttendanceLoading(() async {
-      final String accessToken = await _tokenService.getToken();
       _attendanceDatesOfStudent =
           await _attendanceService.getAttendancesForStudent(
-        accessToken: accessToken,
         startDate: startDate,
         endDate: endDate,
         studentId: studentId,
@@ -110,9 +103,7 @@ class AttendanceProvider with ChangeNotifier {
 
   Future<void> addAttendance(int studentId, DateTime attendanceDate) async {
     await _manageAttendanceLoading(() async {
-      final String accessToken = await _tokenService.getToken();
-      await _attendanceService.addAttendance(
-          accessToken, attendanceDate, studentId);
+      await _attendanceService.addAttendance(attendanceDate: attendanceDate, studentId: studentId);
       log('Attendance successfully added.');
       await fetchAttendances();
     });
@@ -120,10 +111,8 @@ class AttendanceProvider with ChangeNotifier {
 
   Future<void> deleteAttendance(int studentId, DateTime attendanceDate) async {
     await _manageAttendanceLoading(() async {
-      final String accessToken = await _tokenService.getToken();
       await _attendanceService.deleteAttendance(
-          accessToken: accessToken,
-          studentId: studentId,
+            studentId: studentId,
           attendanceDate: attendanceDate);
       log('Attendance successfully deleted.');
       await fetchAttendances(

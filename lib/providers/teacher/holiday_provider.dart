@@ -3,13 +3,11 @@ import 'package:flutter/material.dart';
 import '../../exceptions/holiday_exception.dart';
 import '../../models/holiday.dart';
 import '../../services/teacher/holiday_service.dart';
-import '../../services/token_service.dart';
 
 class HolidayProvider with ChangeNotifier {
-  HolidayProvider(this._holidayService, this._tokenService);
+  HolidayProvider(this._holidayService);
 
   final HolidayService _holidayService;
-  final TokenService _tokenService;
 
   bool _isLoading = false;
   List<Holiday> _holidays = [];
@@ -46,9 +44,7 @@ class HolidayProvider with ChangeNotifier {
     }
 
     try {
-      final String accessToken = await _tokenService.getToken();
       _holidays = await _holidayService.getHolidays(
-        accessToken,
         newStartDate,
         newEndDate,
       );
@@ -63,8 +59,7 @@ class HolidayProvider with ChangeNotifier {
   Future<void> addHoliday(DateTime holidayDate, String reason) async {
     _setLoading(true);
     try {
-      final String accessToken = await _tokenService.getToken();
-      await _holidayService.addHoliday(accessToken, holidayDate, reason);
+      await _holidayService.addHoliday(holidayDate, reason);
       log('Holiday successfully added.');
       await fetchHolidays();
     } finally {
@@ -75,9 +70,7 @@ class HolidayProvider with ChangeNotifier {
   Future<void> deleteHoliday(DateTime holidayDate) async {
     _setLoading(true);
     try {
-      final String accessToken = await _tokenService.getToken();
-      await _holidayService.deleteHoliday(
-          accessToken: accessToken, holidayDate: holidayDate);
+      await _holidayService.deleteHoliday(holidayDate: holidayDate);
       log('Holiday successfully deleted.');
       await fetchHolidays();
     } finally {

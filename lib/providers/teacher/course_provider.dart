@@ -3,10 +3,9 @@ import 'package:flutter/material.dart';
 import '../../models/owned_by.dart';
 import '../../models/teacher/course.dart';
 import '../../services/teacher/course_service.dart';
-import '../../services/token_service.dart';
 
 class CourseProvider with ChangeNotifier {
-  CourseProvider(this._courseService, this._tokenService);
+  CourseProvider(this._courseService);
 
   final Map<String, List<Course>> _coursesMap = {
     'ongoing': [],
@@ -15,7 +14,6 @@ class CourseProvider with ChangeNotifier {
   };
 
   final CourseService _courseService;
-  final TokenService _tokenService;
 
   bool _isLoading = false;
   List<OwnedBy> _eligibleStudents = [];
@@ -53,9 +51,7 @@ class CourseProvider with ChangeNotifier {
   Future<void> fetchEligibleStudents({int? page}) async {
     _setLoading(true);
     try {
-      final accessToken = await _tokenService.getToken();
       final response = await _courseService.getEligibleStudents(
-        accessToken: accessToken,
         page: page ?? _currentEligibleStudentPage,
       );
 
@@ -86,13 +82,10 @@ class CourseProvider with ChangeNotifier {
     _setLoading(true);
 
     try {
-      final String accessToken = await _tokenService.getToken();
-
       final response = await _courseService.getCourses(
-        accessToken: accessToken,
         page: page ?? _currentPage,
-        sort: sort,
-        order: order,
+        sortBy: sort,
+        sortOrder: order,
         filterBy: filterBy,
       );
 
@@ -123,10 +116,7 @@ class CourseProvider with ChangeNotifier {
   Future<void> existsEligibleStudents() async {
     _setLoading(true);
     try {
-      final String accessToken = await _tokenService.getToken();
-
-      _hasEligibleStudents =
-          await _courseService.hasEligibleStudents(accessToken);
+      _hasEligibleStudents = await _courseService.hasEligibleStudents();
     } finally {
       _setLoading(false);
     }
@@ -136,12 +126,9 @@ class CourseProvider with ChangeNotifier {
     _setLoading(true);
 
     try {
-      final String accessToken = await _tokenService.getToken();
-
-      await _courseService.addCourse(
-        accessToken: accessToken,
-        totalClasses: totalClasses,
-        studentId: studentId,
+      await _courseService.createCourse(
+        totalClasses,
+        studentId,
       );
       log('Course successfully added.');
       await resetAndFetch(filterBy: 'waitlist');
@@ -154,12 +141,9 @@ class CourseProvider with ChangeNotifier {
     _setLoading(true);
 
     try {
-      final String accessToken = await _tokenService.getToken();
-
-      await _courseService.startCourse(
-        accessToken: accessToken,
-        courseId: studentId,
-        startDate: startDate,
+      await _courseService.startCourseById(
+        studentId,
+        startDate,
       );
       log('Course successfully started.');
       await resetAndFetch(filterBy: 'ongoing');
@@ -168,16 +152,13 @@ class CourseProvider with ChangeNotifier {
     }
   }
 
-  Future<void> endCourse(int studentId, DateTime endDate) async {
+  Future<void> endCourse(int courseId, DateTime endDate) async {
     _setLoading(true);
 
     try {
-      final String accessToken = await _tokenService.getToken();
-
-      await _courseService.endCourse(
-        accessToken: accessToken,
-        courseId: studentId,
-        endDate: endDate,
+      await _courseService.endCourseById(
+        courseId,
+        endDate,
       );
       log('Course successfully ended.');
       await resetAndFetch(filterBy: 'closed');
@@ -193,12 +174,9 @@ class CourseProvider with ChangeNotifier {
     _setLoading(true);
 
     try {
-      final String accessToken = await _tokenService.getToken();
-
-      await _courseService.updateCourse(
-        accessToken: accessToken,
-        courseId: courseId,
-        totalClasses: totalClasses,
+      await _courseService.updateCourseById(
+        courseId,
+        totalClasses,
       );
       log('Course successfully updated.');
 
@@ -212,11 +190,8 @@ class CourseProvider with ChangeNotifier {
     _setLoading(true);
 
     try {
-      final String accessToken = await _tokenService.getToken();
-
       await _courseService.deleteCourse(
-        accessToken: accessToken,
-        courseId: courseId,
+        courseId,
       );
       log('Course successfully deleted.');
 

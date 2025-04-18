@@ -1,11 +1,9 @@
-// Update in your original file (e.g., custom_drawer.dart)
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/teacher/attendance_provider.dart';
 import '../../../providers/teacher/course_provider.dart';
 import '../../../providers/teacher/holiday_provider.dart';
 import '../../../providers/teacher/month_provider.dart';
-import '../../../providers/notification_provider.dart';
 import '../../../providers/teacher/payment_provider.dart';
 import '../../../providers/teacher/student_provider.dart';
 import '../../../providers/teacher/weekday_provider.dart';
@@ -37,7 +35,6 @@ class CustomDrawer extends StatelessWidget {
           Provider.of<CourseProvider>(context, listen: false).clearData();
           Provider.of<HolidayProvider>(context, listen: false).clearData();
           Provider.of<MonthlyProvider>(context, listen: false).clearData();
-          Provider.of<NotificationProvider>(context, listen: false).clearData();
           Provider.of<PaymentProvider>(context, listen: false).clearData();
           Provider.of<StudentProvider>(context, listen: false).clearData();
           Provider.of<WeekdayProvider>(context, listen: false).clearData();
@@ -55,39 +52,47 @@ class CustomDrawer extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
+      child: Column( // Changed ListView to Column
         children: [
-          const UserInfoHeader(),
-          ListTile(
-            title: Text(
-              'My Holidays',
-              style: theme.textTheme.bodyLarge,
+          Expanded(
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                const UserInfoHeader(),
+                ListTile(
+                  title: Text(
+                    'My Holidays',
+                    style: theme.textTheme.bodyLarge,
+                  ),
+                  onTap: () {
+                    Navigator.pushNamed(context, '/teacher/holidays');
+                  },
+                ),
+                ListTile(
+                  title: Text(
+                    'About',
+                    style: theme.textTheme.bodyLarge,
+                  ),
+                  onTap: () {
+                    Navigator.pushNamed(context, '/about');
+                  },
+                ),
+                ListTile(
+                  title: Text(
+                    'Logout',
+                    style: theme.textTheme.bodyLarge,
+                  ),
+                  onTap: () {
+                    _logout(context);
+                  },
+                ),
+                const Divider(),
+                // ThemeSwitcher is now outside the Expanded and ListView
+              ],
             ),
-            onTap: () {
-              Navigator.pushNamed(context, '/teacher/holidays');
-            },
           ),
-          ListTile(
-            title: Text(
-              'About',
-              style: theme.textTheme.bodyLarge,
-            ),
-            onTap: () {
-              Navigator.pushNamed(context, '/about');
-            },
-          ),
-          ListTile(
-            title: Text(
-              'Logout',
-              style: theme.textTheme.bodyLarge,
-            ),
-            onTap: () {
-              _logout(context);
-            },
-          ),
-          const Divider(),
-          const ThemeSwitcher(),
+          const ThemeSwitcher(), // Aligned to the bottom
+          const SizedBox(height: 8), // Optional: Add some spacing at the bottom
         ],
       ),
     );

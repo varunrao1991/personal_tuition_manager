@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../widgets/notification_widget.dart';
 import 'attendance_screen.dart';
 import 'course_screen.dart';
 import 'widgets/custom_drawer.dart';
@@ -52,7 +51,6 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
           "Teacher Dashboard",
           style: Theme.of(context).textTheme.titleLarge,
         ),
-        actions: const [NotificationHandlerWidget()],
       ),
       drawer: const CustomDrawer(),
       body: _getViewer(),

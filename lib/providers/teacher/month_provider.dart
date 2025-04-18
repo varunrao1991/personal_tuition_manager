@@ -1,13 +1,11 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import '../../services/teacher/payment_service.dart';
-import '../../services/token_service.dart';
 
 class MonthlyProvider with ChangeNotifier {
-  MonthlyProvider(this._paymentService, this._tokenService);
+  MonthlyProvider(this._paymentService);
 
   final PaymentService _paymentService;
-  final TokenService _tokenService;
 
   bool _isLoading = false;
   Map<DateTime, int> _monthlyPayments = {};
@@ -37,7 +35,6 @@ class MonthlyProvider with ChangeNotifier {
     }
     _setLoading(true);
     try {
-      final String accessToken = await _tokenService.getToken();
       DateTime now = _lastLoadedMonth ?? DateTime.now();
       List<DateTime> monthsToLoad = List.generate(numberOfMonths, (index) {
         return DateTime(now.year, now.month - index, 1);
@@ -48,7 +45,6 @@ class MonthlyProvider with ChangeNotifier {
         DateTime endDate = DateTime(month.year, month.month + 1, 0);
 
         int totalPayments = await _paymentService.getTotalAmountPayments(
-          accessToken: accessToken,
           startDate: startDate,
           endDate: endDate,
         );
@@ -83,14 +79,11 @@ class MonthlyProvider with ChangeNotifier {
     _setLoading(true);
 
     try {
-      final String accessToken = await _tokenService.getToken();
-
       for (DateTime uniqueMonth in uniqueMonths) {
         DateTime startDate = DateTime(uniqueMonth.year, uniqueMonth.month, 1);
         DateTime endDate = DateTime(uniqueMonth.year, uniqueMonth.month + 1, 0);
 
         int totalPayments = await _paymentService.getTotalAmountPayments(
-          accessToken: accessToken,
           startDate: startDate,
           endDate: endDate,
         );
@@ -109,12 +102,10 @@ class MonthlyProvider with ChangeNotifier {
 
     _setLoading(true);
     try {
-      final String accessToken = await _tokenService.getToken();
       for (DateTime startDate in _monthlyPayments.keys) {
         DateTime endDate = DateTime(startDate.year, startDate.month + 1, 0);
 
         int totalPayments = await _paymentService.getTotalAmountPayments(
-          accessToken: accessToken,
           startDate: startDate,
           endDate: endDate,
         );

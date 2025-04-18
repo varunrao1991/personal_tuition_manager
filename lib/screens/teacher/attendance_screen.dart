@@ -5,6 +5,7 @@ import '../../constants/app_constants.dart';
 import '../../models/attendance.dart';
 import '../../providers/teacher/attendance_provider.dart';
 import '../../providers/teacher/holiday_provider.dart';
+import '../../providers/teacher/student_provider.dart';
 import '../../providers/teacher/weekday_provider.dart';
 import '../../utils/handle_errors.dart';
 import '../../widgets/custom_card.dart';
@@ -179,6 +180,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       ),
       floatingActionButton: CustomFAB(
         icon: Icons.calendar_today,
+        isEnabled:
+            Provider.of<StudentProvider>(context, listen: false).anyUserExists,
         onPressed: () {
           showCustomModalBottomSheet(
             context: context,

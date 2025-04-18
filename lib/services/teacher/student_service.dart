@@ -1,10 +1,8 @@
-import 'dart:convert';
 import 'dart:developer';
-import 'package:http/http.dart' as http;
-import '../../config/app_config.dart';
+import 'package:sqflite/sqflite.dart';
 import '../../models/teacher/student_model.dart';
 import '../../models/teacher/student_update.dart';
-import '../../utils/response_to_error.dart';
+import '../../helpers/database_helper.dart';
 
 class StudentResponse {
   final List<Student> students;
@@ -21,127 +19,145 @@ class StudentResponse {
 }
 
 class StudentService {
-  final String apiUrl = Config().apiUrl;
-  final http.Client _client;
+  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
-  StudentService(this._client);
+  StudentService();
 
   Future<StudentResponse> getStudents({
-    required String accessToken,
     required int page,
     String? sort,
     String? order,
     String? name,
   }) async {
-    final queryParameters = {
-      'page': page.toString(),
-      if (sort != null) 'sort': sort,
-      if (order != null) 'order': order,
-      if (name != null && name.isNotEmpty) 'name': name,
-    };
+    final db = await _dbHelper.database;
 
-    final uri = Uri.parse('$apiUrl/api/students')
-        .replace(queryParameters: queryParameters);
+    const limit = 20;
+    final offset = (page - 1) * limit;
 
-    final response = await _client.get(
-      uri,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $accessToken',
-      },
+    String whereClause = '';
+    List<dynamic> whereArgs = [];
+
+    if (name != null && name.isNotEmpty) {
+      whereClause = 'name LIKE ?';
+      whereArgs = ['%$name%'];
+    }
+
+    final orderClause = (sort != null && order != null)
+        ? '$sort ${order.toUpperCase()}'
+        : 'name ASC';
+
+    final totalQuery = await db.rawQuery(
+      'SELECT COUNT(*) as count FROM User ${whereClause.isNotEmpty ? "WHERE $whereClause" : ""}',
+      whereArgs,
+    );
+    final totalRecords = Sqflite.firstIntValue(totalQuery) ?? 0;
+    final totalPages = (totalRecords / limit).ceil();
+
+    final rows = await db.query(
+      'User',
+      where: whereClause.isNotEmpty ? whereClause : null,
+      whereArgs: whereArgs.isNotEmpty ? whereArgs : null,
+      orderBy: orderClause,
+      limit: limit,
+      offset: offset,
     );
 
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> data = jsonDecode(response.body);
-      return StudentResponse(
-        students: (data['data'] as List)
-            .map((student) => Student.fromJson(student))
-            .toList(),
-        totalPages: data['totalPages'],
-        totalRecords: data['totalRecords'],
-        currentPage: data['currentPage'],
+    final List<Student> students = rows.map((row) {
+      return Student(
+        id: row['id'] as int,
+        name: row['name'] as String,
+        mobile: row['mobile'] as String,
+        createdAt: row['createdAt'] != null
+            ? DateTime.parse(row['createdAt'] as String)
+            : DateTime.now(),
       );
-    } else {
-      throw responseToError(response.body);
-    }
+    }).toList();
+
+    return StudentResponse(
+      students: students,
+      totalPages: totalPages,
+      totalRecords: totalRecords,
+      currentPage: page,
+    );
   }
 
   Future<void> createStudent({
-    required String accessToken,
     required StudentUpdate studentUpdate,
   }) async {
-    final response = await _client.post(
-      Uri.parse('$apiUrl/api/students'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $accessToken',
+    final db = await _dbHelper.database;
+
+    await db.insert(
+      'User',
+      {
+        'name': studentUpdate.name,
+        'mobile': studentUpdate.mobile,
+        'createdAt': DateTime.now().toIso8601String(),
       },
-      body: jsonEncode(studentUpdate.toJson()),
     );
 
-    if (response.statusCode != 201) {
-      throw responseToError(response.body);
-    } else {
-      log("Student created.");
-    }
+    log('Student successfully created.');
+  }
+
+  Future<bool> anyUserExists() async {
+    final db = await _dbHelper.database;
+
+    final result = await db.rawQuery('SELECT 1 FROM User LIMIT 1');
+
+    return result.isNotEmpty;
   }
 
   Future<void> updateStudent({
-    required String accessToken,
     required StudentUpdate studentUpdate,
   }) async {
-    final response = await _client.put(
-      Uri.parse('$apiUrl/api/students/${studentUpdate.id}'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $accessToken',
+    final db = await _dbHelper.database;
+
+    await db.update(
+      'User',
+      {
+        if (studentUpdate.name != null) 'name': studentUpdate.name,
+        if (studentUpdate.mobile != null) 'mobile': studentUpdate.mobile,
       },
-      body: jsonEncode(studentUpdate.toJson()),
+      where: 'id = ?',
+      whereArgs: [studentUpdate.id],
     );
 
-    if (response.statusCode != 200) {
-      throw responseToError(response.body);
-    } else {
-      log("Student updated.");
-    }
-  }
-  
-  Future<void> enableDisable({
-    required String accessToken,
-    required int id,
-    required bool enable,
-  }) async {
-    final response = await _client.post(
-      Uri.parse('$apiUrl/api/students/enable'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $accessToken',
-      },
-      body: jsonEncode({'id': id, 'enabled': enable}),
-    );
-
-    if (response.statusCode != 200) {
-      throw responseToError(response.body);
-    } else {
-      log("Student updated.");
-    }
+    log('Student successfully updated.');
   }
 
   Future<void> deleteStudent({
-    required String accessToken,
     required int studentId,
   }) async {
-    final response = await _client.delete(
-      Uri.parse('$apiUrl/api/students/$studentId'),
-      headers: {
-        'Authorization': 'Bearer $accessToken',
-      },
+    final db = await _dbHelper.database;
+
+    await db.delete(
+      'User',
+      where: 'id = ?',
+      whereArgs: [studentId],
     );
 
-    if (response.statusCode != 200) {
-      throw responseToError(response.body);
-    } else {
-      log("Student deleted.");
+    log('Student successfully deleted.');
+  }
+
+  Future<Student?> getStudentById(int id) async {
+    final db = await _dbHelper.database;
+
+    final rows = await db.query(
+      'User',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+
+    if (rows.isEmpty) {
+      return null;
     }
+
+    final row = rows.first;
+    return Student(
+        id: row['id'] as int,
+        name: row['name'] as String,
+        mobile: row['mobile'] as String,
+        createdAt: row['createdAt'] != null
+            ? DateTime.parse(row['createdAt'] as String)
+            : DateTime.now());
   }
 }

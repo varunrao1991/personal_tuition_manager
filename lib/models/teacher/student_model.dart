@@ -3,22 +3,19 @@ class Student {
   final String name;
   final String mobile;
   final DateTime createdAt;
-  final bool enabled;
 
   Student(
       {required this.id,
       required this.name,
       required this.mobile,
-      required this.createdAt,
-      required this.enabled});
+      required this.createdAt});
 
   factory Student.fromJson(Map<String, dynamic> json) {
     return Student(
         id: json['id'],
         name: json['name'],
         mobile: json['mobile'],
-        createdAt: DateTime.parse(json['createdAt']),
-        enabled: json['enabled']);
+        createdAt: DateTime.parse(json['createdAt']));
   }
 
   Map<String, dynamic> toJson() {
@@ -34,13 +31,11 @@ class Student {
       {int? id,
       String? name,
       String? mobile,
-      DateTime? createdAt,
-      bool? enabled}) {
+      DateTime? createdAt}) {
     return Student(
         id: id ?? this.id,
         name: name ?? this.name,
         mobile: mobile ?? this.mobile,
-        createdAt: createdAt ?? this.createdAt,
-        enabled: enabled ?? this.enabled);
+        createdAt: createdAt ?? this.createdAt);
   }
 }

@@ -1,11 +1,11 @@
-import 'dart:convert';
 import 'dart:developer';
-import 'package:http/http.dart' as http;
+import 'package:padmayoga/models/owned_by.dart';
+import 'package:sqflite/sqflite.dart';
 import '../../models/create_payment.dart';
-import '../../models/daily_total.dart';
 import '../../models/fetch_payment.dart';
-import '../../config/app_config.dart';
-import '../../utils/response_to_error.dart';
+import '../../helpers/database_helper.dart';
+import './student_service.dart';
+import './course_service.dart';
 
 class PaymentResponse {
   final List<Payment> payments;
@@ -22,172 +22,175 @@ class PaymentResponse {
 }
 
 class PaymentService {
-  String apiUrl = Config().apiUrl;
-  final http.Client _client;
+  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
-  PaymentService(this._client);
+  PaymentService();
+
+  final StudentService _userService = StudentService();
+  final CourseService _courseService = CourseService();
 
   Future<PaymentResponse> getPayments({
-    required String accessToken,
-    required int page,
-    String? sort,
-    String? order,
-    DateTime? startDate,
-    DateTime? endDate,
-  }) async {
-    Map<String, String> queryParams = {
-      'page': page.toString(),
-    };
+  required int page,
+  String? sort,
+  String? order,
+  DateTime? startDate,
+  DateTime? endDate,
+}) async {
+  final db = await _dbHelper.database;
 
-    if (sort != null) queryParams['sort'] = sort;
-    if (order != null) queryParams['order'] = order;
-    if (startDate != null && endDate != null) {
-      queryParams['startDate'] = startDate.toIso8601String();
-      queryParams['endDate'] = endDate.toIso8601String();
-    }
+  const limit = 20;
+  final offset = (page - 1) * limit;
 
-    Uri uri =
-        Uri.parse('$apiUrl/api/payments').replace(queryParameters: queryParams);
+  String whereClause = '';
+  List<dynamic> whereArgs = [];
 
-    final response = await _client.get(uri, headers: {
-      'Authorization': 'Bearer $accessToken',
-      'Content-Type': 'application/json',
-    });
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final payments = (data['data'] as List)
-          .map((paymentJson) => Payment.fromJson(paymentJson))
-          .toList();
-
-      return PaymentResponse(
-        payments: payments,
-        totalPages: data['totalPages'],
-        totalRecords: data['totalRecords'],
-        currentPage: data['currentPage'],
-      );
-    } else {
-      throw responseToError(response.body);
-    }
+  if (startDate != null && endDate != null) {
+    whereClause = 'paymentDate BETWEEN ? AND ?';
+    whereArgs = [
+      startDate.toIso8601String(),
+      endDate.toIso8601String(),
+    ];
   }
 
+  final orderClause = (sort != null && order != null)
+      ? '$sort ${order.toUpperCase()}'
+      : 'paymentDate DESC';
+
+  final totalQuery = await db.rawQuery(
+    'SELECT COUNT(*) as count FROM Payment ${whereClause.isNotEmpty ? "WHERE $whereClause" : ""}',
+    whereArgs,
+  );
+  final totalRecords = Sqflite.firstIntValue(totalQuery) ?? 0;
+  final totalPages = (totalRecords / limit).ceil();
+
+  final rows = await db.query(
+    'Payment',
+    where: whereClause.isNotEmpty ? whereClause : null,
+    whereArgs: whereArgs.isNotEmpty ? whereArgs : null,
+    orderBy: orderClause,
+    limit: limit,
+    offset: offset,
+  );
+
+  final List<Payment> payments = [];
+
+  for (var row in rows) {
+    final student = await _userService.getStudentById(row['studentId'] as int);
+    if (student == null) {
+      log('Student not found for payment ID: ${row['id']} - Payment will be excluded');
+      continue; // Skip this payment if the student is not found
+    }
+
+    final courseStatus = await _courseService.getCourseStatus(row['id'] as int);
+
+    payments.add(Payment(
+      id: row['id'] as int,
+      amount: row['amount'] as int,
+      paymentDate: DateTime.parse(row['paymentDate'] as String),
+      ownedBy: OwnedBy(id: student.id, name: student.name),
+      courseStatus: courseStatus,
+    ));
+  }
+
+  return PaymentResponse(
+    payments: payments,
+    totalPages: totalPages,
+    totalRecords: totalRecords,
+    currentPage: page,
+  );
+}
+
   Future<void> addPayment({
-    required String accessToken,
     required CreatePayment createPayment,
   }) async {
-    final response = await _client.post(
-      Uri.parse('$apiUrl/api/payments'),
-      headers: {
-        'Authorization': 'Bearer $accessToken',
-        'Content-Type': 'application/json',
+    final db = await _dbHelper.database;
+
+    await db.insert(
+      'Payment',
+      {
+        'amount': createPayment.amount,
+        'paymentDate': createPayment.paymentDate.toIso8601String(),
+        'studentId': createPayment.studentId,
       },
-      body: jsonEncode(createPayment.toJson()),
     );
 
-    if (response.statusCode != 201) {
-      throw responseToError(response.body);
-    } else {
-      log('Payment successfully created.');
-    }
+    log('Payment successfully created.');
   }
 
   Future<int> getTotalAmountPayments({
-    required String accessToken,
     required DateTime startDate,
     required DateTime endDate,
   }) async {
-    final String formattedStartDate = _formatDate(startDate);
-    final String formattedEndDate = _formatDate(endDate);
+    final db = await _dbHelper.database;
 
-    final response = await _client.get(
-      Uri.parse(
-          '$apiUrl/api/payments/total?startDate=$formattedStartDate&endDate=$formattedEndDate'),
-      headers: {
-        'Authorization': 'Bearer $accessToken',
-        'Content-Type': 'application/json',
-      },
+    final result = await db.rawQuery(
+      '''
+      SELECT SUM(amount) as total
+      FROM Payment
+      WHERE paymentDate BETWEEN ? AND ?
+      ''',
+      [startDate.toIso8601String(), endDate.toIso8601String()],
     );
 
-    if (response.statusCode != 200) {
-      throw responseToError(response.body);
-    } else {
-      return int.parse(response.body);
-    }
+    return result.first['total'] != null ? result.first['total'] as int : 0;
   }
 
   Future<Map<int, double>> getDailyTotalPayments({
-    required String accessToken,
     required DateTime startDate,
     required DateTime endDate,
   }) async {
-    final String formattedStartDate = _formatDate(startDate);
-    final String formattedEndDate = _formatDate(endDate);
+    final db = await _dbHelper.database;
 
-    final response = await _client.get(
-      Uri.parse(
-          '$apiUrl/api/payments/daily?startDate=$formattedStartDate&endDate=$formattedEndDate'),
-      headers: {
-        'Authorization': 'Bearer $accessToken',
-        'Content-Type': 'application/json',
-      },
+    final result = await db.rawQuery(
+      '''
+      SELECT paymentDate, SUM(amount) as total
+      FROM Payment
+      WHERE paymentDate BETWEEN ? AND ?
+      GROUP BY paymentDate
+      ''',
+      [startDate.toIso8601String(), endDate.toIso8601String()],
     );
 
-    if (response.statusCode != 200) {
-      throw responseToError(response.body);
-    } else {
-      final List<dynamic> data = jsonDecode(response.body);
+    final Map<int, double> dailyTotals = {};
 
-      final List<DailyTotal> dailyTotals = data.map((entry) {
-        return DailyTotal.fromJson(entry);
-      }).toList();
-
-      return {
-        for (var dailyTotal in dailyTotals)
-          dailyTotal.dateTime.day: dailyTotal.totalAmount
-      };
+    for (var row in result) {
+      final date = DateTime.parse(row['paymentDate'] as String);
+      dailyTotals[date.day] = (row['total'] as num).toDouble();
     }
-  }
 
-  String _formatDate(DateTime date) {
-    return '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    return dailyTotals;
   }
 
   Future<void> updatePayment({
-    required String accessToken,
     required CreatePayment updatePayment,
   }) async {
-    final response = await _client.put(
-      Uri.parse('$apiUrl/api/payments/${updatePayment.id}'),
-      headers: {
-        'Authorization': 'Bearer $accessToken',
-        'Content-Type': 'application/json',
+    final db = await _dbHelper.database;
+
+    await db.update(
+      'Payment',
+      {
+        'amount': updatePayment.amount,
+        'paymentDate': updatePayment.paymentDate.toIso8601String(),
+        'studentId': updatePayment.studentId,
       },
-      body: jsonEncode(updatePayment.toJson()),
+      where: 'id = ?',
+      whereArgs: [updatePayment.id],
     );
 
-    if (response.statusCode != 200) {
-      throw responseToError(response.body);
-    } else {
-      log('Payment successfully updated.');
-    }
+    log('Payment successfully updated.');
   }
 
   Future<void> deletePayment({
-    required String accessToken,
     required int paymentId,
   }) async {
-    final response = await _client.delete(
-      Uri.parse('$apiUrl/api/payments/$paymentId'),
-      headers: {
-        'Authorization': 'Bearer $accessToken',
-        'Content-Type': 'application/json',
-      },
+    final db = await _dbHelper.database;
+
+    await db.delete(
+      'Payment',
+      where: 'id = ?',
+      whereArgs: [paymentId],
     );
 
-    if (response.statusCode != 200) {
-      throw responseToError(response.body);
-    } else {
-      log('Payment successfully deleted.');
-    }
+    log('Payment successfully deleted.');
   }
 }

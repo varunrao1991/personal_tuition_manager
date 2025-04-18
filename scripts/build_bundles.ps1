@@ -32,9 +32,7 @@ function Build-AAB {
 
 # Define properties for each user type
 $bundleProperties = @{
-    "admin" = "AdminApp"
     "teacher" = "TeacherApp"
-    "student" = "StudentApp"
 }
 
 # Build AABs for admin, teacher, and student

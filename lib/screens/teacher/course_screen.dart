@@ -302,7 +302,7 @@ class _CourseScreenState extends State<CourseScreen>
     final int totalClasses = course.totalClasses;
     final DateTime paymentDate = course.payment.paymentDate;
     final bool canStart = course.canStart ?? false;
-    final bool noCredit = course.noCreatit ?? false;
+    final bool noCredit = course.noCredit ?? false;
 
     final selectedTabFilter = _getFilterByTabIndex(tabIndex);
     switch (selectedTabFilter) {

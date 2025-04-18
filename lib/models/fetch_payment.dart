@@ -1,4 +1,4 @@
-import 'course_of_payment.dart';
+import '../services/teacher/course_service.dart';
 import 'owned_by.dart';
 
 class Payment {
@@ -6,7 +6,7 @@ class Payment {
   final int amount;
   final DateTime paymentDate;
   final OwnedBy ownedBy;
-  final int courseStatus;
+  final CourseStatus courseStatus;
 
   Payment({
     required this.id,
@@ -22,9 +22,7 @@ class Payment {
       amount: json['amount'],
       paymentDate: DateTime.parse(json['paymentDate']),
       ownedBy: OwnedBy.fromJson(json['student']),
-      courseStatus: json['course'] == null
-          ? 3
-          : CourseOfPayment.fromJson(json['course']).courseStatus,
+      courseStatus: CourseStatus.noCourse,
     );
   }
 }

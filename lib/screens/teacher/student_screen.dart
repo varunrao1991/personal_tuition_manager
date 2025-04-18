@@ -83,37 +83,6 @@ class _StudentScreenState extends State<StudentScreen> {
     }
   }
 
-  Future<void> _onLongPress(
-      BuildContext context, int teacherId, bool enabled) async {
-    await showModalBottomSheet(
-      context: context,
-      builder: (BuildContext context) {
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                title: Text(enabled ? 'Disable student' : 'Enable student'),
-                onTap: () async {
-                  final studentProvider =
-                      Provider.of<StudentProvider>(context, listen: false);
-                  try {
-                    await studentProvider.enableStudent(teacherId, !enabled);
-                  } catch (e) {
-                    handleErrors(context, e);
-                  }
-                  _fetchStudents();
-                  Navigator.of(context).pop(true);
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   Future<void> _openStudentForm({StudentUpdate? student}) async {
     await showCustomModalBottomSheet(
       context: context,
@@ -244,7 +213,6 @@ class _StudentScreenState extends State<StudentScreen> {
     StudentUpdate studentUpdate = StudentUpdate.fromStudent(student);
     return StudentCard(
       student: student,
-      onLongPress: () => _onLongPress(context, student.id, student.enabled),
       onEdit: () => _openStudentForm(student: studentUpdate),
       onDelete: () async {
         bool? success = await _showDeleteConfirmationDialog(context);
@@ -259,7 +227,7 @@ class _StudentScreenState extends State<StudentScreen> {
     return showCustomDialog(
       context: context,
       child: const ConfirmationDialog(
-        message: 'Delete this student?',
+        message: 'Delete the student?',
         confirmButtonText: 'Delete',
         cancelButtonText: 'Cancel',
       ),

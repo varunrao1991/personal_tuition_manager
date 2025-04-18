@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:padmayoga/config/app_config.dart';
+import 'package:padmayoga/providers/auth_provider.dart';
 import 'package:padmayoga/providers/theme_provider.dart';
-import 'package:padmayoga/providers/thumbnail_provider.dart';
-import 'package:padmayoga/services/thumbnail_service.dart';
+import 'package:padmayoga/screens/common/forgot_pin_screen.dart';
+import 'package:padmayoga/services/auth_service.dart';
 import 'package:provider/provider.dart';
 import 'providers/teacher/attendance_provider.dart';
 import 'providers/teacher/holiday_provider.dart';
@@ -11,88 +13,63 @@ import './routes/teacher_routes.dart';
 import 'providers/teacher/course_provider.dart';
 import 'routes/navigator.dart';
 import 'screens/common/about_screen.dart';
-import 'screens/common/forgot_password_screen.dart';
-import 'screens/common/notification_screen.dart';
 import 'services/teacher/attendance_service.dart';
 import 'services/teacher/course_service.dart';
 import 'services/teacher/holiday_service.dart';
 import 'services/teacher/weekday_service.dart';
 import 'constants/app_theme.dart';
-import 'providers/notification_provider.dart';
 import 'providers/teacher/payment_provider.dart';
 import 'providers/teacher/student_provider.dart';
-import 'providers/auth_provider.dart';
-import 'screens/common/change_password_screen.dart';
-import 'services/auth_service.dart';
-import 'services/notification_service.dart';
 import 'services/teacher/payment_service.dart';
 import 'services/teacher/student_service.dart';
-import 'services/token_service.dart';
-import 'utils/http_client.dart';
 
 class MyApp extends StatelessWidget {
-  final String userType;
   final materialTheme = const MaterialTheme();
 
-  const MyApp({super.key, required this.userType});
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        Provider(create: (_) => HttpTimeoutClient()),
-        Provider(create: (_) => TokenService()),
         ChangeNotifierProvider(
           create: (context) => AuthProvider(
-              AuthService(context.read<HttpTimeoutClient>(), userType),
-              context.read<TokenService>()),
+              AuthService()),
         ),
         ChangeNotifierProvider(
           create: (context) => StudentProvider(
-              StudentService(context.read<HttpTimeoutClient>()),
-              context.read<TokenService>()),
+              StudentService()),
         ),
         ChangeNotifierProvider(
           create: (context) => PaymentProvider(
-              PaymentService(context.read<HttpTimeoutClient>()),
-              context.read<TokenService>()),
+              PaymentService()),
         ),
         ChangeNotifierProvider(
           create: (context) => MonthlyProvider(
-              PaymentService(context.read<HttpTimeoutClient>()),
-              context.read<TokenService>()),
+              PaymentService()),
         ),
         ChangeNotifierProvider(
             create: (context) => AttendanceProvider(
-                AttendanceService(context.read<HttpTimeoutClient>()),
-                context.read<TokenService>())),
+                AttendanceService()
+            )),
         ChangeNotifierProvider(
             create: (context) => HolidayProvider(
-                HolidayService(context.read<HttpTimeoutClient>()),
-                context.read<TokenService>())),
+                HolidayService()
+            )),
         ChangeNotifierProvider(
             create: (context) => WeekdayProvider(
-                WeekdayService(context.read<HttpTimeoutClient>()),
-                context.read<TokenService>())),
-        ChangeNotifierProvider(
-          create: (context) => NotificationProvider(
-              NotificationService(context.read<HttpTimeoutClient>()),
-              context.read<TokenService>()),
-        ),
+                WeekdayService()
+            )),
         ChangeNotifierProvider(
             create: (context) => CourseProvider(
-                CourseService(context.read<HttpTimeoutClient>()),
-                context.read<TokenService>())),
-        ChangeNotifierProvider(
-            create: (context) => ThumbnailProvider(
-                ThumbnailService(context.read<HttpTimeoutClient>()),
-                context.read<TokenService>())),
+                CourseService()
+            )),
         ChangeNotifierProvider(
           create: (context) {
             final themeProvider = ThemeProvider();
             themeProvider.loadThemePreference();
             return themeProvider;
-          },
+          }
         ),
       ],
       child: Consumer<ThemeProvider>(
@@ -100,17 +77,15 @@ class MyApp extends StatelessWidget {
           return MaterialApp(
             navigatorKey: navigatorKey,
             navigatorObservers: [RouteObserver()],
-            title: 'Teacher App',
+            title: Config().appName,
             themeMode: themeProvider.themeMode,
             theme: materialTheme.light(),
             darkTheme: materialTheme.dark(),
             initialRoute: '/login',
             routes: {
               ...teacherRoutes,
-              '/forgot-password': (context) => const ForgotPasswordScreen(),
               '/about': (context) => const AboutScreen(),
-              '/notification': (context) => const NotificationScreen(),
-              '/change-password': (context) => const ChangePasswordScreen(),
+              '/forgot-pin': (context) => const ForgotPinScreen(),
             },
           );
         },

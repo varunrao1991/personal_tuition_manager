@@ -1,119 +1,105 @@
-import 'dart:convert';
-import 'dart:developer';
-import 'package:http/http.dart' as http;
+import 'package:sqflite/sqflite.dart';
 import '../../models/attendance.dart';
-import '../../config/app_config.dart';
-import '../../utils/response_to_error.dart';
+import '../../models/owned_by.dart';
+import '../../helpers/database_helper.dart';
 
 class AttendanceService {
-  String apiUrl = Config().apiUrl;
-  final http.Client _client;
+  Future<void> deleteAttendance({
+    required DateTime attendanceDate,
+    required int studentId,
+  }) async {
+    final db = await DatabaseHelper.instance.database;
 
-  AttendanceService(this._client);
+    await db.delete(
+      DatabaseHelper.attendanceTable,
+      where: 'attendanceDate = ? AND studentId = ?',
+      whereArgs: [attendanceDate.toIso8601String(), studentId],
+    );
+  }
 
-  Future<List<Attendance>> getAttendances(
-      {required String accessToken,
-      DateTime? startDate,
-      DateTime? endDate,
-      bool myAttendance = false}) async {
-    Map<String, String> queryParams = {};
+  Future<List<Attendance>> getAllAttendances({
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    final db = await DatabaseHelper.instance.database;
+
+    String? where;
+    List<String>? whereArgs;
 
     if (startDate != null && endDate != null) {
-      queryParams['startDate'] = startDate.toIso8601String().split('T').first;
-      queryParams['endDate'] = endDate.toIso8601String().split('T').first;
+      where = 'A.attendanceDate BETWEEN ? AND ?';
+      whereArgs = [
+        startDate.toIso8601String(),
+        endDate.toIso8601String(),
+      ];
     }
 
-    Uri uri = Uri.parse(
-            '$apiUrl/api/attendances${myAttendance ? '/my_attendances' : ''}')
-        .replace(queryParameters: queryParams);
+    final result = await db.rawQuery('''
+    SELECT A.attendanceDate, U.id, U.name
+    FROM ${DatabaseHelper.attendanceTable} A
+    JOIN ${DatabaseHelper.userTable} U ON A.studentId = U.id
+    ${where != null ? 'WHERE $where' : ''}
+  ''', whereArgs);
 
-    final response = await _client.get(uri, headers: {
-      'Authorization': 'Bearer $accessToken',
-      'Content-Type': 'application/json',
-    });
+    return result.map((row) {
+      return Attendance(
+        attendanceDate: DateTime.parse(row['attendanceDate'] as String),
+        ownedBy: OwnedBy(id: row['id'] as int, name: row['name'] as String),
+      );
+    }).toList();
+  }
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final attendances = (data as List)
-          .map((attendanceJson) => Attendance.fromJson(attendanceJson))
-          .toList();
+  Future<void> addAttendance({
+    required DateTime attendanceDate,
+    required int studentId,
+  }) async {
+    final db = await DatabaseHelper.instance.database;
 
-      return attendances;
-    } else {
-      throw responseToError(response.body);
-    }
+    await db.insert(
+      DatabaseHelper.attendanceTable,
+      {
+        'attendanceDate': attendanceDate.toIso8601String(),
+        'studentId': studentId,
+      },
+      conflictAlgorithm: ConflictAlgorithm.ignore,
+    );
   }
 
   Future<List<DateTime>> getAttendancesForStudent({
-    required String accessToken,
     required int studentId,
     required DateTime startDate,
     required DateTime endDate,
   }) async {
-    Map<String, String> queryParams = {};
+    final db = await DatabaseHelper.instance.database;
 
-    queryParams['studentId'] = studentId.toString();
-    queryParams['startDate'] = startDate.toIso8601String();
-    queryParams['endDate'] = endDate.toIso8601String();
-
-    Uri uri = Uri.parse('$apiUrl/api/attendances/attendances_for_student')
-        .replace(queryParameters: queryParams);
-
-    final response = await _client.get(uri, headers: {
-      'Authorization': 'Bearer $accessToken',
-      'Content-Type': 'application/json',
-    });
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final attendances = (data as List)
-          .map((attendanceJson) =>
-              DateTime.parse(attendanceJson['attendanceDate']))
-          .toList();
-
-      return attendances;
-    } else {
-      throw responseToError(response.body);
-    }
-  }
-
-  Future<void> addAttendance(
-      String accessToken, DateTime attendanceDate, int studentId) async {
-    String formattedDate = attendanceDate.toIso8601String();
-
-    final response = await _client.post(
-      Uri.parse(
-          '$apiUrl/api/attendances?studentId=$studentId&attendanceDate=$formattedDate'),
-      headers: {'Authorization': 'Bearer $accessToken'},
+    final result = await db.query(
+      DatabaseHelper.attendanceTable,
+      columns: ['attendanceDate'],
+      where: 'studentId = ? AND attendanceDate BETWEEN ? AND ?',
+      whereArgs: [
+        studentId,
+        startDate.toIso8601String(),
+        endDate.toIso8601String(),
+      ],
     );
 
-    if (response.statusCode != 201) {
-      throw responseToError(response.body);
-    } else {
-      log('Attendance successfully created.');
-    }
+    return result
+        .map((row) => DateTime.parse(row['attendanceDate'] as String))
+        .toList();
   }
 
-  Future<void> deleteAttendance({
-    required String accessToken,
-    required int studentId,
+  Future<bool> attendanceExists({
     required DateTime attendanceDate,
+    required int studentId,
   }) async {
-    String formattedDate = attendanceDate.toIso8601String();
+    final db = await DatabaseHelper.instance.database;
 
-    final response = await _client.delete(
-      Uri.parse(
-          '$apiUrl/api/attendances?studentId=$studentId&attendanceDate=$formattedDate'),
-      headers: {
-        'Authorization': 'Bearer $accessToken',
-        'Content-Type': 'application/json',
-      },
+    final result = await db.query(
+      DatabaseHelper.attendanceTable,
+      where: 'attendanceDate = ? AND studentId = ?',
+      whereArgs: [attendanceDate.toIso8601String(), studentId],
     );
 
-    if (response.statusCode != 200) {
-      throw responseToError(response.body);
-    } else {
-      log('Attendance successfully deleted.');
-    }
+    return result.isNotEmpty;
   }
 }

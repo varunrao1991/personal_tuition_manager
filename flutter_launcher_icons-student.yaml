@@ -1,5 +1,0 @@
-flutter_icons:    
-  android: true
-  ios: true    
-  image_path: "assets/icon/student/app_icon.png"
-  remove_alpha_ios: true

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:padmayoga/services/teacher/course_service.dart';
 import '../../../models/fetch_payment.dart';
 import '../../../utils/time_ago.dart';
 import '../../../widgets/custom_swipe_card.dart';
@@ -16,15 +17,15 @@ class PaymentCard extends StatelessWidget {
     required this.onDelete,
   });
 
-  Color _getColorBasedOnStatus(int courseStatus) {
+  Color _getColorBasedOnStatus(CourseStatus courseStatus) {
     switch (courseStatus) {
-      case 0:
+      case CourseStatus.noCourse:
         return Colors.green;
-      case 1:
+      case CourseStatus.notStarted:
         return Colors.yellow;
-      case 2:
+      case CourseStatus.started:
         return Colors.red;
-      case 3:
+      case CourseStatus.closed:
         return Colors.grey;
       default:
         return Colors.black;
