@@ -12,6 +12,7 @@ class ErrorCodes {
   static const String pinMismatch = "PIN_MISMATCH";
   static const String securityNotSet = "SECURITY_NOT_SET";
   static const String securityAnswerIncorrect = "SECURITY_ANSWER_INCORRECT";
+  static const String fillAll = "FILL_ALL";
   static const String conflict = 'CONFLICT';
   static const String unknownError = 'UNKNOWN_ERROR';
   static const String internalServerError = 'INTERNAL_SERVER_ERROR';

@@ -18,14 +18,13 @@ android {
     ndkVersion = localProperties.getProperty('flutter.ndkVersion', '21.4.7075529')
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
-
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
+        jvmTarget = '1.8'
     }
-
+    
     defaultConfig {
         applicationId = 'com.padma.yoglog'
         minSdk = flutterMinSdkVersion
