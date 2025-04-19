@@ -14,7 +14,7 @@ class StudentProvider with ChangeNotifier {
   List<Student> _students = [];
   int _currentPage = 1;
   int _totalPages = 1;
-  bool _anyUserExists = false;
+  bool _anyUserExists = true;
 
   List<Student> get students => _students;
   bool get isLoading => _isLoading;
@@ -82,8 +82,7 @@ class StudentProvider with ChangeNotifier {
         studentUpdate: studentUpdate,
       );
       await resetAndFetch();
-      bool userExists = await _studentService.anyUserExists();
-      _anyUserExists = userExists;
+      _anyUserExists = await _studentService.anyUserExists();
     } finally {
       _setLoading(false);
     }
@@ -110,17 +109,6 @@ class StudentProvider with ChangeNotifier {
         studentId: studentId,
       );
       await resetAndFetch();
-      bool userExists = await _studentService.anyUserExists();
-      _anyUserExists = userExists;
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  Future<void> anyStudentExists() async {
-    _setLoading(true);
-
-    try {
       bool userExists = await _studentService.anyUserExists();
       _anyUserExists = userExists;
     } finally {

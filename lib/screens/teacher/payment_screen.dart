@@ -171,7 +171,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       ),
       floatingActionButton: CustomFAB(
         isEnabled:
-            Provider.of<StudentProvider>(context, listen: false).anyUserExists,
+            Provider.of<StudentProvider>(context, listen: true).anyUserExists,
         onPressed: () {
           showCustomModalBottomSheet(
             context: context,
