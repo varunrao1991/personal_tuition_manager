@@ -3,13 +3,15 @@ pipeline {
 
     environment {
         // Set other required environment variables, but let Jenkins handle the BUILD_NUMBER automatically
-        FLUTTER_HOME = "/opt/flutter"  // Path to Flutter SDK
-        PATH = "${env.PATH}:${env.FLUTTER_HOME}/bin"
         APP_NAME = "TeacherApp"
         VERSION_NAME = "1.0.${BUILD_NUMBER}"
         ENVIRONMENT = "production"
         BUILD_BASE_DIR = "build"
         DEBUG_INFO_DIR = "debug_info"
+
+        KEY_ALIAS = credentials('KEY_ALIAS')        // Jenkins stored key alias
+        KEY_PASSWORD = credentials('KEY_PASSWORD')  // Jenkins stored key password
+        STORE_PASSWORD = credentials('STORE_PASSWORD') // Jenkins stored store password
     }
     stages {
         stage('Checkout Code') {
@@ -22,16 +24,11 @@ pipeline {
         stage('Set Up Keystore Folder') {
             steps {
                 script {
-                    // Ensure the keystore folder exists, or use default path
-                    if (env.KEYSTORE_FOLDER) {
-                        echo "Using provided KEYSTORE_FOLDER: ${env.KEYSTORE_FOLDER}"
-                    } else {
-                        env.KEYSTORE_FOLDER = "${env.HOME}/keystores"  // Default Linux path
-                    }
-                    // Verify the keystore folder exists
-                    if (!fileExists(env.KEYSTORE_FOLDER)) {
-                        error "ERROR: Keystore folder not found: ${env.KEYSTORE_FOLDER}"
-                    }
+                    // Use the 'build' folder to store the keystore file
+                    env.KEYSTORE_FOLDER = "${env.WORKSPACE}/build/keystores"  // Set to the build folder inside workspace
+
+                    // Ensure the keystore folder exists
+                    sh "mkdir -p ${env.KEYSTORE_FOLDER}"
                     echo "Keystore folder set to: ${env.KEYSTORE_FOLDER}"
                 }
             }
@@ -68,6 +65,18 @@ pipeline {
         stage('Verify Env File') {
             steps {
                 sh 'cat .env.production'
+            }
+        }
+
+        stage('Prepare Keystore File') {
+            steps {
+                withCredentials([file(credentialsId: 'KEYSTORE_FILE', variable: 'KEYSTORE_FILE_PATH')]) {
+                    sh '''
+                        mkdir -p "${KEYSTORE_FOLDER}"
+                        cp "$KEYSTORE_FILE_PATH" "${KEYSTORE_FOLDER}/padmayoga_release_key.jks"
+                        echo "Keystore file placed at: ${KEYSTORE_FOLDER}/padmayoga_release_key.jks"
+                    '''
+                }
             }
         }
 

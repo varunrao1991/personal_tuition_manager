@@ -38,12 +38,23 @@ android {
         release {
             def keystoreProperties = new Properties()
             def keystorePropertiesFile = rootProject.file('key.properties')
+
             if (keystorePropertiesFile.exists()) {
                 keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+                println "Using keystore from key.properties"
+            } else {
+                println "key.properties not found. Using environment variables."
+                keystoreProperties['keyAlias'] = System.getenv("KEY_ALIAS")
+                keystoreProperties['keyPassword'] = System.getenv("KEY_PASSWORD")
+                keystoreProperties['storePassword'] = System.getenv("STORE_PASSWORD")
+                keystoreProperties['storeFile'] = "padmayoga_release_key.jks"
             }
+
+            def keystoreFilePath = file("${System.getenv('KEYSTORE_FOLDER')}/${keystoreProperties['storeFile']}")
+
             keyAlias keystoreProperties['keyAlias']
             keyPassword keystoreProperties['keyPassword']
-            storeFile file(keystoreProperties['storeFile'].replace('%KEYSTORE_FOLDER%', System.getenv('KEYSTORE_FOLDER') ?: ''))
+            storeFile keystoreFilePath
             storePassword keystoreProperties['storePassword']
         }
     }
