@@ -96,7 +96,8 @@ pipeline {
             steps {
                 dir('android') {
                     // Run bundle install to install gems from Gemfile
-                    sh 'bundle install'
+                    sh 'gem install bundler'  // Ensure Bundler is installed
+                    sh 'bundle install'  // Install the dependencies specified in Gemfile
                 }
             }
         }
