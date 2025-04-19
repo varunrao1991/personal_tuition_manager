@@ -3,13 +3,14 @@ pipeline {
 
     environment {
         // Set other required environment variables, but let Jenkins handle the BUILD_NUMBER automatically
+        FLUTTER_HOME = "/opt/flutter"  // Path to Flutter SDK
+        PATH = "${env.PATH}:${env.FLUTTER_HOME}/bin"
         APP_NAME = "TeacherApp"
-        VERSION_NAME = "1.0.${BUILD_NUMBER}"  // Jenkins's automatic build number
-        ENVIRONMENT = "production"  // Set environment to production, can be changed as needed
+        VERSION_NAME = "1.0.${BUILD_NUMBER}"
+        ENVIRONMENT = "production"
         BUILD_BASE_DIR = "build"
         DEBUG_INFO_DIR = "debug_info"
     }
-
     stages {
         stage('Checkout Code') {
             steps {
@@ -50,6 +51,23 @@ pipeline {
         stage('Flutter Version') {
             steps {
                 sh 'flutter --version'
+            }
+        }
+        
+                stage('Generate Env File') {
+            steps {
+                sh '''
+                cat > .env.production <<EOF
+                DB_NAME=app.db
+                APP_NAME="Teacher App"
+                EOF
+                '''
+            }
+        }
+
+        stage('Verify Env File') {
+            steps {
+                sh 'cat .env.production'
             }
         }
         
