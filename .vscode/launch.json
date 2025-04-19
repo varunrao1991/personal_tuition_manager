@@ -10,6 +10,15 @@
       "args": [
         "--dart-define=ENV=development",
       ]
+    },
+    {
+      "name": "Rel Teacher",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "release",
+      "program": "lib/main.dart",
+      "args": [
+        "--dart-define=ENV=release"      ]
     }
   ]
 }

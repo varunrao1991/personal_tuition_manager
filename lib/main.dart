@@ -6,19 +6,20 @@ import 'utils/shared_pref.dart';
 import 'app.dart' as app;
 
 Future<void> main() async {
+  // Ensure Flutter bindings are initialized before running any other code
   WidgetsFlutterBinding.ensureInitialized();
 
-  const String environment =
-      String.fromEnvironment('ENV', defaultValue: 'development');
-
   try {
-    await dotenv.load(fileName: ".env.$environment");
+    // Load the correct .env file based on the environment
+    await dotenv.load(fileName: ".env");
     log('Environment variables loaded: ${dotenv.env}');
   } catch (e) {
     log('Error loading .env file: $e');
   }
+
+  // Initialize shared preferences
   await sharedPrefs.init();
 
-    WidgetsFlutterBinding.ensureInitialized();
-    runApp(const app.MyApp());
+  // Run the app
+  runApp(const app.MyApp());
 }

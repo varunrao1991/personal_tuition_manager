@@ -45,6 +45,5 @@ flutter_native_splash:
 flutter:
   uses-material-design: true
   assets:
-    - .env.development
-    - .env.production
+    - .env
     - assets/icon/app_icon.png
