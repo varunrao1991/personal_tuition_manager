@@ -18,7 +18,6 @@ buildlog/
 # =====================
 # Environment
 # =====================
-.env*
 !.env.example
 key.properties
 *.jks
@@ -27,7 +26,6 @@ android/key.properties
 android/local.properties
 android/fastlane/metadata
 build/
-.env.*
 .bundle/
 vendor/
 
