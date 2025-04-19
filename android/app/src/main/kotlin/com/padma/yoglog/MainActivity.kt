@@ -1,4 +1,4 @@
-package com.padma.padmayoga
+package com.padma.yoglog
 
 import io.flutter.embedding.android.FlutterActivity
 
