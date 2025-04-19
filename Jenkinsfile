@@ -95,13 +95,20 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 dir('android') {
-                    // Run bundle install to install gems from Gemfile
-                    sh 'ruby --version'
-                    sh 'gem --version'
-                    sh 'bundle check || bundle install'
+                    sh '''
+                        echo "Ruby version: $(ruby --version)"
+                        echo "Gem version: $(gem --version)"
+
+                        # Configure bundler to install gems locally inside android/vendor/bundle
+                        bundle config set --local path 'vendor/bundle'
+
+                        # Install gems if missing
+                        bundle check || bundle install --jobs=4
+                    '''
                 }
             }
         }
+
 
         stage('Build App Bundle') {
             steps {
