@@ -1,0 +1,3 @@
+default_platform(:android)
+
+package_name("com.padma.yoglog")

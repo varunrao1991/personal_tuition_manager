@@ -136,6 +136,19 @@ pipeline {
                 }
             }
         }
+        
+        stage('Upload to Play Store') {
+            steps {
+                withCredentials([file(credentialsId: 'PLAY_STORE_JSON_KEY', variable: 'PLAY_STORE_JSON_PATH')]) {
+                    dir('android') {
+                        sh """
+                            bundle exec fastlane run validate_play_store_json_key json_key:"$PLAY_STORE_JSON_PATH"
+                            bundle exec fastlane deploy json_key:"$PLAY_STORE_JSON_PATH"
+                        """
+                    }
+                }
+            }
+        }
     }
 
     post {
