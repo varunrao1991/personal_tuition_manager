@@ -13,7 +13,7 @@ def flutterMinSdkVersion = localProperties.getProperty('flutter.minSdkVersion', 
 def flutterCompileSdkVersion = localProperties.getProperty('flutter.compileSdk', '34').toInteger()
 
 android {
-    namespace = 'com.padma.yoglogoffline'
+    namespace = 'com.padma.yoglog'
     compileSdk = flutterCompileSdkVersion
     ndkVersion = localProperties.getProperty('flutter.ndkVersion', '21.4.7075529')
 
@@ -27,7 +27,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = 'com.padma.yoglogoffline'
+        applicationId = 'com.padma.yoglog'
         minSdk = flutterMinSdkVersion
         targetSdk = flutterCompileSdkVersion
         versionCode = flutterVersionCode
