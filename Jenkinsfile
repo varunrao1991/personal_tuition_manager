@@ -13,7 +13,8 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                git url: 'git@github.com:varunrao1991/padmayoga_offline_app.git', branch: 'main'
+                git url: 'git@github.com:varunrao1991/padmayoga_offline_app.git', 
+                branch: 'main'
             }
         }
 
@@ -46,6 +47,12 @@ pipeline {
             }
         }
 
+        stage('Flutter Version') {
+            steps {
+                sh 'flutter --version'
+            }
+        }
+        
         stage('Build App Bundle') {
             steps {
                 script {
