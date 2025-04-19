@@ -54,7 +54,7 @@ pipeline {
             }
         }
         
-                stage('Generate Env File') {
+        stage('Generate Env File') {
             steps {
                 sh '''
                 cat > .env.production <<EOF
@@ -70,7 +70,7 @@ pipeline {
                 sh 'cat .env.production'
             }
         }
-        
+
         stage('Build App Bundle') {
             steps {
                 script {
@@ -83,7 +83,7 @@ pipeline {
                             --dart-define=ENV=${env.ENVIRONMENT} \
                             --dart-define=APP_NAME=${env.APP_NAME} \
                             --build-name="${env.VERSION_NAME}" \
-                            --build-number=${BUILD_NUMBER}  // Jenkins build number
+                            --build-number=${BUILD_NUMBER}
                     """
                     echo "Executing build command: ${buildCommand}"
                     sh buildCommand
