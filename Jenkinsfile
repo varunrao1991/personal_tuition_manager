@@ -12,12 +12,14 @@ pipeline {
         KEY_ALIAS = credentials('KEY_ALIAS')        // Jenkins stored key alias
         KEY_PASSWORD = credentials('KEY_PASSWORD')  // Jenkins stored key password
         STORE_PASSWORD = credentials('STORE_PASSWORD') // Jenkins stored store password
+        PLAY_STORE_JSON_KEY = credentials('PLAY_STORE_JSON_KEY')  // The JSON key for Play Store
     }
+
     stages {
         stage('Checkout Code') {
             steps {
                 git url: 'git@github.com:varunrao1991/padmayoga_offline_app.git', 
-                branch: 'main'
+                    branch: 'main'
             }
         }
 
@@ -90,6 +92,15 @@ pipeline {
             }
         }
 
+        stage('Install Dependencies') {
+            steps {
+                dir('android') {
+                    // Run bundle install to install gems from Gemfile
+                    sh 'bundle install'
+                }
+            }
+        }
+
         stage('Build App Bundle') {
             steps {
                 script {
@@ -141,9 +152,10 @@ pipeline {
             steps {
                 withCredentials([file(credentialsId: 'PLAY_STORE_JSON_KEY', variable: 'PLAY_STORE_JSON_PATH')]) {
                     dir('android') {
+                        // Run fastlane commands using bundle exec, passing the JSON key file as an argument
                         sh """
-                            bundle exec fastlane run validate_play_store_json_key json_key:"$PLAY_STORE_JSON_PATH"
-                            bundle exec fastlane deploy json_key:"$PLAY_STORE_JSON_PATH"
+                            bundle exec fastlane run validate_play_store_json_key json_key:$PLAY_STORE_JSON_PATH
+                            bundle exec fastlane deploy json_key:$PLAY_STORE_JSON_PATH
                         """
                     }
                 }
