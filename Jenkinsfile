@@ -98,7 +98,7 @@ pipeline {
                     // Run bundle install to install gems from Gemfile
                     sh 'ruby --version'
                     sh 'gem --version'
-                    sh 'bundle install'  // Install the dependencies specified in Gemfile
+                    sh 'bundle check || bundle install'
                 }
             }
         }
