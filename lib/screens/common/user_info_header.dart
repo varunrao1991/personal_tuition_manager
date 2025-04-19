@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:padmayoga/config/app_config.dart';
+
+import '../../config/app_config.dart';
 
 class UserInfoHeader extends StatelessWidget {
   const UserInfoHeader({super.key});

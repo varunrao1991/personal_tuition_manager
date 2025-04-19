@@ -1,45 +1,101 @@
-# Miscellaneous
+# =====================
+# General
+# =====================
 *.class
 *.log
 *.pyc
 *.swp
+*.lock
+*.tmp
+*.temp
 .DS_Store
-.atom/
-.buildlog/
+debug_info/
+migrate_working_dir/
+buildlog/
 .history
 .svn/
-migrate_working_dir/
-android/
-debug_info/
 
-# IntelliJ related
+# =====================
+# Environment
+# =====================
+.env*
+!.env.example
+key.properties
+
+# =====================
+# Flutter / Dart / Pub
+# =====================
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+.flutter-plugins
+.flutter-plugins-dependencies
+.metadata
+/build/
+**/build/
+**/doc/api/
+generated_plugin_registrant.dart
+
+# =====================
+# Android
+# =====================
+# Remove this if you want to track android native code
+# Do not ignore the whole android folder!
+android/.gradle/
+android/app/build/
+android/local.properties
+android/key.properties
+android/.idea/
+android/.kotlin/
+android/.settings/
+android/*.iml
+
+# Obfuscation & symbolication
+app.*.symbols
+app.*.map.json
+
+# Android Studio output folders
+/android/app/debug/
+android/app/profile/
+android/app/release/
+
+# =====================
+# iOS
+# =====================
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/App.framework
+ios/Flutter/engine/
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+ios/Pods/
+ios/.symlinks/
+ios/Runner.xcworkspace/
+ios/build/
+ios/.flutter-plugins
+ios/.flutter-plugins-dependencies
+**/ios/Flutter/.last_build_id
+
+# =====================
+# VSCode / IntelliJ
+# =====================
+.vscode/
+.idea/
 *.iml
 *.ipr
 *.iws
-.idea/
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
+# =====================
+# macOS
+# =====================
+.DS_Store
 
-# Flutter/Dart/Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
-.dart_tool/
-.flutter-plugins
-.flutter-plugins-dependencies
-.pub-cache/
-.pub/
-/build/
-
-# Symbolication related
-app.*.symbols
-
-# Obfuscation related
-app.*.map.json
-
-# Android Studio will place build artifacts here
-/android/app/debug
-/android/app/profile
-/android/app/release
+# =====================
+# Optional: Fastlane, Firebase, etc.
+# =====================
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+firebase_app_id_file.json

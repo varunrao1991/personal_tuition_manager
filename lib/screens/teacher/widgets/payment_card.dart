@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:padmayoga/services/teacher/course_service.dart';
+import '../../../services/teacher/course_service.dart';
 import '../../../models/fetch_payment.dart';
 import '../../../utils/time_ago.dart';
 import '../../../widgets/custom_swipe_card.dart';

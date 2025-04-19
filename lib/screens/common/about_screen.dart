@@ -46,7 +46,7 @@ class AboutScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Welcome to Padmayoga',
+          Text('Welcome to Padma',
               style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 10),
           Text(
@@ -71,7 +71,7 @@ class AboutScreen extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            'Padmayoga is dedicated to empowering yoga teachers by offering a simple, intuitive platform '
+            'Padma is dedicated to empowering yoga teachers by offering a simple, intuitive platform '
             'to manage classes, track attendance, and ensure smooth payments. Our mission is to let '
             'teachers focus on what they love most—teaching—while we handle the logistics.',
             style: Theme.of(context).textTheme.bodyMedium,
@@ -148,7 +148,7 @@ class AboutScreen extends StatelessWidget {
       padding: const EdgeInsets.all(AppPaddings.smallPadding),
       child: Center(
         child: Text(
-          '© 2024 Padmayoga - All Rights Reserved',
+          '© 2024 Padma - All Rights Reserved',
           style: Theme.of(context).textTheme.bodySmall,
         ),
       ),

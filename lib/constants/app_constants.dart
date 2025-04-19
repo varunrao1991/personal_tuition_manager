@@ -34,12 +34,6 @@ class ButtonSizes {
   static const double largePadding = 20.0;
 }
 
-class Constants {
-  static const String defaultNotificationChannelId = 'padma_yoga_channel';
-  static const String defaultNotificationChannelName = 'Padmayoga';
-  static const String defaultNotificationChannelDescription = "Nothing";
-}
-
 class RegularExpressions {
   static final passwordRegex =
       RegExp(r'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[!@#\$&*~]).{8,}$');

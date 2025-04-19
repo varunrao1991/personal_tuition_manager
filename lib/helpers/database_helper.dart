@@ -1,7 +1,8 @@
-import 'package:padmayoga/config/app_config.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
+
+import '../config/app_config.dart';
 
 class DatabaseHelper {
   final _databaseName = Config().appDb;

@@ -9,11 +9,6 @@
       "program": "lib/main.dart",
       "args": [
         "--dart-define=ENV=development",
-        "--dart-define=USER_TYPE=teacher"
-      ],
-      "toolArgs": [
-        "--flavor",
-        "teacher"
       ]
     }
   ]

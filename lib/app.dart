@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:padmayoga/config/app_config.dart';
-import 'package:padmayoga/providers/auth_provider.dart';
-import 'package:padmayoga/providers/theme_provider.dart';
-import 'package:padmayoga/screens/common/forgot_pin_screen.dart';
-import 'package:padmayoga/services/auth_service.dart';
+import 'config/app_config.dart';
+import 'providers/auth_provider.dart';
+import 'providers/theme_provider.dart';
+import 'screens/common/forgot_pin_screen.dart';
+import 'services/auth_service.dart';
 import 'package:provider/provider.dart';
 import 'providers/teacher/attendance_provider.dart';
 import 'providers/teacher/holiday_provider.dart';

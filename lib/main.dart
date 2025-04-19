@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'utils/shared_pref.dart';
 
-import 'teacher_app.dart' as teacher;
+import 'app.dart' as app;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,5 +20,5 @@ Future<void> main() async {
   await sharedPrefs.init();
 
     WidgetsFlutterBinding.ensureInitialized();
-    runApp(const teacher.MyApp());
+    runApp(const app.MyApp());
 }

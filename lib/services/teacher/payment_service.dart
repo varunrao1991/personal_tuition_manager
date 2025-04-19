@@ -1,6 +1,6 @@
 import 'dart:developer';
-import 'package:padmayoga/models/owned_by.dart';
 import 'package:sqflite/sqflite.dart';
+import '../../models/owned_by.dart';
 import '../../models/create_payment.dart';
 import '../../models/fetch_payment.dart';
 import '../../helpers/database_helper.dart';

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:padmayoga/providers/teacher/student_provider.dart';
 import 'package:provider/provider.dart';
+import '../../providers/teacher/student_provider.dart';
 import '../../widgets/custom_fab.dart';
 import '../../constants/app_constants.dart';
 import '../../models/create_payment.dart';
