@@ -71,14 +71,25 @@ pipeline {
         stage('Prepare Keystore File') {
             steps {
                 withCredentials([file(credentialsId: 'KEYSTORE_FILE', variable: 'KEYSTORE_FILE_PATH')]) {
-                    sh '''
-                        mkdir -p "${KEYSTORE_FOLDER}"
-                        cp "$KEYSTORE_FILE_PATH" "${KEYSTORE_FOLDER}/padmayoga_release_key.jks"
-                        echo "Keystore file placed at: ${KEYSTORE_FOLDER}/padmayoga_release_key.jks"
-                    '''
+                    script {
+                        // Only create the directory if it doesn't already exist
+                        if (!fileExists("${KEYSTORE_FOLDER}")) {
+                            sh "mkdir -p ${KEYSTORE_FOLDER}"
+                            echo "Keystore folder created at: ${KEYSTORE_FOLDER}"
+                        } else {
+                            echo "Keystore folder already exists at: ${KEYSTORE_FOLDER}"
+                        }
+
+                        // Copy the keystore file to the folder
+                        sh '''
+                            cp "$KEYSTORE_FILE_PATH" "${KEYSTORE_FOLDER}/padmayoga_release_key.jks"
+                            echo "Keystore file placed at: ${KEYSTORE_FOLDER}/padmayoga_release_key.jks"
+                        '''
+                    }
                 }
             }
         }
+
 
         stage('Build App Bundle') {
             steps {
