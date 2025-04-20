@@ -18,18 +18,16 @@ class CustomFAB extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color? backgroundColor = isEnabled
-        ? Theme.of(context).floatingActionButtonTheme.foregroundColor
-        : Theme.of(context)
-            .floatingActionButtonTheme
-            .foregroundColor!
-            .withOpacity(0.5);
-
     return FloatingActionButton(
       heroTag: heroTag,
       onPressed: isEnabled ? onPressed : null,
+      backgroundColor: isEnabled
+          ? Theme.of(context).floatingActionButtonTheme.backgroundColor
+          : Colors.grey[300],
+      foregroundColor: isEnabled
+          ? Theme.of(context).floatingActionButtonTheme.foregroundColor
+          : Colors.grey[600],
       tooltip: tooltip,
-      foregroundColor: backgroundColor,
       child: Icon(icon),
     );
   }

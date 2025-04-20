@@ -35,6 +35,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       final weekDayProvider =
           Provider.of<WeekdayProvider>(context, listen: false);
       weekDayProvider.fetchWeekdays();
+      Provider.of<StudentProvider>(context, listen: false).loadStudentsExists();
     });
   }
 
@@ -107,9 +108,13 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                   ),
                   calendarFormat: CalendarFormat.month,
                   calendarStyle: CalendarStyle(
-                    todayDecoration: const BoxDecoration(
+                    todayDecoration: BoxDecoration(
                       color: Colors.transparent,
                       shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.primary,
+                        width: 2,
+                      ),
                     ),
                     todayTextStyle: TextStyle(
                       color: Theme.of(context).colorScheme.primary,
@@ -127,16 +132,38 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                       color: Colors.transparent,
                     ),
                     defaultTextStyle: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface),
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
                     weekendDecoration: const BoxDecoration(
                       shape: BoxShape.circle,
                       color: Colors.transparent,
                     ),
                     weekendTextStyle: TextStyle(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withOpacity(0.7)),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.7),
+                    ),
+                    outsideDecoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.transparent,
+                    ),
+                    outsideTextStyle: TextStyle(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.3),
+                    ),
+                    holidayDecoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.2),
+                    ),
+                    holidayTextStyle: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
                   ),
                   selectedDayPredicate: (day) => isSameDay(_selectedDate, day),
                   onDaySelected: _onDaySelected,
@@ -213,45 +240,76 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
             (attendance) => isSameDay(attendance.attendanceDate, dateTrimmed))
         .length;
 
+    // Determine the background color based on the day's status
+    Color backgroundColor;
+    if (isSelected) {
+      backgroundColor = Colors.redAccent;
+    } else if (isHoliday || !isWeekday) {
+      backgroundColor =
+          Theme.of(context).colorScheme.onSurface.withOpacity(0.2);
+    } else {
+      backgroundColor = Colors.transparent;
+    }
+
+    // Determine the text color based on the day's status
+    Color textColor;
+    if (isSelected) {
+      textColor = Colors.white;
+    } else if (isToday) {
+      textColor = Theme.of(context).colorScheme.primary;
+    } else if (isHoliday || !isWeekday) {
+      textColor = Theme.of(context).colorScheme.onSurface.withOpacity(0.7);
+    } else {
+      textColor = Theme.of(context).colorScheme.onSurface;
+    }
+
     return Container(
+      margin: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: isSelected
-            ? Theme.of(context).colorScheme.secondary
-            : (isHoliday || !isWeekday
-                ? Theme.of(context).colorScheme.onSurface.withOpacity(0.3)
-                : Colors.transparent),
+        color: backgroundColor,
         shape: BoxShape.circle,
+        border: isToday
+            ? Border.all(
+                color: Theme.of(context).colorScheme.primary,
+                width: 2,
+              )
+            : null,
       ),
       child: Stack(
-        alignment: Alignment.bottomRight,
+        alignment: Alignment.center,
         children: [
           Center(
             child: Text(
               '${date.day}',
               style: TextStyle(
-                color: isSelected
-                    ? Colors.white
-                    : Theme.of(context).colorScheme.onSurface,
-                fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
+                color: textColor,
+                fontWeight:
+                    isToday || isSelected ? FontWeight.bold : FontWeight.normal,
               ),
             ),
           ),
           if (attendanceCount > 0)
             Positioned(
-              top: 0,
-              right: 0,
+              top: -4,
+              right: -0,
               child: Container(
-                padding: const EdgeInsets.all(AppPaddings.tinyPadding),
+                padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary,
-                  borderRadius: BorderRadius.circular(12),
+                    color: Colors.green[600],
+                    shape: BoxShape.circle,
                 ),
-                child: Text(
-                  '$attendanceCount',
-                  style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
+                constraints: const BoxConstraints(
+                  minWidth: 16,
+                  minHeight: 16,
+                ),
+                child: Center(
+                  child: Text(
+                    '$attendanceCount',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
                 ),
               ),
             ),

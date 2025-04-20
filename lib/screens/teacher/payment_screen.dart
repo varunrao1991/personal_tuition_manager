@@ -40,6 +40,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
     _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchPayments();
+      _loadInitialPayments();
+      Provider.of<StudentProvider>(context, listen: false)
+          .loadStudentsExists();
     });
   }
 
@@ -185,6 +188,15 @@ class _PaymentScreenState extends State<PaymentScreen> {
         icon: Icons.add,
       ),
     );
+  }
+
+  Future<void> _loadInitialPayments() async {
+    try {
+      await Provider.of<MonthlyProvider>(context, listen: false)
+          .fetchPaymentsForMoreMonths();
+    } catch (e) {
+      handleErrors(context, e);
+    }
   }
 
   Widget _buildMonthlyPayments() {

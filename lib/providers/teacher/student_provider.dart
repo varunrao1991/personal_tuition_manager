@@ -88,6 +88,15 @@ class StudentProvider with ChangeNotifier {
     }
   }
 
+  Future<void> loadStudentsExists() async {
+    _setLoading(true);
+    try {
+      _anyUserExists = await _studentService.anyUserExists();
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   Future<void> updateStudent(StudentUpdate studentUpdate) async {
     _setLoading(true);
 
