@@ -152,6 +152,7 @@ pipeline {
                     if (fileExists(originalAab)) {
                         sh "mv ${originalAab} ${renamedAab}"
                         echo "App Bundle renamed to: ${renamedAab}"
+                        env.AAB_FILE_PATH = renamedAab
                     } else {
                         echo "WARNING: App Bundle not found at expected location: ${originalAab}"
                     }

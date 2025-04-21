@@ -1,10 +1,10 @@
 desc "Deploy a new version to the Google Play"
 lane :deploy do
   upload_to_play_store(
-    aab: "../build/app/outputs/bundle/release/TeacherApp-1.0.#{ENV['BUILD_NUMBER']}-production.aab",
+    aab: ENV["AAB_FILE_PATH"],
     json_key: ENV["PLAY_STORE_JSON_PATH"],
     package_name: "com.padma.yoglog",
     track: "internal",
     release_status: "draft"
-  )
+  )  
 end
