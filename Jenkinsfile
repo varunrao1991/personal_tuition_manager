@@ -29,12 +29,16 @@ pipeline {
                 script {
                     def pubspec = readFile('pubspec.yaml')
                     def versionLine = pubspec.readLines().find { it.trim().startsWith('version:') }
-                    def baseVersion = versionLine?.split(':')?.getAt(1)?.trim()?.split('\\+')?.getAt(0) ?: "1.0.0"
+
+                    // Split properly and handle default if missing
+                    def baseVersion = versionLine?.split(':')?.toList()[1]?.trim()?.split('\\+')?.toList()[0] ?: "1.0.0"
+
                     env.VERSION_NAME = "${baseVersion}.${BUILD_NUMBER}"
                     echo "VERSION_NAME set to: ${env.VERSION_NAME}"
                 }
             }
         }
+
 
         stage('Set Up Keystore Folder') {
             steps {
