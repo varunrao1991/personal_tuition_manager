@@ -85,20 +85,30 @@ pipeline {
 
         stage('Prepare Keystore File') {
             steps {
-                withCredentials([file(credentialsId: 'KEYSTORE_FILE', variable: 'KEYSTORE_FILE_PATH')]) {
-                    script {
-                        if (!fileExists("${KEYSTORE_FOLDER}")) {
-                            sh "mkdir -p ${KEYSTORE_FOLDER}"
-                            echo "Keystore folder created at: ${KEYSTORE_FOLDER}"
+                script {
+                    def keystoreFilePath = "${env.KEYSTORE_FOLDER}/padmayoga_release_key.jks"
+
+                    // Ensure the folder exists
+                    if (!fileExists(env.KEYSTORE_FOLDER)) {
+                        sh "mkdir -p ${env.KEYSTORE_FOLDER}"
+                        echo "Keystore folder created at: ${env.KEYSTORE_FOLDER}"
+                    }
+
+                    // Only copy if the keystore file doesn't already exist
+                    if (!fileExists(keystoreFilePath)) {
+                        withCredentials([file(credentialsId: 'KEYSTORE_FILE', variable: 'KEYSTORE_FILE_PATH')]) {
+                            sh """
+                                cp "$KEYSTORE_FILE_PATH" "${keystoreFilePath}"
+                                echo "Keystore file placed at: ${keystoreFilePath}"
+                            """
                         }
-                        sh '''
-                            cp "$KEYSTORE_FILE_PATH" "${KEYSTORE_FOLDER}/padmayoga_release_key.jks"
-                            echo "Keystore file placed at: ${KEYSTORE_FOLDER}/padmayoga_release_key.jks"
-                        '''
+                    } else {
+                        echo "Keystore file already exists at: ${keystoreFilePath}, skipping copy."
                     }
                 }
             }
         }
+
 
         stage('Install Dependencies') {
             steps {
