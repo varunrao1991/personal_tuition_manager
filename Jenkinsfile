@@ -1,35 +1,45 @@
 pipeline {
-    agent any  // Use any available agent to run the pipeline
+    agent any
+
+    parameters {
+        booleanParam(name: 'UPLOAD_TO_PLAYSTORE', defaultValue: false, description: 'Enable to upload the build to Play Store')
+    }
 
     environment {
-        // Set other required environment variables, but let Jenkins handle the BUILD_NUMBER automatically
         APP_NAME = "TeacherApp"
-        VERSION_NAME = "1.0.${BUILD_NUMBER}"
         ENVIRONMENT = "production"
         BUILD_BASE_DIR = "build"
         DEBUG_INFO_DIR = "debug_info"
 
-        KEY_ALIAS = credentials('KEY_ALIAS')        // Jenkins stored key alias
-        KEY_PASSWORD = credentials('KEY_PASSWORD')  // Jenkins stored key password
-        STORE_PASSWORD = credentials('STORE_PASSWORD') // Jenkins stored store password
-        PLAY_STORE_JSON_KEY = credentials('PLAY_STORE_JSON_KEY')  // The JSON key for Play Store
+        KEY_ALIAS = credentials('KEY_ALIAS')
+        KEY_PASSWORD = credentials('KEY_PASSWORD')
+        STORE_PASSWORD = credentials('STORE_PASSWORD')
+        PLAY_STORE_JSON_KEY = credentials('PLAY_STORE_JSON_KEY')
     }
 
     stages {
         stage('Checkout Code') {
             steps {
-                git url: 'git@github.com:varunrao1991/padmayoga_offline_app.git', 
-                    branch: 'main'
+                git url: 'git@github.com:varunrao1991/padmayoga_offline_app.git', branch: 'main'
+            }
+        }
+
+        stage('Extract Version from pubspec.yaml') {
+            steps {
+                script {
+                    def pubspec = readFile('pubspec.yaml')
+                    def versionLine = pubspec.readLines().find { it.trim().startsWith('version:') }
+                    def baseVersion = versionLine?.split(':')?.getAt(1)?.trim()?.split('\\+')?.getAt(0) ?: "1.0.0"
+                    env.VERSION_NAME = "${baseVersion}.${BUILD_NUMBER}"
+                    echo "VERSION_NAME set to: ${env.VERSION_NAME}"
+                }
             }
         }
 
         stage('Set Up Keystore Folder') {
             steps {
                 script {
-                    // Use the 'build' folder to store the keystore file
-                    env.KEYSTORE_FOLDER = "${env.WORKSPACE}/build/keystores"  // Set to the build folder inside workspace
-
-                    // Ensure the keystore folder exists
+                    env.KEYSTORE_FOLDER = "${env.WORKSPACE}/build/keystores"
                     sh "mkdir -p ${env.KEYSTORE_FOLDER}"
                     echo "Keystore folder set to: ${env.KEYSTORE_FOLDER}"
                 }
@@ -39,7 +49,6 @@ pipeline {
         stage('Create Debug Info Directory') {
             steps {
                 script {
-                    // Create the debug info directory
                     def debugInfoPath = "${env.BUILD_BASE_DIR}/${env.DEBUG_INFO_DIR}"
                     sh "mkdir -p ${debugInfoPath}"
                     echo "Debug info directory created at: ${debugInfoPath}"
@@ -52,7 +61,7 @@ pipeline {
                 sh 'flutter --version'
             }
         }
-        
+
         stage('Generate Env File') {
             steps {
                 sh '''
@@ -74,19 +83,14 @@ pipeline {
             steps {
                 withCredentials([file(credentialsId: 'KEYSTORE_FILE', variable: 'KEYSTORE_FILE_PATH')]) {
                     script {
-                        // Only create the directory if it doesn't already exist
                         if (!fileExists("${KEYSTORE_FOLDER}")) {
                             sh "mkdir -p ${KEYSTORE_FOLDER}"
                             echo "Keystore folder created at: ${KEYSTORE_FOLDER}"
-
-                            // Copy the keystore file to the folder
-                            sh '''
-                                cp "$KEYSTORE_FILE_PATH" "${KEYSTORE_FOLDER}/padmayoga_release_key.jks"
-                                echo "Keystore file placed at: ${KEYSTORE_FOLDER}/padmayoga_release_key.jks"
-                            '''
-                        } else {
-                            echo "Keystore folder already exists at: ${KEYSTORE_FOLDER}"
                         }
+                        sh '''
+                            cp "$KEYSTORE_FILE_PATH" "${KEYSTORE_FOLDER}/padmayoga_release_key.jks"
+                            echo "Keystore file placed at: ${KEYSTORE_FOLDER}/padmayoga_release_key.jks"
+                        '''
                     }
                 }
             }
@@ -98,22 +102,16 @@ pipeline {
                     sh '''
                         echo "Ruby version: $(ruby --version)"
                         echo "Gem version: $(gem --version)"
-
-                        # Configure bundler to install gems locally inside android/vendor/bundle
                         bundle config set --local path 'vendor/bundle'
-
-                        # Install gems if missing
                         bundle check || bundle install --jobs=4
                     '''
                 }
             }
         }
 
-
         stage('Build App Bundle') {
             steps {
                 script {
-                    // Run the Flutter build command
                     def buildCommand = """
                         flutter build appbundle \
                             --release \
@@ -133,7 +131,6 @@ pipeline {
         stage('Rename App Bundle') {
             steps {
                 script {
-                    // Rename the app bundle
                     def outputDir = "build/app/outputs/bundle/release"
                     def originalAab = "${outputDir}/app-release.aab"
                     def renamedAab = "${outputDir}/${env.APP_NAME}-${env.VERSION_NAME}-${env.ENVIRONMENT}.aab"
@@ -151,17 +148,18 @@ pipeline {
         stage('Post Build') {
             steps {
                 script {
-                    // Archive the generated `.aab` file as an artifact (optional)
                     archiveArtifacts artifacts: '**/build/app/outputs/bundle/release/*.aab', allowEmptyArchive: true
                 }
             }
         }
-        
+
         stage('Upload to Play Store') {
+            when {
+                expression { return params.UPLOAD_TO_PLAYSTORE }
+            }
             steps {
                 withCredentials([file(credentialsId: 'PLAY_STORE_JSON_KEY', variable: 'PLAY_STORE_JSON_PATH')]) {
                     dir('android') {
-                        // Run fastlane commands using bundle exec, passing the JSON key file as an argument
                         sh """
                             bundle exec fastlane run validate_play_store_json_key json_key:$PLAY_STORE_JSON_PATH
                             bundle exec fastlane deploy json_key:$PLAY_STORE_JSON_PATH
