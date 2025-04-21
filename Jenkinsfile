@@ -142,17 +142,18 @@ pipeline {
             }
         }
 
-        stage('Rename App Bundle') {
+       stage('Rename App Bundle') {
             steps {
                 script {
                     def outputDir = "build/app/outputs/bundle/release"
                     def originalAab = "${outputDir}/app-release.aab"
-                    def renamedAab = "${outputDir}/${env.APP_NAME}-${env.VERSION_NAME}-${env.ENVIRONMENT}.aab"
+                    def renamedAabName = "${env.APP_NAME}-${env.VERSION_NAME}-${env.ENVIRONMENT}.aab"
+                    def renamedAab = "${outputDir}/${renamedAabName}"
 
                     if (fileExists(originalAab)) {
                         sh "mv ${originalAab} ${renamedAab}"
                         echo "App Bundle renamed to: ${renamedAab}"
-                        env.AAB_FILE_PATH = renamedAab
+                        env.AAB_FILE_PATH = "../${outputDir}/${renamedAabName}"
                     } else {
                         echo "WARNING: App Bundle not found at expected location: ${originalAab}"
                     }
