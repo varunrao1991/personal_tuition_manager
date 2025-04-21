@@ -44,7 +44,7 @@ class _WeekdayEditorDialogState extends State<WeekdayEditorDialog> {
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             Text('Select Weekdays',
-                style: Theme.of(context).textTheme.bodyLarge),
+                style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 16.0),
             Text(
               'Note: Changing these selections may affect the ongoing courses end date calculation.',

@@ -114,34 +114,24 @@ class _StudentSelectorState extends State<StudentSelector> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Text('Select Student', style: Theme.of(context).textTheme.bodyLarge),
+          Text('Select Student', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: GenericSearchBar(
-                  controller: _searchController,
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedName = value;
-                    });
-                    _fetchStudents();
-                  },
-                  onClear: () {
-                    setState(() {
-                      _selectedName = null;
-                      _searchController.clear();
-                    });
-                    _fetchStudents();
-                  },
-                ),
-              ),
-              const SizedBox(width: 10),
-              IconButton(
-                icon: const Icon(Icons.filter_alt),
-                onPressed: () => _openSortModal(context),
-              ),
-            ],
+          GenericSearchBar(
+            controller: _searchController,
+            onChanged: (value) {
+              setState(() {
+                _selectedName = value;
+              });
+              _fetchStudents();
+            },
+            onClear: () {
+              setState(() {
+                _selectedName = null;
+                _searchController.clear();
+              });
+              _fetchStudents();
+            },
+            onFilterPressed: () => _openSortModal(context),
           ),
           const SizedBox(height: 16),
           SizedBox(
@@ -202,12 +192,13 @@ class _StudentSelectorState extends State<StudentSelector> {
           });
         },
         isSelected: isSelected,
-        child: Text(
+        child: Center(
+            child: Text(
           student.name,
           textAlign: TextAlign.center,
           style: isSelected
               ? Theme.of(context).textTheme.bodyMedium
               : Theme.of(context).textTheme.bodyMedium,
-        ));
+        )));
   }
 }

@@ -58,7 +58,7 @@ class _EditPaymentWidgetState extends State<EditPaymentWidget> {
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 Text('Edit Payment',
-                    style: Theme.of(context).textTheme.bodyLarge),
+                    style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 20),
                 CustomFormTextField(
                   controller:

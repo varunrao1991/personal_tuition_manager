@@ -41,7 +41,7 @@ class _EditCourseWidgetState extends State<EditCourseWidget> {
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 Text('Edit Course',
-                    style: Theme.of(context).textTheme.bodyLarge),
+                    style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 20),
                 CustomFormTextField(
                   controller: _totalClassesController,

@@ -73,7 +73,7 @@ class _PaymentOwnerSelectorState extends State<PaymentOwnerSelector> {
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 Text('Select Paid Student',
-                    style: Theme.of(context).textTheme.bodyLarge),
+                    style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 20),
                 SizedBox(
                   height: 200,
@@ -137,19 +137,20 @@ class _PaymentOwnerSelectorState extends State<PaymentOwnerSelector> {
     bool isSelected = _selectedPayment?.id == student.id;
 
     return CustomCard(
-      onTap: () {
-        setState(() {
-          _selectedPayment = student;
-        });
-      },
-      isSelected: isSelected,
-      child: Text(
-        student.name,
-        textAlign: TextAlign.center,
-        style: isSelected
-            ? Theme.of(context).textTheme.bodyMedium
-            : Theme.of(context).textTheme.bodyMedium,
-      ),
-    );
+        onTap: () {
+          setState(() {
+            _selectedPayment = student;
+          });
+        },
+        isSelected: isSelected,
+        child: Center(
+          child: Text(
+            student.name,
+            textAlign: TextAlign.center,
+            style: isSelected
+                ? Theme.of(context).textTheme.bodyMedium
+                : Theme.of(context).textTheme.bodyMedium,
+          ),
+        ));
   }
 }

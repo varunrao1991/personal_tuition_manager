@@ -41,3 +41,9 @@ class RegularExpressions {
   static final otpRegex = RegExp(r'^\d{4}$');
   static final nameRegex = RegExp(r'^[a-zA-Z\s]{3,}$');
 }
+
+class AppBorderRadius {
+  static const double smallRadius = 4.0;
+  static const double mediumRadius = 8.0;
+  static const double largeRadius = 12.0;
+}

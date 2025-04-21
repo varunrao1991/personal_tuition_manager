@@ -11,6 +11,7 @@ import '../../utils/handle_errors.dart';
 import '../../widgets/custom_card.dart';
 import '../../widgets/custom_fab.dart';
 import '../../utils/show_custom_bottom_modal.dart';
+import '../common/app_scaffold.dart';
 import 'widgets/mark_attendance.dart';
 
 class AttendanceScreen extends StatefulWidget {
@@ -88,7 +89,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppScaffold(
+      title: 'Attendances',
       body: Padding(
         padding: const EdgeInsets.all(AppPaddings.smallPadding),
         child: Column(
@@ -178,7 +180,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                       isWeekday:
                           weekdayProvider.weekdays.contains(date.weekday),
                       isHoliday: holidayProvider.holidays.any(
-                          (holiday) => isSameDay(holiday.holidayDate, date)),
+                        (holiday) => isSameDay(holiday.holidayDate, date),
+                      ),
                     ),
                   ),
                 );
@@ -189,10 +192,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
               builder: (context, attendanceProvider, child) {
                 final attendancesForSelectedDate = attendanceProvider
                     .attendances
-                    .where(
-                      (attendance) =>
-                          isSameDay(attendance.attendanceDate, _selectedDate),
-                    )
+                    .where((attendance) =>
+                        isSameDay(attendance.attendanceDate, _selectedDate))
                     .toList();
 
                 return Expanded(
@@ -295,8 +296,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
               child: Container(
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                    color: Colors.green[600],
-                    shape: BoxShape.circle,
+                  color: Colors.green[600],
+                  shape: BoxShape.circle,
                 ),
                 constraints: const BoxConstraints(
                   minWidth: 16,
@@ -328,14 +329,26 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       );
     }
 
-    return ListView.builder(
+    return GridView.builder(
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3, // Number of columns
+        crossAxisSpacing: 2, // Horizontal space between items
+        mainAxisSpacing: 2, // Vertical space between items
+        childAspectRatio: 1.2, // Width/height ratio for each item
+      ),
       itemCount: attendanceList.length,
       itemBuilder: (context, index) {
         final attendance = attendanceList[index];
 
         return CustomCard(
-            child: Text(attendance.ownedBy.name,
-                style: Theme.of(context).textTheme.bodyLarge));
+          child: Center(
+            child: Text(
+              attendance.ownedBy.name,
+              style: Theme.of(context).textTheme.bodyLarge,
+              textAlign: TextAlign.center,
+            ),
+          ),
+        );
       },
     );
   }

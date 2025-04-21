@@ -33,7 +33,7 @@ class UserInfoHeader extends StatelessWidget {
           Text(
             'Welcome',
             style: theme.textTheme.titleMedium!.copyWith(
-              color: theme.colorScheme.onPrimary.withOpacity(0.9),
+              color: theme.colorScheme.onPrimary,
             ),
           ),
         ],

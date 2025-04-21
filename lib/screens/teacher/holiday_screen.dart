@@ -293,56 +293,86 @@ class _HolidayScreenState extends State<HolidayScreen> {
       );
     }
 
-    return ListView.builder(
+    return GridView.builder(
+      padding: const EdgeInsets.all(4),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 1.1, // Slightly taller cards
+        crossAxisSpacing: 2,
+        mainAxisSpacing: 2,
+      ),
       itemCount: holidayProvider.holidays.length,
       itemBuilder: (context, index) {
         final holiday = holidayProvider.holidays[index];
+        final reasonText =
+            holiday.reason.isEmpty ? 'No reason provided' : holiday.reason;
+
         return CustomSwipeCard(
-            onSwipeLeft: () {
-              _showDeleteConfirmationDialog(context, holiday.holidayDate);
-            },
-            onSwipeRight: () {
-              showCustomModalBottomSheet(
-                context: context,
-                child: HolidayForm(
-                  selectedDate: holiday.holidayDate,
-                  reason: holiday.reason,
-                ),
-              ).then((result) async {
-                if (result != null) {
-                  DateTime selectedDate = result['date'];
-                  String reason = result['reason'];
-                  await _addHolidayToBackend(selectedDate, reason);
-                  _fetchHolidaysForVisibleRange();
-                }
-              });
-            },
-            child: Container(
-              margin: const EdgeInsets.all(AppMargins.smallMargin),
-              child: Padding(
-                padding: const EdgeInsets.all(AppPaddings.smallPadding),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          onSwipeLeft: () =>
+              _showDeleteConfirmationDialog(context, holiday.holidayDate),
+          onSwipeRight: () => _showEditHolidaySheet(context, holiday),
+          child: Container(
+            padding: const EdgeInsets.all(6),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Date section at top
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
                   children: [
-                    Text(holiday.reason,
-                        style: Theme.of(context).textTheme.bodyLarge),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        const Icon(Icons.date_range),
-                        const SizedBox(width: 8),
-                        Text(
-                            DateFormat('EEE, dd MMM y')
-                                .format(holiday.holidayDate),
-                            style: Theme.of(context).textTheme.bodyMedium),
-                      ],
+                    // Big day number
+                    Text(
+                      DateFormat('d').format(holiday.holidayDate),
+                      style:
+                          Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
                     ),
+                    const SizedBox(width: 6),
+                    // Small month abbreviation
+                    Text(DateFormat('MMM').format(holiday.holidayDate),
+                        style: Theme.of(context).textTheme.headlineSmall),
                   ],
                 ),
-              ),
-            ));
+
+                // Reason centered below date
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      reasonText,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontStyle: FontStyle.italic,
+                            color: Theme.of(context).hintColor,
+                          ),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
       },
     );
+  }
+
+  void _showEditHolidaySheet(BuildContext context, Holiday holiday) {
+    showCustomModalBottomSheet(
+      context: context,
+      child: HolidayForm(
+        selectedDate: holiday.holidayDate,
+        reason: holiday.reason,
+      ),
+    ).then((result) async {
+      if (result != null) {
+        await _addHolidayToBackend(result['date'], result['reason']);
+        _fetchHolidaysForVisibleRange();
+      }
+    });
   }
 
   void _showDeleteConfirmationDialog(

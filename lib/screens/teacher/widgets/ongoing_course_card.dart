@@ -3,7 +3,6 @@ import '../../../constants/app_constants.dart';
 import '../../../utils/time_ago.dart';
 import '../../../widgets/custom_elevated_button.dart';
 import '../../../widgets/custom_swipe_card.dart';
-import '../../../widgets/info_column.dart';
 
 class OngoingCourseCard extends StatelessWidget {
   final DateTime startDate;
@@ -35,112 +34,154 @@ class OngoingCourseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final remainingClasses =
+        (totalClasses - completedDays).clamp(0, totalClasses);
+    final progress = completedDays / totalClasses;
+    final isCompleted = remainingClasses == 0;
+
     return CustomSwipeCard(
       onTap: onTap,
       onSwipeLeft: onDelete,
       onSwipeRight: onEdit,
-      child: Padding(
-        padding: const EdgeInsets.all(AppPaddings.tinyPadding),
-        child: Stack(
-          children: [
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildStudentName(context),
-                const SizedBox(height: 8),
-                Align(
-                  alignment: Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          // Header row with name and status
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  name,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
+                ),
+              ),
+              if (noCredit == false)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   child: Text(
-                    timeAgoString(startDate),
-                    style: Theme.of(context).textTheme.bodyMedium,
+                    'Credit',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Colors.green,
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                 ),
-                const SizedBox(height: 8),
-                _buildInfo(),
-                const SizedBox(height: 8),
-                _buildButtons(),
-              ],
+            ],
+          ),
+
+          const SizedBox(height: 8),
+
+          // Course duration info
+          Text(
+            'Started ${timeAgoString(startDate)}',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color:
+                      Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Progress indicator
+          LinearProgressIndicator(
+            value: progress,
+            backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+            color: isCompleted
+                ? Colors.green
+                : Theme.of(context).colorScheme.primary,
+            minHeight: 8,
+            borderRadius: BorderRadius.circular(4),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Stats row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildStatItem(
+                context,
+                value: completedDays.toString(),
+                label: 'Completed',
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              _buildStatItem(
+                context,
+                value: remainingClasses.toString(),
+                label: 'Remaining',
+                color: remainingClasses == 0 ? Colors.green : Colors.orange,
+              ),
+              _buildStatItem(
+                context,
+                value: totalClasses.toString(),
+                label: 'Total',
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          // Action buttons
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+            CustomElevatedButton(
+              text: 'Update',
+              onPressed: onUpdate,
+              icon: Icons.edit,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                foregroundColor:
+                    Theme.of(context).colorScheme.onPrimaryContainer,
+              ),
             ),
-          ],
-        ),
+            CustomElevatedButton(
+              text: 'Complete',
+              icon: isCompleted ? Icons.check_circle : Icons.lock,
+              onPressed: isCompleted ? onClose : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isCompleted ? Colors.green : Colors.grey,
+                foregroundColor: Colors.white,
+              ),
+            )
+          ])
+        ]),
       ),
     );
   }
 
-  Widget _buildStudentName(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Row(
-        children: [
-          Text(name, style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(width: 4),
-          if (noCredit == false)
-            const Icon(
-              Icons.check,
-              color: Colors.green,
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfo() {
-    int remainingClasses =
-        (totalClasses - completedDays).clamp(0, totalClasses);
-    int completedValue =
-        completedDays >= totalClasses ? totalClasses : completedDays;
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildStatItem(
+    BuildContext context, {
+    required String value,
+    required String label,
+    required Color color,
+  }) {
+    return Column(
       children: [
-        Expanded(
-          child: InfoColumn(
-            value: completedValue.toString(),
-            mainAxisAlignment: MainAxisAlignment.start,
-            label: 'Completed',
-            color: Colors.blueAccent,
-          ),
+        Text(
+          value,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: color,
+                fontWeight: FontWeight.bold,
+              ),
         ),
-        Expanded(
-          child: InfoColumn(
-            value: remainingClasses.toString(),
-            mainAxisAlignment: MainAxisAlignment.center,
-            label: 'Remaining',
-            color: Colors.red,
-          ),
-        ),
-        Expanded(
-          child: InfoColumn(
-            value: totalClasses.toString(),
-            mainAxisAlignment: MainAxisAlignment.end,
-            label: 'Credit',
-            color: Colors.green,
-          ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              ),
         ),
       ],
-    );
-  }
-
-  Widget _buildButtons() {
-    int remainingClasses =
-        (totalClasses - completedDays).clamp(0, totalClasses);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        _buildButton('Restart', onUpdate),
-        const SizedBox(width: 32),
-        _buildButton('Close', remainingClasses == 0 ? onClose : null),
-      ],
-    );
-  }
-
-  Widget _buildButton(String text, VoidCallback? onPressed) {
-    return Expanded(
-      child: CustomElevatedButton(
-        text: text,
-        onPressed: onPressed,
-      ),
     );
   }
 }

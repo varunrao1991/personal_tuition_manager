@@ -66,7 +66,7 @@ class _AddStudentCourseProcessWidgetState
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        Text('Course Details', style: Theme.of(context).textTheme.bodyLarge),
+        Text('Course Details', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 20),
         Form(
           key: _formKey,

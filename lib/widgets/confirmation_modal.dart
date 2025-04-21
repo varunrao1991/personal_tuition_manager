@@ -31,11 +31,13 @@ class ConfirmationDialog extends StatelessWidget {
           Text(
             'Confirmation',
             style: theme.textTheme.titleLarge,
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 10.0),
           Text(
             message,
             style: theme.textTheme.bodyMedium,
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 30.0),
           Row(

@@ -10,6 +10,7 @@ import '../../widgets/search_bar.dart';
 import '../../utils/show_custom_bottom_modal.dart';
 import '../../utils/show_custom_center_modal.dart';
 import '../../widgets/sort_modal.dart';
+import '../common/app_scaffold.dart';
 import 'widgets/student_form.dart';
 import 'widgets/student_card.dart';
 import '../../widgets/confirmation_modal.dart';
@@ -112,7 +113,8 @@ class _StudentScreenState extends State<StudentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppScaffold(
+      title: 'Students',
       body: Column(
         children: [
           _buildSearchAndFilterRow(context),
@@ -129,21 +131,11 @@ class _StudentScreenState extends State<StudentScreen> {
   Widget _buildSearchAndFilterRow(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(AppPaddings.mediumPadding),
-      child: Row(
-        children: [
-          Expanded(
-            child: GenericSearchBar(
-              controller: _searchController,
-              onClear: () => _resetSearch(context),
-              onChanged: (value) => _performSearch(context, value),
-            ),
-          ),
-          const SizedBox(width: 10),
-          IconButton(
-            icon: const Icon(Icons.filter_alt),
-            onPressed: () => _openSortModal(context),
-          ),
-        ],
+      child: GenericSearchBar(
+        controller: _searchController,
+        onClear: () => _resetSearch(context),
+        onChanged: (value) => _performSearch(context, value),
+        onFilterPressed: () => _openSortModal(context),
       ),
     );
   }

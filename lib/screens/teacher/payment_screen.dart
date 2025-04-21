@@ -13,6 +13,7 @@ import '../../widgets/confirmation_modal.dart';
 import '../../widgets/custom_snackbar.dart';
 import '../../utils/show_custom_bottom_modal.dart';
 import '../../widgets/total_graph.dart';
+import '../common/app_scaffold.dart';
 import 'widgets/edit_payment.dart';
 import 'widgets/monthly_payments.dart';
 import 'widgets/payment_card.dart';
@@ -41,8 +42,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchPayments();
       _loadInitialPayments();
-      Provider.of<StudentProvider>(context, listen: false)
-          .loadStudentsExists();
+      Provider.of<StudentProvider>(context, listen: false).loadStudentsExists();
     });
   }
 
@@ -155,7 +155,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppScaffold(
+      title: 'Payments',
       body: Column(
         children: [
           _buildMonthlyPayments(),

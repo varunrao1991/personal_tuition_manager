@@ -207,8 +207,8 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             Text('Mark attendance',
-                style: Theme.of(context).textTheme.bodyLarge),
-            const SizedBox(height: 16),
+                style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 20),
             _buildSearchBar(context, studentProvider),
             const SizedBox(height: 16),
             _buildStudentGrid(rearrangedStudents),
@@ -225,53 +225,42 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
 
   Widget _buildSearchBar(
       BuildContext context, StudentProvider studentProvider) {
-    return Row(
-      children: [
-        Expanded(
-          child: GenericSearchBar(
-            controller: _searchController,
-            onChanged: (value) async {
-              setState(() {
-                _selectedName = value;
-              });
-              try {
-                await studentProvider.resetAndFetch(
-                  name: _selectedName,
-                  sort: _selectedSortField,
-                  order: _isAscending ? 'ASC' : 'DESC',
-                );
-              } catch (e) {
-                handleErrors(context, e);
-              }
-            },
-            onClear: () async {
-              setState(() {
-                _selectedName = null;
-              });
-              try {
-                await studentProvider.resetAndFetch(
-                  name: _selectedName,
-                  sort: _selectedSortField,
-                  order: _isAscending ? 'ASC' : 'DESC',
-                );
-              } catch (e) {
-                handleErrors(context, e);
-              }
-            },
-          ),
-        ),
-        const SizedBox(width: 10),
-        IconButton(
-          icon: const Icon(Icons.filter_alt),
-          onPressed: () => _openSortModal(context),
-        ),
-      ],
-    );
+    return GenericSearchBar(
+        controller: _searchController,
+        onChanged: (value) async {
+          setState(() {
+            _selectedName = value;
+          });
+          try {
+            await studentProvider.resetAndFetch(
+              name: _selectedName,
+              sort: _selectedSortField,
+              order: _isAscending ? 'ASC' : 'DESC',
+            );
+          } catch (e) {
+            handleErrors(context, e);
+          }
+        },
+        onClear: () async {
+          setState(() {
+            _selectedName = null;
+          });
+          try {
+            await studentProvider.resetAndFetch(
+              name: _selectedName,
+              sort: _selectedSortField,
+              order: _isAscending ? 'ASC' : 'DESC',
+            );
+          } catch (e) {
+            handleErrors(context, e);
+          }
+        },
+        onFilterPressed: () => _openSortModal(context));
   }
 
   Widget _buildStudentGrid(List<OwnedBy> students) {
     return SizedBox(
-      height: 300,
+      height: 200,
       child: GridView.builder(
         controller: _scrollController,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(

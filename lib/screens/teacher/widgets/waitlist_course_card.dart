@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../constants/app_constants.dart';
+import '../../../utils/time_ago.dart';
 import '../../../widgets/custom_elevated_button.dart';
 import '../../../widgets/custom_swipe_card.dart';
-import '../../../widgets/info_column.dart';
-import '../../../utils/time_ago.dart';
 
 class WaitlistCourseCard extends StatelessWidget {
   final String studentName;
@@ -35,38 +33,110 @@ class WaitlistCourseCard extends StatelessWidget {
       onTap: onTap,
       onSwipeLeft: onDelete,
       onSwipeRight: onEdit,
-      child: Padding(
-        padding: const EdgeInsets.all(AppPaddings.tinyPadding),
+      child: Container(
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(studentName, style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 8),
+            // Header with student name and ID
             Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Paid ${timeAgoString(paymentDate)}',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      const SizedBox(height: 4),
-                      InfoColumn(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        value: '$totalClasses',
-                        label: 'Classes',
-                      ),
-                    ],
+                  child: Text(
+                    studentName,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 2,
                   ),
                 ),
-                CustomElevatedButton(
-                  text: 'Start Course',
-                  onPressed: canStart ? onStart : null,
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceVariant,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    'ID: $studentId',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withOpacity(0.8),
+                        ),
+                  ),
                 ),
               ],
+            ),
+
+            const SizedBox(height: 12),
+
+            // Payment and class information
+            Row(
+              children: [
+                Icon(
+                  Icons.calendar_today,
+                  size: 16,
+                  color:
+                      Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Paid ${timeAgoString(paymentDate)}',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withOpacity(0.8),
+                      ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 8),
+
+            Row(
+              children: [
+                Icon(
+                  Icons.class_,
+                  size: 16,
+                  color:
+                      Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '$totalClasses classes',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withOpacity(0.8),
+                      ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            // Start course button
+            SizedBox(
+              width: double.infinity,
+              child: CustomElevatedButton(
+                text: 'Start Course',
+                onPressed: canStart ? onStart : null,
+                icon: canStart ? Icons.play_arrow : Icons.lock,
+                style: ElevatedButton.styleFrom(
+                  foregroundColor:
+                      Theme.of(context).colorScheme.onPrimaryContainer,
+                  backgroundColor: canStart
+                      ? Theme.of(context).colorScheme.primaryContainer
+                      : Colors.grey,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+              ),
             ),
           ],
         ),

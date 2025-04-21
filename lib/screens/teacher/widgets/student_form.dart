@@ -82,7 +82,7 @@ class _AddStudentFormState extends State<StudentForm> {
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               Text(widget.student != null ? 'Edit Student' : 'Add Student',
-                  style: Theme.of(context).textTheme.bodyLarge),
+                  style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 20),
               CustomFormTextField(
                 controller: _nameController,

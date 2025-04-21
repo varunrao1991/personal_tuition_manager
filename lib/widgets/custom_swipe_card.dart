@@ -30,7 +30,7 @@ class _CustomSwipeCardState extends State<CustomSwipeCard> {
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, constraints) {
-      const maxDragRatio = 0.3;
+      const maxDragRatio = 0.25;
       final maxDrag = constraints.maxWidth * maxDragRatio;
 
       final theme = Theme.of(context);
@@ -100,7 +100,7 @@ class _CustomSwipeCardState extends State<CustomSwipeCard> {
                 });
               },
               onHorizontalDragEnd: (details) {
-                if (_dragExtent.abs() >= maxDrag * 0.5) {
+                if (_dragExtent.abs() >= maxDrag * 0.8) {
                   if (_dragExtent > 0) {
                     widget.onSwipeRight();
                   } else {

@@ -15,6 +15,7 @@ class TeacherHomeScreen extends StatefulWidget {
 
 class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
   int _selectedIndex = 0;
+
   final List<NavItem> _navItems = [
     const NavItem(icon: Icons.check_circle_outline, label: 'Attendances'),
     const NavItem(icon: Icons.payment, label: 'Payments'),
@@ -46,12 +47,6 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          "Teacher Dashboard",
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
-      ),
       drawer: const CustomDrawer(),
       body: _getViewer(),
       bottomNavigationBar: CustomBottomNavigationBar(
