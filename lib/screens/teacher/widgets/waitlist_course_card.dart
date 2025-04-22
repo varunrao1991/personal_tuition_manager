@@ -5,7 +5,7 @@ import '../../../widgets/custom_swipe_card.dart';
 
 class WaitlistCourseCard extends StatelessWidget {
   final String studentName;
-  final int studentId;
+  final int paymentId;
   final int totalClasses;
   final DateTime paymentDate;
   final bool canStart;
@@ -17,7 +17,7 @@ class WaitlistCourseCard extends StatelessWidget {
   const WaitlistCourseCard({
     super.key,
     required this.studentName,
-    required this.studentId,
+    required this.paymentId,
     required this.totalClasses,
     required this.paymentDate,
     required this.canStart,
@@ -56,11 +56,11 @@ class WaitlistCourseCard extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceVariant,
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    'ID: $studentId',
+                    'ID: $paymentId',
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                           color: Theme.of(context)
                               .colorScheme

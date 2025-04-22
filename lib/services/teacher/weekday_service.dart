@@ -1,47 +1,91 @@
 import 'dart:developer';
-import 'dart:convert';
+import 'package:padmayoga/helpers/database_helper.dart';
 import '../../exceptions/weekday_exception.dart';
-import '../../utils/shared_pref.dart';
 
 class WeekdayService {
-  static const String _weekdaysKey = 'weekdays';
-
   WeekdayService();
 
-  Future<void> setWeekdays(List<int> days) async {
-    if (days.any((day) => day < 0 || day > 6)) {
+  Future<void> setWeekdays(List<int> enabledDayIds) async {
+    final db = await DatabaseHelper.instance.database;
+
+    // Validate input
+    if (enabledDayIds.any((dayId) => dayId < 1 || dayId > 7)) {
       throw WeekdayException(
-          'Days must be integers between 0 (Sunday) and 6 (Saturday).');
+          'Day IDs must be integers between 1 (Monday) and 7 (Sunday).');
     }
 
-    // Convert the list to a JSON string for storage
-    String daysJson = jsonEncode(days);
-    await sharedPrefs.saveString(_weekdaysKey, daysJson);
-    
-    log('Weekdays successfully saved: $days');
+    try {
+      // Begin transaction
+      await db.transaction((txn) async {
+        // First disable all weekdays
+        await txn.update(
+          DatabaseHelper.weekdayTable,
+          {'isEnabled': 0},
+        );
+
+        // Then enable only the specified days
+        for (final dayId in enabledDayIds) {
+          await txn.update(
+            DatabaseHelper.weekdayTable,
+            {'isEnabled': 1},
+            where: 'id = ?',
+            whereArgs: [dayId],
+          );
+        }
+      });
+
+      log('Weekdays successfully updated: $enabledDayIds');
+    } catch (e) {
+      log('Error updating weekdays: $e');
+      throw WeekdayException('Failed to update weekdays in database');
+    }
   }
 
   Future<List<int>> getWeekdays() async {
-    final daysJson = await sharedPrefs.getString(_weekdaysKey);
-    
-    if (daysJson == null || daysJson.isEmpty) {
-      // Return default value (all days) if no preference is saved
-      return [0, 1, 2, 3, 4, 5, 6]; // All days of the week
-    }
-    
+    final db = await DatabaseHelper.instance.database;
+
     try {
-      final List<dynamic> decoded = jsonDecode(daysJson);
-      List<int> weekdays = decoded.map((day) => day as int).toList();
-      return weekdays;
+      final List<Map<String, dynamic>> results = await db.query(
+        DatabaseHelper.weekdayTable,
+        where: 'isEnabled = ?',
+        whereArgs: [1],
+      );
+
+      // Extract the IDs of enabled days
+      List<int> enabledDayIds = results.map((day) => day['id'] as int).toList();
+      return enabledDayIds;
     } catch (e) {
-      log('Error parsing weekdays from shared preferences: $e');
-      // Return default value on error
-      return [0, 1, 2, 3, 4, 5, 6];
+      log('Error retrieving weekdays: $e');
+      throw WeekdayException('Failed to retrieve weekdays from database');
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getAllWeekdays() async {
+    final db = await DatabaseHelper.instance.database;
+
+    try {
+      return await db.query(
+        DatabaseHelper.weekdayTable,
+        orderBy: 'id',
+      );
+    } catch (e) {
+      log('Error retrieving all weekdays: $e');
+      throw WeekdayException('Failed to retrieve weekdays from database');
     }
   }
 
   Future<void> clearWeekdays() async {
-    await sharedPrefs.clear(_weekdaysKey);
-    log("Cleared weekdays preference");
+    final db = await DatabaseHelper.instance.database;
+
+    try {
+      await db.update(
+        DatabaseHelper.weekdayTable,
+        {'isEnabled': 0},
+      );
+      log("Reset all weekdays to disabled");
+    } catch (e) {
+      log('Error clearing weekdays: $e');
+      throw WeekdayException('Failed to clear weekdays in database');
+    }
   }
 }

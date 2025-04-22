@@ -43,7 +43,7 @@ class TotalGraph extends StatelessWidget {
           lineBarsData: [
             LineChartBarData(
               spots: spots,
-              isCurved: true,
+              isCurved: false,
               color: colorScheme.primary,
               barWidth: 2,
               belowBarData: BarAreaData(

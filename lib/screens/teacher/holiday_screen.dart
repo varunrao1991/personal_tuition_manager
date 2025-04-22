@@ -27,7 +27,7 @@ class _HolidayScreenState extends State<HolidayScreen> {
   DateTime _selectedDate = DateTime.now();
   DateTime _focusedDate = DateTime.now();
   bool _isLoading = false;
-  List<bool> _isWeekdaySelected = List.filled(7, false);
+  List<int> _weekdays =[];
 
   @override
   void initState() {
@@ -61,8 +61,7 @@ class _HolidayScreenState extends State<HolidayScreen> {
     try {
       await weekdayProvider.fetchWeekdays();
       setState(() {
-        _isWeekdaySelected = List.generate(
-            7, (index) => weekdayProvider.weekdays.contains(index));
+        _weekdays = weekdayProvider.weekdays;
       });
     } catch (error) {
       showCustomSnackBar(
@@ -100,22 +99,16 @@ class _HolidayScreenState extends State<HolidayScreen> {
     showCustomModalBottomSheet(
         context: context,
         child: WeekdayEditorDialog(
-          isSelected: _isWeekdaySelected,
+          enabledWeekdayIds: _weekdays,
         )).then((selected) async {
       if (selected != null) {
         setState(() {
-          _isWeekdaySelected = selected;
+          _weekdays = selected;
         });
         try {
           final weekdayProvider =
               Provider.of<WeekdayProvider>(context, listen: false);
-          List<int> selectedWeekdays = [];
-          for (int i = 0; i < _isWeekdaySelected.length; i++) {
-            if (_isWeekdaySelected[i]) {
-              selectedWeekdays.add(i);
-            }
-          }
-          await weekdayProvider.setWeekdays(selectedWeekdays);
+          await weekdayProvider.setWeekdays(_weekdays);
         } catch (e) {
           handleErrors(context, e);
         }
@@ -178,7 +171,7 @@ class _HolidayScreenState extends State<HolidayScreen> {
                           _buildDayContainer(date, isToday: true),
                       defaultBuilder: (context, date, _) => _buildDayContainer(
                           date,
-                          isWeekday: _isWeekdaySelected[date.weekday % 7],
+                          isWeekday: _weekdays.contains(date.weekday),
                           isHoliday: Provider.of<HolidayProvider>(context,
                                   listen: false)
                               .holidays

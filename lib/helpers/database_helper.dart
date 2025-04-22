@@ -6,13 +6,14 @@ import '../config/app_config.dart';
 
 class DatabaseHelper {
   final _databaseName = Config().appDb;
-  static const int _databaseVersion = 1;
+  static const int _databaseVersion = 2;
 
   static const attendanceTable = 'Attendance';
   static const userTable = 'User';
   static const paymentTable = 'Payment';
   static const holidayTable = 'Holiday';
   static const courseTable = 'Course';
+  static const weekdayTable = 'Weekday'; // New table
 
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
@@ -93,11 +94,49 @@ class DatabaseHelper {
       )
     ''');
 
+    // New Weekday table
+    await db.execute('''
+      CREATE TABLE $weekdayTable (
+        id INTEGER PRIMARY KEY,
+        isEnabled INTEGER NOT NULL DEFAULT 1
+      )
+    ''');
+
+    // Insert default weekday data
+    await _insertDefaultWeekdays(db);
+
     await db.execute('PRAGMA foreign_keys = ON');
   }
 
+  Future<void> _insertDefaultWeekdays(Database db) async {
+    final weekdays = [
+      {'id': 1, 'isEnabled': 1},
+      {'id': 2, 'isEnabled': 1},
+      {'id': 3, 'isEnabled': 1},
+      {'id': 4, 'isEnabled': 1},
+      {'id': 5, 'isEnabled': 1},
+      {'id': 6, 'isEnabled': 1},
+      {'id': 7, 'isEnabled': 1},
+    ];
+
+    for (final day in weekdays) {
+      await db.insert(weekdayTable, day);
+    }
+  }
+
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    // Placeholder: Add migration logic here when schema changes in future versions
+    if (oldVersion < 2) {
+      // Upgrade to version 2: Add Weekday table
+      await db.execute('''
+        CREATE TABLE $weekdayTable (
+          id INTEGER PRIMARY KEY,
+          isEnabled INTEGER NOT NULL DEFAULT 1
+        )
+      ''');
+
+      await _insertDefaultWeekdays(db);
+    }
+    // Add more upgrade steps here as needed for future versions
   }
 
   Future<void> close() async {

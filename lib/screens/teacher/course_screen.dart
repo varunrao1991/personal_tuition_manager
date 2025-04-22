@@ -276,33 +276,6 @@ class _CourseScreenState extends State<CourseScreen>
     );
   }
 
-  Future<void> _viewCourseCalendar(DateTime startDate) async {
-    try {
-      final holidayProvider =
-          Provider.of<HolidayProvider>(context, listen: false);
-      final weekdayProvider =
-          Provider.of<WeekdayProvider>(context, listen: false);
-      final attendanceProvider =
-          Provider.of<AttendanceProvider>(context, listen: false);
-
-      await showCustomModalBottomSheet<int>(
-        context: context,
-        child: Container(
-          margin: const EdgeInsets.all(AppMargins.smallMargin),
-          child: StudentCalendar(
-            startDate: startDate,
-            endDate: _endDateToUse!,
-            holidays: holidayProvider.holidays,
-            weekdays: weekdayProvider.weekdays,
-            attendanceRecords: attendanceProvider.attendanceDatesOfStudent,
-          ),
-        ),
-      );
-    } catch (e) {
-      handleErrors(context, e);
-    }
-  }
-
   int calculateDaysPassedSinceStartToTodayExcludeOffs(DateTime startDate) {
     final weekdayProvider =
         Provider.of<WeekdayProvider>(context, listen: false);
@@ -376,7 +349,7 @@ class _CourseScreenState extends State<CourseScreen>
 
       default: // 'waitlist'
         return WaitlistCourseCard(
-          studentId: course.payment.student.id,
+          paymentId: course.paymentId,
           studentName: course.payment.student.name,
           totalClasses: course.totalClasses,
           paymentDate: course.payment.paymentDate,

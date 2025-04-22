@@ -1,14 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-
-    <!-- Scoped Storage for Android 10+ -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" 
-        android:maxSdkVersion="29" /> <!-- For API level 29 or below -->
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" 
-        android:maxSdkVersion="29" /> <!-- For API level 29 or below -->
-
-    <!-- For Android 11+ (API 30) and beyond, you should rely on scoped storage -->
-    <!-- If you need broader access, you'd use the MANAGE_EXTERNAL_STORAGE permission, but that requires justification in the Play Store -->
     
     <application
         android:label="@string/app_name"
