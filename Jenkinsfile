@@ -9,7 +9,7 @@ pipeline {
         APK_NAME = "TeacherApp"
         ENVIRONMENT = "production"
         BUILD_BASE_DIR = "build"
-        DEBUG_INFO_DIR = "debug_info"
+        NATIVE_DEBUG_SYMBOLS_DIR = "native-debug-symbols"
 
         KEY_ALIAS = credentials('KEY_ALIAS')
         KEY_PASSWORD = credentials('KEY_PASSWORD')
@@ -39,6 +39,7 @@ pipeline {
             }
         }
 
+
         stage('Set Up Keystore Folder') {
             steps {
                 script {
@@ -52,9 +53,9 @@ pipeline {
         stage('Create Debug Info Directory') {
             steps {
                 script {
-                    def debugInfoPath = "${env.BUILD_BASE_DIR}/${env.DEBUG_INFO_DIR}"
-                    sh "mkdir -p ${debugInfoPath}"
-                    echo "Debug info directory created at: ${debugInfoPath}"
+                    def nativeDebugSymbolPath = "${env.BUILD_BASE_DIR}/${env.NATIVE_DEBUG_SYMBOLS_DIR}"
+                    sh "mkdir -p ${nativeDebugSymbolPath}"
+                    echo "Debug info directory created at: ${nativeDebugSymbolPath}"
                 }
             }
         }
@@ -108,6 +109,7 @@ pipeline {
             }
         }
 
+
         stage('Install Dependencies') {
             steps {
                 dir('android') {
@@ -128,7 +130,7 @@ pipeline {
                         flutter build appbundle \
                             --release \
                             --obfuscate \
-                            --split-debug-info="${env.BUILD_BASE_DIR}/${env.DEBUG_INFO_DIR}"
+                            --split-debug-info="${env.BUILD_BASE_DIR}/${env.NATIVE_DEBUG_SYMBOLS_DIR}" \
                             --dart-define=ENV=${env.ENVIRONMENT} \
                             --build-name="${env.VERSION_NAME}" \
                             --build-number=${BUILD_NUMBER}
@@ -153,10 +155,8 @@ pipeline {
 
                         // Set environment variables
                         env.AAB_FILE_PATH = "../${outputDir}/${renamedAabName}"
-                        env.DEBUG_SYMBOLS_PATH = "${env.BUILD_BASE_DIR}/${env.DEBUG_INFO_DIR}"
 
                         echo "AAB_FILE_PATH set to: ${env.AAB_FILE_PATH}"
-                        echo "DEBUG_SYMBOLS_PATH set to: ${env.DEBUG_SYMBOLS_PATH}"
                     } else {
                         echo "WARNING: App Bundle not found at expected location: ${originalAab}"
                     }
@@ -164,39 +164,23 @@ pipeline {
             }
         }
 
-        stage('Zip Debug Symbols') {
-            steps {
-                script {
-                    def debugSymbolsPath = "${env.BUILD_BASE_DIR}/${env.DEBUG_INFO_DIR}"
-                    def zipFilePath = "${env.BUILD_BASE_DIR}/debug-symbols-${env.VERSION_NAME}.zip"
-
-                    // Zip the debug symbols
-                    sh """
-                        cd ${debugSymbolsPath} && zip -r ${zipFilePath} .
-                    """
-                    echo "Zipped debug symbols to: ${zipFilePath}"
-
-                    // Set environment variable for the zipped debug symbols
-                    env.ZIPPED_DEBUG_SYMBOLS_PATH = zipFilePath
-                }
-            }
-        }
 
         stage('Post Build') {
             steps {
                 script {
                     def aabArtifactsPath = "${env.BUILD_BASE_DIR}/app/outputs/bundle/release/*.aab"
-                    def debugSymbolsPath = "${env.ZIPPED_DEBUG_SYMBOLS_PATH}"
+                    def debugSymbolsPath = "${env.BUILD_BASE_DIR}/${env.NATIVE_DEBUG_SYMBOLS_DIR}/**/*"
 
                     archiveArtifacts artifacts: aabArtifactsPath, allowEmptyArchive: true
                     archiveArtifacts artifacts: debugSymbolsPath, allowEmptyArchive: true
 
                     echo "Archived artifacts:"
                     echo "- App Bundles from: ${aabArtifactsPath}"
-                    echo "- Debug symbols (zipped) from: ${debugSymbolsPath}"
+                    echo "- Debug symbols from: ${debugSymbolsPath}"
                 }
             }
         }
+
 
         stage('Upload to Play Store') {
             when {
