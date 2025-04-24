@@ -9,7 +9,7 @@ pipeline {
         APK_NAME = "TeacherApp"
         ENVIRONMENT = "production"
         BUILD_BASE_DIR = "build"
-        NATIVE_DEBUG_SYMBOLS_DIR = "native-debug-symbols"
+        DEBUG_INFO_DIR = "debug_info"
 
         KEY_ALIAS = credentials('KEY_ALIAS')
         KEY_PASSWORD = credentials('KEY_PASSWORD')
@@ -53,9 +53,9 @@ pipeline {
         stage('Create Debug Info Directory') {
             steps {
                 script {
-                    def nativeDebugSymbolPath = "${env.BUILD_BASE_DIR}/${env.NATIVE_DEBUG_SYMBOLS_DIR}"
-                    sh "mkdir -p ${nativeDebugSymbolPath}"
-                    echo "Debug info directory created at: ${nativeDebugSymbolPath}"
+                    def debugInfoPath = "${env.BUILD_BASE_DIR}/${env.DEBUG_INFO_DIR}"
+                    sh "mkdir -p ${debugInfoPath}"
+                    echo "Debug info directory created at: ${debugInfoPath}"
                 }
             }
         }
@@ -130,7 +130,7 @@ pipeline {
                         flutter build appbundle \
                             --release \
                             --obfuscate \
-                            --split-debug-info="${env.BUILD_BASE_DIR}/${env.NATIVE_DEBUG_SYMBOLS_DIR}" \
+                            --split-debug-info="${env.BUILD_BASE_DIR}/${env.DEBUG_INFO_DIR}" \
                             --dart-define=ENV=${env.ENVIRONMENT} \
                             --build-name="${env.VERSION_NAME}" \
                             --build-number=${BUILD_NUMBER}
@@ -169,7 +169,7 @@ pipeline {
             steps {
                 script {
                     def aabArtifactsPath = "${env.BUILD_BASE_DIR}/app/outputs/bundle/release/*.aab"
-                    def debugSymbolsPath = "${env.BUILD_BASE_DIR}/${env.NATIVE_DEBUG_SYMBOLS_DIR}/**/*"
+                    def debugSymbolsPath = "${env.BUILD_BASE_DIR}/${env.DEBUG_INFO_DIR}/**/*"
 
                     archiveArtifacts artifacts: aabArtifactsPath, allowEmptyArchive: true
                     archiveArtifacts artifacts: debugSymbolsPath, allowEmptyArchive: true
