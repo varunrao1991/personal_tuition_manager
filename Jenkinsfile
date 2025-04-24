@@ -3,8 +3,8 @@ pipeline {
 
     parameters {
         booleanParam(name: 'UPLOAD_TO_PLAYSTORE', defaultValue: false, description: 'Enable to upload the build to Play Store')
-        choice(name: 'TRACK', choices: ['internal', 'alpha', 'beta', 'production'], defaultValue: 'internal', description: 'Select Play Store track for deployment')
-        choice(name: 'RELEASE_STATUS', choices: ['draft', 'completed', 'inProgress', 'halted'], defaultValue: 'draft', description: 'Release status for the deployment')
+        choice(name: 'TRACK', choices: ['internal', 'alpha', 'beta', 'production'], description: 'Select Play Store track for deployment')
+        choice(name: 'RELEASE_STATUS', choices: ['draft', 'completed', 'inProgress', 'halted'], description: 'Release status for the deployment')
     }
 
     environment {
@@ -12,8 +12,9 @@ pipeline {
         ENVIRONMENT = "production"
         BUILD_BASE_DIR = "build"
         DEBUG_INFO_DIR = "debug_info"
-        FASTFILE_TRACK = "${params.TRACK}"
-        FASTFILE_RELEASE_STATUS = "${params.RELEASE_STATUS}"
+        // Use params with a fallback to the original default values
+        FASTFILE_TRACK = "${params.TRACK ?: 'internal'}"
+        FASTFILE_RELEASE_STATUS = "${params.RELEASE_STATUS ?: 'draft'}"
 
         KEY_ALIAS = credentials('KEY_ALIAS')
         KEY_PASSWORD = credentials('KEY_PASSWORD')
