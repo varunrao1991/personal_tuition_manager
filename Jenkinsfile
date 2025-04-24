@@ -39,7 +39,6 @@ pipeline {
             }
         }
 
-
         stage('Set Up Keystore Folder') {
             steps {
                 script {
@@ -109,7 +108,6 @@ pipeline {
             }
         }
 
-
         stage('Install Dependencies') {
             steps {
                 dir('android') {
@@ -130,7 +128,7 @@ pipeline {
                         flutter build appbundle \
                             --release \
                             --obfuscate \
-                            --split-debug-info="${env.BUILD_BASE_DIR}/${env.DEBUG_INFO_DIR}" \
+                            --split-debug-info="${env.BUILD_BASE_DIR}/${env.DEBUG_INFO_DIR}"
                             --dart-define=ENV=${env.ENVIRONMENT} \
                             --build-name="${env.VERSION_NAME}" \
                             --build-number=${BUILD_NUMBER}
@@ -166,12 +164,36 @@ pipeline {
             }
         }
 
+        stage('Zip Debug Symbols') {
+            steps {
+                script {
+                    def debugSymbolsPath = "${env.BUILD_BASE_DIR}/${env.DEBUG_INFO_DIR}"
+                    def zipFilePath = "${env.BUILD_BASE_DIR}/debug-symbols-${env.VERSION_NAME}.zip"
+
+                    // Zip the debug symbols
+                    sh """
+                        cd ${debugSymbolsPath} && zip -r ${zipFilePath} .
+                    """
+                    echo "Zipped debug symbols to: ${zipFilePath}"
+
+                    // Set environment variable for the zipped debug symbols
+                    env.ZIPPED_DEBUG_SYMBOLS_PATH = zipFilePath
+                }
+            }
+        }
 
         stage('Post Build') {
             steps {
                 script {
-                    archiveArtifacts artifacts: '**/build/app/outputs/bundle/release/*.aab', allowEmptyArchive: true
-                    archiveArtifacts artifacts: "${env.BUILD_BASE_DIR}/${env.DEBUG_INFO_DIR}/**/*", allowEmptyArchive: true
+                    def aabArtifactsPath = "${env.BUILD_BASE_DIR}/app/outputs/bundle/release/*.aab"
+                    def debugSymbolsPath = "${env.ZIPPED_DEBUG_SYMBOLS_PATH}"
+
+                    archiveArtifacts artifacts: aabArtifactsPath, allowEmptyArchive: true
+                    archiveArtifacts artifacts: debugSymbolsPath, allowEmptyArchive: true
+
+                    echo "Archived artifacts:"
+                    echo "- App Bundles from: ${aabArtifactsPath}"
+                    echo "- Debug symbols (zipped) from: ${debugSymbolsPath}"
                 }
             }
         }
