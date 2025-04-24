@@ -47,12 +47,6 @@ class _StudentCalendarState extends State<StudentCalendar> {
       focusedDay: _selectedDate!,
       firstDay: widget.startDate,
       lastDay: widget.endDate,
-      selectedDayPredicate: (day) => isSameDay(_selectedDate, day),
-      onDaySelected: (selectedDay, focusedDay) {
-        setState(() {
-          _selectedDate = selectedDay;
-        });
-      },
       availableCalendarFormats: const {CalendarFormat.month: 'Month'},
       headerStyle: const HeaderStyle(titleCentered: true),
       calendarFormat: CalendarFormat.month,
@@ -108,7 +102,6 @@ class _StudentCalendarState extends State<StudentCalendar> {
     bool isAttended = widget.attendanceRecords
         .any((attendance) => isSameDay(attendance, date));
     bool isToday = isSameDay(date, today);
-    bool isSelected = isSameDay(date, _selectedDate);
 
     bool isStartDate = isSameDay(date, widget.startDate);
     bool isEndDate = isSameDay(date, widget.endDate);
@@ -162,34 +155,35 @@ class _StudentCalendarState extends State<StudentCalendar> {
       }
     }
 
-    Color backgroundColor;
-    if (!widget.weekdays.contains(date.weekday) || isHoliday) {
-      backgroundColor = Colors.grey[300]!;
-    } else if (isToday) {
-      backgroundColor = Colors.transparent;
+    // Determine the background color based on the day's status
+    Color backgroundColor = Colors.transparent;
+
+    Color textColor;
+    if (isToday) {
+      textColor = Theme.of(context).colorScheme.primary;
+    } else if (isHoliday || !isWeekday) {
+      textColor = Theme.of(context).colorScheme.onSurface.withOpacity(0.7);
     } else {
-      backgroundColor = Colors.transparent;
+      textColor = Theme.of(context).colorScheme.onSurface;
     }
 
     return Stack(
       children: [
-        if (isSelected)
-          Positioned.fill(
-            child: Container(
-              margin: const EdgeInsets.symmetric(vertical: 8.0),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? Theme.of(context).colorScheme.secondary
-                    : (isHoliday || !isWeekday
-                        ? Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withOpacity(0.3)
-                        : Colors.transparent),
-                shape: BoxShape.circle,
-              ),
+        Positioned.fill(
+          child: Container(
+            margin: const EdgeInsets.symmetric(vertical: 8.0),
+            decoration: BoxDecoration(
+              color: backgroundColor,
+              shape: BoxShape.circle,
+              border: isToday
+                  ? Border.all(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 2,
+                    )
+                  : null,
             ),
           ),
+        ),
         Positioned.fill(
           child: Container(
             margin: const EdgeInsets.symmetric(vertical: 8.0),
@@ -202,9 +196,7 @@ class _StudentCalendarState extends State<StudentCalendar> {
               child: Text(
                 '${date.day}',
                 style: TextStyle(
-                  color: isSelected
-                      ? Colors.white
-                      : Theme.of(context).colorScheme.onSurface,
+                  color: textColor,
                   fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
                 ),
               ),

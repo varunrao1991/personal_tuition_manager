@@ -43,7 +43,7 @@ class OngoingCourseCard extends StatelessWidget {
       onSwipeLeft: onDelete,
       onSwipeRight: onEdit,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(8),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           // Header row with name and status
           Row(

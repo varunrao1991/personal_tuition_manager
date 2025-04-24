@@ -68,10 +68,11 @@ class _PaymentProcessWidgetState extends State<PaymentProcessWidget> {
 
   Widget _buildPaymentDetailsStep() {
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
       children: <Widget>[
+        const SizedBox(height: 16.0),
         Text('Payment Details', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16.0),
         Form(
           key: _formKey,
           child: Column(
@@ -88,7 +89,7 @@ class _PaymentProcessWidgetState extends State<PaymentProcessWidget> {
                   return null;
                 },
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16.0),
               CustomFormTextField(
                 controller: _amountController,
                 labelText: 'Amount',
@@ -105,7 +106,7 @@ class _PaymentProcessWidgetState extends State<PaymentProcessWidget> {
                   return null;
                 },
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16.0),
               CustomDateInputField(
                 selectedDate: _paymentDate,
                 title: 'Payment Date',
@@ -115,7 +116,7 @@ class _PaymentProcessWidgetState extends State<PaymentProcessWidget> {
                   });
                 },
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16.0),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [

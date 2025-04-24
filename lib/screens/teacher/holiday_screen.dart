@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -27,7 +29,7 @@ class _HolidayScreenState extends State<HolidayScreen> {
   DateTime _selectedDate = DateTime.now();
   DateTime _focusedDate = DateTime.now();
   bool _isLoading = false;
-  List<int> _weekdays =[];
+  List<int> _weekdays = [];
 
   @override
   void initState() {
@@ -165,10 +167,14 @@ class _HolidayScreenState extends State<HolidayScreen> {
                     onDaySelected: _onDaySelected,
                     onPageChanged: _onPageChanged,
                     calendarBuilders: CalendarBuilders(
-                      selectedBuilder: (context, date, _) =>
-                          _buildDayContainer(date, isSelected: true),
-                      todayBuilder: (context, date, _) =>
-                          _buildDayContainer(date, isToday: true),
+                      selectedBuilder: (context, date, _) => _buildDayContainer(
+                          date,
+                          isSelected: true,
+                          isWeekday: _weekdays.contains(date.weekday)),
+                      todayBuilder: (context, date, _) => _buildDayContainer(
+                          date,
+                          isToday: true,
+                          isWeekday: _weekdays.contains(date.weekday)),
                       defaultBuilder: (context, date, _) => _buildDayContainer(
                           date,
                           isWeekday: _weekdays.contains(date.weekday),
@@ -251,22 +257,43 @@ class _HolidayScreenState extends State<HolidayScreen> {
       bool isToday = false,
       bool isWeekday = false,
       bool isHoliday = false}) {
+    Color textColor;
+    if (isSelected) {
+      textColor = Colors.white;
+    } else if (isToday) {
+      textColor = Theme.of(context).colorScheme.primary;
+    } else if (isHoliday || !isWeekday) {
+      textColor = Theme.of(context).colorScheme.onSurface.withOpacity(0.7);
+    } else {
+      textColor = Theme.of(context).colorScheme.onSurface;
+    }
+
+    Color backgroundColor;
+    if (isSelected) {
+      backgroundColor = Colors.redAccent;
+    } else if (isHoliday || !isWeekday) {
+      backgroundColor =
+          Theme.of(context).colorScheme.onSurface.withOpacity(0.2);
+    } else {
+      backgroundColor = Colors.transparent;
+    }
+
     return Container(
       decoration: BoxDecoration(
-        color: isSelected
-            ? Colors.redAccent
-            : isHoliday || !isWeekday
-                ? Colors.grey.withOpacity(0.2)
-                : Colors.transparent,
+        color: backgroundColor,
         shape: BoxShape.circle,
+        border: isToday
+            ? Border.all(
+                color: Theme.of(context).colorScheme.primary,
+                width: 2,
+              )
+            : null,
       ),
       child: Center(
         child: Text(
           date.day.toString(),
           style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                color: isSelected
-                    ? Colors.white
-                    : Theme.of(context).colorScheme.onSurface,
+                color: textColor,
                 fontWeight: (isSelected || isToday)
                     ? FontWeight.bold
                     : FontWeight.normal,

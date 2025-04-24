@@ -37,7 +37,7 @@ class PaymentCard extends StatelessWidget {
       onSwipeLeft: onDelete,
       onSwipeRight: onEdit,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        padding: const EdgeInsets.all(8),
         child: Row(
           children: [
             // Status indicator bar
@@ -50,7 +50,7 @@ class PaymentCard extends StatelessWidget {
               ),
               margin: const EdgeInsets.only(right: 16),
             ),
-            
+
             // Main content
             Expanded(
               child: Column(
@@ -70,27 +70,31 @@ class PaymentCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,
                       ),
-                      
+
                       // Status badge
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: _getColorBasedOnStatus(payment.courseStatus).withOpacity(0.2),
+                          color: _getColorBasedOnStatus(payment.courseStatus)
+                              .withOpacity(0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
                           _getStatusText(payment.courseStatus),
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                color: _getColorBasedOnStatus(payment.courseStatus),
-                                fontWeight: FontWeight.bold,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.labelSmall?.copyWith(
+                                    color: _getColorBasedOnStatus(
+                                        payment.courseStatus),
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 8),
-                  
+
                   // Second row - Payment ID and Days ago
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -102,7 +106,7 @@ class PaymentCard extends StatelessWidget {
                               color: Colors.grey.shade600,
                             ),
                       ),
-                      
+
                       // Days ago
                       Text(
                         timeAgoString(payment.paymentDate),
@@ -113,9 +117,9 @@ class PaymentCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 8),
-                  
+
                   // Student name (with ellipsis for long names)
                   Text(
                     payment.ownedBy.name,

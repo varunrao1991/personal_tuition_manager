@@ -47,6 +47,7 @@ class _WeekdayEditorDialogState extends State<WeekdayEditorDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
+            const SizedBox(height: 16.0),
             Text('Select Weekdays',
                 style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 16.0),
@@ -80,9 +81,12 @@ class _WeekdayEditorDialogState extends State<WeekdayEditorDialog> {
                       children: [
                         Text(
                           _dayName(weekdayId),
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                  ),
                         ),
                       ],
                     ),

@@ -66,8 +66,9 @@ class _AddStudentCourseProcessWidgetState
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
+        const SizedBox(height: 16.0),
         Text('Course Details', style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16.0),
         Form(
           key: _formKey,
           child: Column(
@@ -84,7 +85,7 @@ class _AddStudentCourseProcessWidgetState
                   return null;
                 },
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16.0),
               CustomFormTextField(
                 controller: _totalClassesController,
                 labelText: 'Classes',
@@ -101,7 +102,7 @@ class _AddStudentCourseProcessWidgetState
                   return null;
                 },
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16.0),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [

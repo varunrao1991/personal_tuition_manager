@@ -6,7 +6,7 @@ pipeline {
     }
 
     environment {
-        APP_NAME = "TeacherApp"
+        APK_NAME = "TeacherApp"
         ENVIRONMENT = "production"
         BUILD_BASE_DIR = "build"
         DEBUG_INFO_DIR = "debug_info"
@@ -71,7 +71,7 @@ pipeline {
                 sh '''
                 cat > .env.production <<EOF
                 DB_NAME=app.db
-                APP_NAME="Teacher App"
+                APP_NAME="Personal Tuition Manager"
                 EOF
                 '''
             }
@@ -132,7 +132,6 @@ pipeline {
                             --obfuscate \
                             --split-debug-info="${env.BUILD_BASE_DIR}/${env.DEBUG_INFO_DIR}" \
                             --dart-define=ENV=${env.ENVIRONMENT} \
-                            --dart-define=APP_NAME=${env.APP_NAME} \
                             --build-name="${env.VERSION_NAME}" \
                             --build-number=${BUILD_NUMBER}
                     """
@@ -147,7 +146,7 @@ pipeline {
                 script {
                     def outputDir = "build/app/outputs/bundle/release"
                     def originalAab = "${outputDir}/app-release.aab"
-                    def renamedAabName = "${env.APP_NAME}-${env.VERSION_NAME}-${env.ENVIRONMENT}.aab"
+                    def renamedAabName = "${env.APK_NAME}-${env.VERSION_NAME}-${env.ENVIRONMENT}.aab"
                     def renamedAab = "${outputDir}/${renamedAabName}"
 
                     if (fileExists(originalAab)) {

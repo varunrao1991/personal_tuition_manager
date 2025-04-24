@@ -97,7 +97,6 @@ class AttendanceProvider with ChangeNotifier {
         endDate: endDate,
         studentId: studentId,
       );
-      log('Attendance successfully loaded for id $studentId');
     });
   }
 

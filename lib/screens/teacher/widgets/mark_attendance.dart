@@ -206,9 +206,10 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
+            const SizedBox(height: 16.0),
             Text('Mark attendance',
                 style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16.0),
             _buildSearchBar(context, studentProvider),
             const SizedBox(height: 16),
             _buildStudentGrid(rearrangedStudents),

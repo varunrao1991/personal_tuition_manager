@@ -102,12 +102,9 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                   firstDay: DateTime.utc(2020, 1, 1),
                   lastDay: DateTime.now(),
                   availableCalendarFormats: const {
-                    CalendarFormat.month: 'Month',
+                    CalendarFormat.month: 'Month'
                   },
-                  headerStyle: HeaderStyle(
-                    titleCentered: true,
-                    titleTextStyle: Theme.of(context).textTheme.headlineSmall!,
-                  ),
+                  headerStyle: const HeaderStyle(titleCentered: true),
                   calendarFormat: CalendarFormat.month,
                   calendarStyle: CalendarStyle(
                     todayDecoration: BoxDecoration(
@@ -284,8 +281,9 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
               '${date.day}',
               style: TextStyle(
                 color: textColor,
-                fontWeight:
-                    isToday || isSelected ? FontWeight.bold : FontWeight.normal,
+                fontWeight: (isToday || isSelected)
+                    ? FontWeight.bold
+                    : FontWeight.normal,
               ),
             ),
           ),

@@ -114,8 +114,9 @@ class _StudentSelectorState extends State<StudentSelector> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
+          const SizedBox(height: 16.0),
           Text('Select Student', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16.0),
           GenericSearchBar(
             controller: _searchController,
             onChanged: (value) {
@@ -164,7 +165,7 @@ class _StudentSelectorState extends State<StudentSelector> {
               },
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16.0),
           if (_selectedStudent != null)
             Padding(
               padding: const EdgeInsets.only(bottom: 10.0),

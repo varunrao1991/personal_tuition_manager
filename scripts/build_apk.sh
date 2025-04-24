@@ -4,9 +4,10 @@
 debugInfoDir="debug_info"
 buildBaseDir="build"
 buildNumber=1
-appName="TeacherApp"
+apkName="TeacherApp"
 versionName="1.0.$buildNumber"
 environment="production"  # Change to "development" or "staging" as needed
+platforms="android-arm,android-arm64"
 
 # Cross-platform environment variable handling
 if [ -n "$KEYSTORE_FOLDER" ]; then
@@ -19,7 +20,7 @@ else
       KEYSTORE_FOLDER=$(wslpath "$KEYSTORE_FOLDER")
     fi
   fi
-  
+
   # Fallback to default Linux path if still not set
   KEYSTORE_FOLDER="${KEYSTORE_FOLDER:-$HOME/keystores}"
 fi
@@ -40,17 +41,17 @@ echo "Building with keystore folder: $KEYSTORE_FOLDER"
 debugInfoPath="$buildBaseDir/$debugInfoDir"
 mkdir -p "$debugInfoPath"
 
-echo "Building App Bundle for $environment environment..."
+echo "Building APK for $environment environment..."
 
 # Build command
-buildCommand="flutter build appbundle \
+buildCommand="flutter build apk \
 --release \
 --obfuscate \
 --split-debug-info=\"$debugInfoPath\" \
 --dart-define=ENV=$environment \
---dart-define=APP_NAME=$appName \
 --build-name=\"$versionName\" \
---build-number=$buildNumber"
+--build-number=$buildNumber \
+--target-platform=$platforms"
 
 echo "Executing:"
 echo "$buildCommand"
@@ -60,22 +61,22 @@ eval "$buildCommand"
 
 # Handle result
 if [ $? -eq 0 ]; then
-    echo -e "\nApp Bundle build successful!"
+    echo -e "\nAPK build successful!"
     echo "Version: $versionName"
     echo "Build: $buildNumber"
     echo "Environment: $environment"
 
-    outputDir="build/app/outputs/bundle/release"
-    originalAab="$outputDir/app-release.aab"
-    renamedAab="$outputDir/${appName}-${versionName}-${environment}.aab"
+    outputDir="build/app/outputs/flutter-apk"
+    originalApk="$outputDir/app-release.apk"
+    renamedApk="$outputDir/${apkName}-${versionName}-${environment}.apk"
 
-    if [ -f "$originalAab" ]; then
-        mv "$originalAab" "$renamedAab"
-        echo "App Bundle renamed to: $renamedAab"
+    if [ -f "$originalApk" ]; then
+        mv "$originalApk" "$renamedApk"
+        echo "APK renamed to: $renamedApk"
     else
-        echo "WARNING: App Bundle not found at expected location: $originalAab"
+        echo "WARNING: APK not found at expected location: $originalApk"
     fi
 else
-    echo -e "\nApp Bundle build failed!"
+    echo -e "\nAPK build failed!"
     exit 1
 fi

@@ -72,9 +72,10 @@ class _PaymentOwnerSelectorState extends State<PaymentOwnerSelector> {
                 child: Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
+                const SizedBox(height: 16.0),
                 Text('Select Paid Student',
                     style: Theme.of(context).textTheme.titleLarge),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16.0),
                 SizedBox(
                   height: 200,
                   child: Consumer<CourseProvider>(
@@ -108,7 +109,7 @@ class _PaymentOwnerSelectorState extends State<PaymentOwnerSelector> {
                     },
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16.0),
                 if (_selectedPayment != null)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 10.0),

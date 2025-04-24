@@ -47,9 +47,10 @@ class _HolidayFormState extends State<HolidayForm> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
+                const SizedBox(height: 16.0),
                 Text('Add Holiday',
                     style: Theme.of(context).textTheme.titleLarge),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16.0),
                 CustomDateInputField(
                   title: 'Holiday Date',
                   selectedDate: widget.selectedDate,

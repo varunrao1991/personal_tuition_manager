@@ -116,11 +116,9 @@ class MaterialTheme {
       onTertiary: Colors.black,
       error: Color(0xffba1a1a),
       onError: Colors.white,
-      background: Color(0xfff9f9f9),
-      onBackground: Color(0xff444444),
       surface: Color(0xfff9f9f9),
       onSurface: Color(0xff444444),
-      surfaceVariant: Colors.white,
+      surfaceContainerHighest: Colors.white,
       outline: Color(0xffdddddd),
     ),
     // Text Theme
@@ -192,8 +190,8 @@ class MaterialTheme {
           borderRadius: BorderRadius.circular(30),
         ),
       ).copyWith(
-        side: MaterialStateProperty.resolveWith<BorderSide?>((states) {
-          if (states.contains(MaterialState.disabled)) {
+        side: WidgetStateProperty.resolveWith<BorderSide?>((states) {
+          if (states.contains(WidgetState.disabled)) {
             return BorderSide(color: Colors.grey[400]!);
           }
           return null;
@@ -270,9 +268,9 @@ class MaterialTheme {
       unselectedLabelStyle:
           _buildTextTheme(const Color(0xff444444), const Color(0xff444444))
               .titleMedium,
-      indicator: UnderlineTabIndicator(
+      indicator: const UnderlineTabIndicator(
         borderSide: BorderSide(
-          color: const Color(0xff17a194),
+          color: Color(0xff17a194),
           width: 2,
         ),
       ),
@@ -296,11 +294,9 @@ class MaterialTheme {
       onTertiary: Colors.black,
       error: Color(0xffffb4ab),
       onError: Color(0xff690005),
-      background: Color(0xff121212),
-      onBackground: Color(0xffe0e0e0),
       surface: Color(0xff121212),
       onSurface: Color(0xffe0e0e0),
-      surfaceVariant: Color(0xff1e1e1e),
+      surfaceContainerHighest: Color(0xff1e1e1e),
       outline: Color(0xff333333),
     ),
     // Text Theme
@@ -372,8 +368,8 @@ class MaterialTheme {
           borderRadius: BorderRadius.circular(30),
         ),
       ).copyWith(
-        side: MaterialStateProperty.resolveWith<BorderSide?>((states) {
-          if (states.contains(MaterialState.disabled)) {
+        side: WidgetStateProperty.resolveWith<BorderSide?>((states) {
+          if (states.contains(WidgetState.disabled)) {
             return BorderSide(color: Colors.grey[700]!);
           }
           return null;
@@ -450,9 +446,9 @@ class MaterialTheme {
       unselectedLabelStyle:
           _buildTextTheme(const Color(0xffe0e0e0), const Color(0xffe0e0e0))
               .titleMedium,
-      indicator: UnderlineTabIndicator(
+      indicator: const UnderlineTabIndicator(
         borderSide: BorderSide(
-          color: const Color(0xff7d99d7),
+          color: Color(0xff7d99d7),
           width: 2,
         ),
       ),

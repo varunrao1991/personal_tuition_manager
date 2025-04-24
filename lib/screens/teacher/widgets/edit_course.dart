@@ -40,9 +40,10 @@ class _EditCourseWidgetState extends State<EditCourseWidget> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
+                const SizedBox(height: 16.0),
                 Text('Edit Course',
                     style: Theme.of(context).textTheme.titleLarge),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16.0),
                 CustomFormTextField(
                   controller: _totalClassesController,
                   labelText: 'Classes',
@@ -58,7 +59,7 @@ class _EditCourseWidgetState extends State<EditCourseWidget> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16.0),
                 CustomElevatedButton(
                   text: 'Update',
                   onPressed: () async {

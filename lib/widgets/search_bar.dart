@@ -52,103 +52,106 @@ class _GenericSearchBarState extends State<GenericSearchBar> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Row(
-      children: [
-        Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12.0),
-              boxShadow: [
-                BoxShadow(
-                  color: theme.shadowColor.withOpacity(0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: TextField(
-              controller: widget.controller,
-              autofocus: widget.autofocus,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurface,
+    return Padding(
+      padding: const EdgeInsets.all(8), // 👈 Add padding here
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12.0),
+                boxShadow: [
+                  BoxShadow(
+                    color: theme.shadowColor.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: theme.cardColor,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: AppPaddings.mediumPadding,
-                  vertical: AppPaddings.smallPadding,
+              child: TextField(
+                controller: widget.controller,
+                autofocus: widget.autofocus,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurface,
                 ),
-                hintText: widget.hintText ?? 'Search...',
-                hintStyle: theme.textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurface.withOpacity(0.5),
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: theme.cardColor,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: AppPaddings.mediumPadding,
+                    vertical: AppPaddings.smallPadding,
+                  ),
+                  hintText: widget.hintText ?? 'Search...',
+                  hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurface.withOpacity(0.5),
+                  ),
+                  labelText: widget.labelText,
+                  labelStyle: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.primary,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                    borderSide: BorderSide(
+                      color: colorScheme.primary,
+                      width: 1.5,
+                    ),
+                  ),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: colorScheme.onSurface.withOpacity(0.7),
+                  ),
+                  suffixIcon: widget.controller.text.isNotEmpty
+                      ? IconButton(
+                          icon: Icon(
+                            Icons.clear,
+                            color: colorScheme.onSurface.withOpacity(0.7),
+                          ),
+                          onPressed: () {
+                            widget.controller.clear();
+                            widget.onClear();
+                            widget.onChanged('');
+                          },
+                        )
+                      : null,
                 ),
-                labelText: widget.labelText,
-                labelStyle: theme.textTheme.bodyMedium?.copyWith(
+                onChanged: _onSearchChanged,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          if (widget.onFilterPressed != null)
+            Container(
+              height: 48,
+              decoration: BoxDecoration(
+                color: theme.cardColor,
+                borderRadius: BorderRadius.circular(12.0),
+                boxShadow: [
+                  BoxShadow(
+                    color: theme.shadowColor.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: IconButton(
+                icon: Icon(
+                  Icons.filter_alt_rounded,
                   color: colorScheme.primary,
                 ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.0),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.0),
-                  borderSide: BorderSide.none,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.0),
-                  borderSide: BorderSide(
-                    color: colorScheme.primary,
-                    width: 1.5,
-                  ),
-                ),
-                prefixIcon: Icon(
-                  Icons.search,
-                  color: colorScheme.onSurface.withOpacity(0.7),
-                ),
-                suffixIcon: widget.controller.text.isNotEmpty
-                    ? IconButton(
-                        icon: Icon(
-                          Icons.clear,
-                          color: colorScheme.onSurface.withOpacity(0.7),
-                        ),
-                        onPressed: () {
-                          widget.controller.clear();
-                          widget.onClear();
-                          widget.onChanged('');
-                        },
-                      )
-                    : null,
+                tooltip: 'Filter',
+                onPressed: widget.onFilterPressed,
               ),
-              onChanged: _onSearchChanged,
             ),
-          ),
-        ),
-        const SizedBox(width: 10),
-        if (widget.onFilterPressed != null)
-          Container(
-            height: 48,
-            decoration: BoxDecoration(
-              color: theme.cardColor,
-              borderRadius: BorderRadius.circular(12.0),
-              boxShadow: [
-                BoxShadow(
-                  color: theme.shadowColor.withOpacity(0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: IconButton(
-              icon: Icon(
-                Icons.filter_alt_rounded,
-                color: colorScheme.primary,
-              ),
-              tooltip: 'Filter',
-              onPressed: widget.onFilterPressed,
-            ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 }

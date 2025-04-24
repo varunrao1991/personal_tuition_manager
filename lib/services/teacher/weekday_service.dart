@@ -1,6 +1,6 @@
 import 'dart:developer';
-import 'package:padmayoga/helpers/database_helper.dart';
 import '../../exceptions/weekday_exception.dart';
+import '../../helpers/database_helper.dart';
 
 class WeekdayService {
   WeekdayService();
