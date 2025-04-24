@@ -3,6 +3,8 @@ pipeline {
 
     parameters {
         booleanParam(name: 'UPLOAD_TO_PLAYSTORE', defaultValue: false, description: 'Enable to upload the build to Play Store')
+        choice(name: 'TRACK', choices: ['internal', 'alpha', 'beta', 'production'], defaultValue: 'internal', description: 'Select Play Store track for deployment')
+        choice(name: 'RELEASE_STATUS', choices: ['draft', 'completed', 'inProgress', 'halted'], defaultValue: 'draft', description: 'Release status for the deployment')
     }
 
     environment {
@@ -10,6 +12,8 @@ pipeline {
         ENVIRONMENT = "production"
         BUILD_BASE_DIR = "build"
         DEBUG_INFO_DIR = "debug_info"
+        FASTFILE_TRACK = "${params.TRACK}"
+        FASTFILE_RELEASE_STATUS = "${params.RELEASE_STATUS}"
 
         KEY_ALIAS = credentials('KEY_ALIAS')
         KEY_PASSWORD = credentials('KEY_PASSWORD')
@@ -38,7 +42,6 @@ pipeline {
                 }
             }
         }
-
 
         stage('Set Up Keystore Folder') {
             steps {
@@ -109,7 +112,6 @@ pipeline {
             }
         }
 
-
         stage('Install Dependencies') {
             steps {
                 dir('android') {
@@ -155,15 +157,16 @@ pipeline {
 
                         // Set environment variables
                         env.AAB_FILE_PATH = "../${outputDir}/${renamedAabName}"
-
+                        
                         echo "AAB_FILE_PATH set to: ${env.AAB_FILE_PATH}"
+                        echo "Using track: ${env.FASTFILE_TRACK}"
+                        echo "Using release status: ${env.FASTFILE_RELEASE_STATUS}"
                     } else {
                         echo "WARNING: App Bundle not found at expected location: ${originalAab}"
                     }
                 }
             }
         }
-
 
         stage('Post Build') {
             steps {
@@ -180,7 +183,6 @@ pipeline {
                 }
             }
         }
-
 
         stage('Upload to Play Store') {
             when {

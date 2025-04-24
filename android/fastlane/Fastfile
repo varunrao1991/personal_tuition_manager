@@ -4,7 +4,7 @@ lane :deploy do
     aab: ENV["AAB_FILE_PATH"],
     json_key: ENV["PLAY_STORE_JSON_PATH"],
     package_name: "com.padma.yoglog",
-    track: "internal",
-    release_status: "draft"
+    track:  ENV["FASTFILE_TRACK"],
+    release_status: ENV["FASTFILE_RELEASE_STATUS"]
   )  
 end
