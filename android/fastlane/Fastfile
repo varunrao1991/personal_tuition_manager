@@ -6,5 +6,11 @@ lane :deploy do
     package_name: "com.padma.yoglog",
     track: "internal",
     release_status: "draft"
-  )  
+  )
+
+  upload_symbols_to_play_console(
+    symbol_paths: [ENV["DEBUG_SYMBOLS_PATH"]],
+    package_name: "com.padma.yoglog",
+    json_key: ENV["PLAY_STORE_JSON_PATH"]
+  )
 end

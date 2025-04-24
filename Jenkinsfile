@@ -141,7 +141,7 @@ pipeline {
             }
         }
 
-       stage('Rename App Bundle') {
+        stage('Rename App Bundle') {
             steps {
                 script {
                     def outputDir = "build/app/outputs/bundle/release"
@@ -152,7 +152,13 @@ pipeline {
                     if (fileExists(originalAab)) {
                         sh "mv ${originalAab} ${renamedAab}"
                         echo "App Bundle renamed to: ${renamedAab}"
+
+                        // Set environment variables
                         env.AAB_FILE_PATH = "../${outputDir}/${renamedAabName}"
+                        env.DEBUG_SYMBOLS_PATH = "${env.BUILD_BASE_DIR}/${env.DEBUG_INFO_DIR}"
+
+                        echo "AAB_FILE_PATH set to: ${env.AAB_FILE_PATH}"
+                        echo "DEBUG_SYMBOLS_PATH set to: ${env.DEBUG_SYMBOLS_PATH}"
                     } else {
                         echo "WARNING: App Bundle not found at expected location: ${originalAab}"
                     }
@@ -160,10 +166,12 @@ pipeline {
             }
         }
 
+
         stage('Post Build') {
             steps {
                 script {
                     archiveArtifacts artifacts: '**/build/app/outputs/bundle/release/*.aab', allowEmptyArchive: true
+                    archiveArtifacts artifacts: "${env.BUILD_BASE_DIR}/${env.DEBUG_INFO_DIR}/**/*", allowEmptyArchive: true
                 }
             }
         }
