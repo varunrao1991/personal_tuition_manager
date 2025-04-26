@@ -36,8 +36,8 @@ jobs:
     - name: Set up Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.29.3'  # Use the newer version (3.29.3) here
-        channel: stable           # Ensure you're using the correct stable channel
+        flutter-version: '3.29.3'
+        channel: stable
 
     - name: Verify Flutter Installation
       run: |
@@ -78,7 +78,6 @@ jobs:
     - name: Install Dependencies
       run: |
         cd android
-        echo "Installing dependencies..."
         flutter pub get
         flutter doctor
 
