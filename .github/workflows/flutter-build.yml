@@ -25,6 +25,14 @@ jobs:
       with:
         ref: main
 
+    - name: Cache Flutter dependencies
+      uses: actions/cache@v2
+      with:
+        path: ~/.pub-cache
+        key: ${{ runner.os }}-flutter-${{ hashFiles('**/pubspec.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-flutter-
+
     - name: Set up Flutter
       uses: subosito/flutter-action@v2
       with:
@@ -74,6 +82,16 @@ jobs:
         flutter pub get
         flutter doctor
 
+    - name: Cache Android dependencies
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-android-${{ hashFiles('**/*.gradle*') }}
+        restore-keys: |
+          ${{ runner.os }}-android-
+
     - name: Build App Bundle
       run: |
         flutter build appbundle --release \
@@ -107,8 +125,8 @@ jobs:
         mkdir -p $HOME/.keystore
         echo "${{ secrets.KEYSTORE_FILE }}" | base64 --decode > $HOME/.keystore/key_store_file.jks
         
-        # Path to the unsigned app bundle
-        UNSIGNED_AAB="${BUILD_BASE_DIR}/app/outputs/bundle/release/app-release.aab"
+        # Path to the unsigned app bundle (renamed version)
+        UNSIGNED_AAB="${BUILD_BASE_DIR}/app/outputs/bundle/release/${APK_NAME}-${VERSION_NAME}-${ENVIRONMENT}.aab"
         SIGNED_AAB="${BUILD_BASE_DIR}/app/outputs/bundle/release/${APK_NAME}-${VERSION_NAME}-${ENVIRONMENT}-signed.aab"
 
         # Sign the app bundle using jarsigner
