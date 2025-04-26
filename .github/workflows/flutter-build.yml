@@ -25,7 +25,6 @@ jobs:
       with:
         ref: main
 
-    # Keystore file and password validation before any installation
     - name: Verify Keystore Password
       id: verify_keystore
       run: |
@@ -37,17 +36,16 @@ jobs:
         # Decode keystore from the secrets and create directory
         mkdir -p $HOME/.keystore
         echo "${{ secrets.KEYSTORE_FILE }}" | base64 --decode > $HOME/.keystore/key_store_file.jks
-
+    
         # Validate the keystore password using keytool
-        keytool -list -keystore $HOME/.keystore/key_store_file.jks -storepass "${{ secrets.KEY_PASSWORD }}" &>/dev/null
-        
+        keytool -list -keystore $HOME/.keystore/key_store_file.jks -storepass "${{ secrets.KEY_PASSWORD }}"
         if [ $? -ne 0 ]; then
           echo "Invalid keystore password. Please verify your password and try again."
           exit 1
         else
           echo "Keystore password is valid. Proceeding with the build."
         fi
-
+      
     - name: Cache Flutter dependencies
       uses: actions/cache@v3
       with:
