@@ -96,9 +96,14 @@ jobs:
         fi
 
     - name: Sign App Bundle
-      if: ${{ secrets.KEYSTORE_FILE != '' }}
       run: |
         # Ensure the keystore file is available
+        if [ -z "${{ secrets.KEYSTORE_FILE }}" ]; then
+          echo "Keystore file is missing. Skipping signing step."
+          exit 0  # Skip the signing step if no keystore is provided
+        fi
+        
+        # Create keystore directory and decode the keystore
         mkdir -p $HOME/.keystore
         echo "${{ secrets.KEYSTORE_FILE }}" | base64 --decode > $HOME/.keystore/key_store_file.jks
         
@@ -108,7 +113,13 @@ jobs:
 
         # Sign the app bundle using jarsigner
         if [ -f "$UNSIGNED_AAB" ]; then
-          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore $HOME/.keystore/key_store_file.jks -storepass ${{ secrets.KEY_PASSWORD }} -keypass ${{ secrets.KEY_PASSWORD }} $UNSIGNED_AAB ${{ secrets.KEY_ALIAS }}
+          jarsigner -verbose \
+                    -sigalg SHA256withRSA \
+                    -digestalg SHA-256 \
+                    -keystore $HOME/.keystore/key_store_file.jks \
+                    -storepass "${{ secrets.KEY_PASSWORD }}" \
+                    -keypass "${{ secrets.KEY_PASSWORD }}" \
+                    $UNSIGNED_AAB "${{ secrets.KEY_ALIAS }}"
           mv $UNSIGNED_AAB $SIGNED_AAB
           echo "App Bundle signed and moved to: $SIGNED_AAB"
           echo "SIGNED_AAB_PATH=$SIGNED_AAB" >> $GITHUB_ENV
