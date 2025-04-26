@@ -26,7 +26,7 @@ jobs:
         ref: main
 
     - name: Cache Flutter dependencies
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/.pub-cache
         key: ${{ runner.os }}-flutter-${{ hashFiles('**/pubspec.yaml') }}
@@ -82,7 +82,7 @@ jobs:
         flutter doctor
 
     - name: Cache Android dependencies
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: |
           ~/.gradle/caches
