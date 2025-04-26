@@ -90,7 +90,7 @@ pipeline {
         stage('Prepare Keystore File') {
             steps {
                 script {
-                    def keystoreFilePath = "${env.KEYSTORE_FOLDER}/padmayoga_release_key.jks"
+                    def keystoreFilePath = "${env.KEYSTORE_FOLDER}/key_store_file.jks"
 
                     // Ensure the folder exists
                     if (!fileExists(env.KEYSTORE_FOLDER)) {

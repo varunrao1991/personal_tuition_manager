@@ -36,6 +36,16 @@ jobs:
         flutter --version
         flutter doctor
 
+    - name: Check for Keystore
+      id: check_keystore
+      run: |
+        if [ -z "${{ secrets.KEYSTORE_FILE }}" ]; then
+          echo "Keystore file is not provided, exiting the workflow."
+          exit 1
+        else
+          echo "Keystore file found, proceeding with the build."
+        fi
+
     - name: Extract Version from pubspec.yaml
       id: extract_version
       run: |
@@ -64,7 +74,7 @@ jobs:
           echo "Keystore secret is not set, skipping signing step."
         else
           echo "Copying keystore file..."
-          echo "${{ secrets.KEYSTORE_FILE }}" | base64 --decode > $HOME/.keystore/padmayoga_release_key.jks
+          echo "${{ secrets.KEYSTORE_FILE }}" | base64 --decode > $HOME/.keystore/key_store_file.jks
         fi
 
     - name: Install Dependencies
@@ -109,7 +119,6 @@ jobs:
       run: |
         if command -v fastlane &>/dev/null; then
           echo "Fastlane is installed."
-          echo "fastlane_installed=true" >> $GITHUB_ENV
           echo "fastlane_installed=true" >> $GITHUB_ENV
         else
           echo "Fastlane is not installed, skipping Play Store upload."
