@@ -44,14 +44,29 @@ jobs:
         flutter --version
         flutter doctor
 
-    - name: Check for Keystore
+    # Early keystore verification
+    - name: Check for Keystore and Alias/Password Verification
       id: check_keystore
       run: |
         if [ -z "${{ secrets.KEYSTORE_FILE }}" ]; then
           echo "Keystore file is not provided, exiting the workflow."
           exit 1
         else
-          echo "Keystore file found, proceeding with the build."
+          echo "Keystore file found, proceeding with further checks."
+        fi
+
+        if [ -z "${{ secrets.KEY_PASSWORD }}" ]; then
+          echo "Keystore password is not provided, exiting the workflow."
+          exit 1
+        else
+          echo "Keystore password found, proceeding with further checks."
+        fi
+
+        if [ -z "${{ secrets.KEY_ALIAS }}" ]; then
+          echo "Keystore alias is not provided, exiting the workflow."
+          exit 1
+        else
+          echo "Keystore alias found, proceeding with the build."
         fi
 
     - name: Extract Version from pubspec.yaml
