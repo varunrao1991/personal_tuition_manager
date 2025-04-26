@@ -28,7 +28,13 @@ jobs:
     - name: Set up Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.5.2'  # Update this as per your project SDK version
+        flutter-version: '3.29.3'  # Use the newer version (3.29.3) here
+        channel: stable           # Ensure you're using the correct stable channel
+
+    - name: Verify Flutter Installation
+      run: |
+        flutter --version
+        flutter doctor
 
     - name: Extract Version from pubspec.yaml
       id: extract_version
