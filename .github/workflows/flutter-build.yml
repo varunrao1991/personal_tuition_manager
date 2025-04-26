@@ -1,0 +1,128 @@
+name: Build and Deploy Flutter App
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  APK_NAME: TeacherApp
+  ENVIRONMENT: production
+  BUILD_BASE_DIR: build
+  DEBUG_INFO_DIR: debug_info
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
+      with:
+        ref: main
+
+    - name: Set up Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.5.2'  # Update this as per your project SDK version
+
+    - name: Extract Version from pubspec.yaml
+      id: extract_version
+      run: |
+        VERSION_NAME=$(grep '^version:' pubspec.yaml | cut -d ':' -f2 | tr -d '[:space:]')
+        VERSION_NAME="${VERSION_NAME}-${GITHUB_RUN_NUMBER}"
+        echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
+        echo "VERSION_NAME set to: $VERSION_NAME"
+
+    - name: Create Debug Info Directory
+      run: |
+        mkdir -p "${BUILD_BASE_DIR}/${DEBUG_INFO_DIR}"
+        echo "Debug info directory created at: ${BUILD_BASE_DIR}/${DEBUG_INFO_DIR}"
+
+    - name: Generate Env File
+      run: |
+        echo "DB_NAME=app.db" > .env.production
+        echo 'APP_NAME="Personal Tuition Manager"' >> .env.production
+
+    - name: Verify Env File
+      run: cat .env.production
+
+    - name: Prepare Keystore File (if exists)
+      run: |
+        mkdir -p $HOME/.keystore
+        if [ -z "${{ secrets.KEYSTORE_FILE }}" ]; then
+          echo "Keystore secret is not set, skipping signing step."
+        else
+          echo "Copying keystore file..."
+          echo "${{ secrets.KEYSTORE_FILE }}" | base64 --decode > $HOME/.keystore/padmayoga_release_key.jks
+        fi
+
+    - name: Install Dependencies
+      run: |
+        cd android
+        echo "Installing dependencies..."
+        flutter pub get
+        flutter doctor
+
+    - name: Build App Bundle
+      run: |
+        flutter build appbundle --release \
+          --obfuscate \
+          --split-debug-info="${BUILD_BASE_DIR}/${DEBUG_INFO_DIR}" \
+          --dart-define=ENV=${ENVIRONMENT} \
+          --build-name="${VERSION_NAME}" \
+          --build-number=${GITHUB_RUN_NUMBER}
+
+    - name: Rename App Bundle
+      run: |
+        ORIGINAL_AAB="build/app/outputs/bundle/release/app-release.aab"
+        RENAMED_AAB="build/app/outputs/bundle/release/${APK_NAME}-${VERSION_NAME}-${ENVIRONMENT}.aab"
+        if [ -f "$ORIGINAL_AAB" ]; then
+          mv $ORIGINAL_AAB $RENAMED_AAB
+          echo "App Bundle renamed to: $RENAMED_AAB"
+          echo "AAB_FILE_PATH=$RENAMED_AAB" >> $GITHUB_ENV
+        else
+          echo "WARNING: App Bundle not found."
+        fi
+
+    - name: Upload to Play Store (if Fastlane exists and enabled)
+      if: ${{ github.event.inputs.UPLOAD_TO_PLAYSTORE == 'true' && (steps.fastlane_check.outputs.fastlane_installed == 'true') }}
+      run: |
+        echo "Uploading AAB to Play Store using Fastlane..."
+        echo "${{ secrets.PLAY_STORE_JSON_KEY }}" | base64 --decode > play_store_json_key.json
+        cd android
+        bundle exec fastlane run validate_play_store_json_key json_key:play_store_json_key.json
+        bundle exec fastlane deploy json_key:play_store_json_key.json
+
+    - name: Check Fastlane Installation
+      id: fastlane_check
+      run: |
+        if command -v fastlane &>/dev/null; then
+          echo "Fastlane is installed."
+          echo "fastlane_installed=true" >> $GITHUB_ENV
+          echo "fastlane_installed=true" >> $GITHUB_ENV
+        else
+          echo "Fastlane is not installed, skipping Play Store upload."
+          echo "fastlane_installed=false" >> $GITHUB_ENV
+        fi
+
+    - name: Archive Artifacts
+      run: |
+        echo "Archiving app bundle and debug symbols..."
+        mkdir -p $HOME/artifacts
+        mv build/app/outputs/bundle/release/*.aab $HOME/artifacts/
+        mv build/debug_info/* $HOME/artifacts/
+        ls -al $HOME/artifacts
+        echo "Artifacts archived."
+        
+    - name: Success Message
+      if: success()
+      run: echo "Build successful!"
+
+    - name: Failure Message
+      if: failure()
+      run: echo "Build failed!"
