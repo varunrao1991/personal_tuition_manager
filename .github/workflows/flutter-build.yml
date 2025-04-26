@@ -25,6 +25,29 @@ jobs:
       with:
         ref: main
 
+    # Keystore file and password validation before any installation
+    - name: Verify Keystore Password
+      id: verify_keystore
+      run: |
+        if [ -z "${{ secrets.KEYSTORE_FILE }}" ]; then
+          echo "Keystore file is not provided, exiting the workflow."
+          exit 1
+        fi
+        
+        # Decode keystore from the secrets and create directory
+        mkdir -p $HOME/.keystore
+        echo "${{ secrets.KEYSTORE_FILE }}" | base64 --decode > $HOME/.keystore/key_store_file.jks
+
+        # Validate the keystore password using keytool
+        keytool -list -keystore $HOME/.keystore/key_store_file.jks -storepass "${{ secrets.KEY_PASSWORD }}" &>/dev/null
+        
+        if [ $? -ne 0 ]; then
+          echo "Invalid keystore password. Please verify your password and try again."
+          exit 1
+        else
+          echo "Keystore password is valid. Proceeding with the build."
+        fi
+
     - name: Cache Flutter dependencies
       uses: actions/cache@v3
       with:
@@ -44,30 +67,12 @@ jobs:
         flutter --version
         flutter doctor
 
-    # Early keystore verification
-    - name: Check for Keystore and Alias/Password Verification
-      id: check_keystore
+    # Fastlane installation
+    - name: Install Fastlane
       run: |
-        if [ -z "${{ secrets.KEYSTORE_FILE }}" ]; then
-          echo "Keystore file is not provided, exiting the workflow."
-          exit 1
-        else
-          echo "Keystore file found, proceeding with further checks."
-        fi
-
-        if [ -z "${{ secrets.KEY_PASSWORD }}" ]; then
-          echo "Keystore password is not provided, exiting the workflow."
-          exit 1
-        else
-          echo "Keystore password found, proceeding with further checks."
-        fi
-
-        if [ -z "${{ secrets.KEY_ALIAS }}" ]; then
-          echo "Keystore alias is not provided, exiting the workflow."
-          exit 1
-        else
-          echo "Keystore alias found, proceeding with the build."
-        fi
+        sudo apt-get update
+        sudo apt-get install -y ruby-full
+        sudo gem install fastlane
 
     - name: Extract Version from pubspec.yaml
       id: extract_version
@@ -129,21 +134,17 @@ jobs:
 
     - name: Sign App Bundle
       run: |
-        # Ensure the keystore file is available
         if [ -z "${{ secrets.KEYSTORE_FILE }}" ]; then
           echo "Keystore file is missing. Skipping signing step."
-          exit 0  # Skip the signing step if no keystore is provided
+          exit 0
         fi
         
-        # Create keystore directory and decode the keystore
         mkdir -p $HOME/.keystore
         echo "${{ secrets.KEYSTORE_FILE }}" | base64 --decode > $HOME/.keystore/key_store_file.jks
         
-        # Path to the unsigned app bundle (renamed version)
         UNSIGNED_AAB="${BUILD_BASE_DIR}/app/outputs/bundle/release/${APK_NAME}-${VERSION_NAME}-${ENVIRONMENT}.aab"
         SIGNED_AAB="${BUILD_BASE_DIR}/app/outputs/bundle/release/${APK_NAME}-${VERSION_NAME}-${ENVIRONMENT}-signed.aab"
 
-        # Sign the app bundle using jarsigner
         if [ -f "$UNSIGNED_AAB" ]; then
           jarsigner -verbose \
                     -sigalg SHA256withRSA \
@@ -168,17 +169,6 @@ jobs:
         cd android
         bundle exec fastlane run validate_play_store_json_key json_key:play_store_json_key.json
         bundle exec fastlane deploy json_key:play_store_json_key.json
-
-    - name: Check Fastlane Installation
-      id: fastlane_check
-      run: |
-        if command -v fastlane &>/dev/null; then
-          echo "Fastlane is installed."
-          echo "fastlane_installed=true" >> $GITHUB_ENV
-        else
-          echo "Fastlane is not installed, skipping Play Store upload."
-          echo "fastlane_installed=false" >> $GITHUB_ENV
-        fi
 
     - name: Archive Artifacts
       run: |
