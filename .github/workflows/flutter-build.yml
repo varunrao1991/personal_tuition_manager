@@ -67,16 +67,6 @@ jobs:
     - name: Verify Env File
       run: cat .env.production
 
-    - name: Prepare Keystore File (if exists)
-      run: |
-        mkdir -p $HOME/.keystore
-        if [ -z "${{ secrets.KEYSTORE_FILE }}" ]; then
-          echo "Keystore secret is not set, skipping signing step."
-        else
-          echo "Copying keystore file..."
-          echo "${{ secrets.KEYSTORE_FILE }}" | base64 --decode > $HOME/.keystore/key_store_file.jks
-        fi
-
     - name: Install Dependencies
       run: |
         cd android
@@ -103,6 +93,28 @@ jobs:
           echo "AAB_FILE_PATH=$RENAMED_AAB" >> $GITHUB_ENV
         else
           echo "WARNING: App Bundle not found."
+        fi
+
+    - name: Sign App Bundle
+      if: ${{ secrets.KEYSTORE_FILE != '' }}
+      run: |
+        # Ensure the keystore file is available
+        mkdir -p $HOME/.keystore
+        echo "${{ secrets.KEYSTORE_FILE }}" | base64 --decode > $HOME/.keystore/key_store_file.jks
+        
+        # Path to the unsigned app bundle
+        UNSIGNED_AAB="${BUILD_BASE_DIR}/app/outputs/bundle/release/app-release.aab"
+        SIGNED_AAB="${BUILD_BASE_DIR}/app/outputs/bundle/release/${APK_NAME}-${VERSION_NAME}-${ENVIRONMENT}-signed.aab"
+
+        # Sign the app bundle using jarsigner
+        if [ -f "$UNSIGNED_AAB" ]; then
+          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore $HOME/.keystore/key_store_file.jks -storepass ${{ secrets.KEY_PASSWORD }} -keypass ${{ secrets.KEY_PASSWORD }} $UNSIGNED_AAB ${{ secrets.KEY_ALIAS }}
+          mv $UNSIGNED_AAB $SIGNED_AAB
+          echo "App Bundle signed and moved to: $SIGNED_AAB"
+          echo "SIGNED_AAB_PATH=$SIGNED_AAB" >> $GITHUB_ENV
+        else
+          echo "ERROR: App Bundle not found at $UNSIGNED_AAB"
+          exit 1
         fi
 
     - name: Upload to Play Store (if Fastlane exists and enabled)
