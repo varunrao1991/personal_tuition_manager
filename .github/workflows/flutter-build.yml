@@ -33,34 +33,31 @@ jobs:
       - name: Verify Keystore Password (with enhanced debug)
         id: verify_keystore
         run: |
-          # Generate and print checksums first
+          # Make sure /tmp/keystore exists
+          mkdir -p "$(dirname "$KEYSTORE_PATH")"
+      
+          # Debug checksums
           echo "::debug::Password checksum (SHA-256): $(echo -n "${{ secrets.KEY_PASSWORD }}" | shasum -a 256 | cut -d' ' -f1)"
           echo "::debug::Alias checksum (SHA-256): $(echo -n "${{ secrets.KEY_ALIAS }}" | shasum -a 256 | cut -d' ' -f1)"
           
-          # Original debug info (partial password/keystore)
           echo "::debug::First 2 chars of KEY_PASSWORD: ${KEY_PASSWORD:0:2}**"
           echo "::debug::First 3 lines of KEYSTORE_FILE:"
           echo "${{ secrets.KEYSTORE_FILE }}" | head -n 3
       
-          # Create keystore directory
-          mkdir -p "$HOME/.keystore"
-      
-          # Decode keystore (Ubuntu uses `base64 -d`)
+          # Decode and save keystore
           echo "${{ secrets.KEYSTORE_FILE }}" | base64 -d > "$KEYSTORE_PATH"
       
-          # Enhanced file verification
+          # Verify keystore file
           echo "::debug::Keystore file verification:"
-          ls -la "$HOME/.keystore/"
+          ls -la "$(dirname "$KEYSTORE_PATH")"
           file "$KEYSTORE_PATH"
           echo "::debug::Keystore size: $(wc -c <"$KEYSTORE_PATH") bytes"
-          
-          # Print first 100 bytes in both hex and raw formats
           echo "::debug::First 100 bytes (hexdump):"
           head -c 100 "$KEYSTORE_PATH" | hexdump -C
           echo "::debug::First 100 bytes (raw base64):"
           head -c 100 "$KEYSTORE_PATH" | base64 -w0
       
-          # Password verification with alias check
+          # Verify password and alias
           if ! keytool -list \
             -keystore "$KEYSTORE_PATH" \
             -storepass "${{ secrets.KEY_PASSWORD }}" \
@@ -73,7 +70,7 @@ jobs:
             echo "Keystore verification successful. Checksums:"
             echo "Password: $(echo -n "${{ secrets.KEY_PASSWORD }}" | shasum -a 256 | cut -d' ' -f1)"
             echo "Alias: $(echo -n "${{ secrets.KEY_ALIAS }}" | shasum -a 256 | cut -d' ' -f1)"
-          fi
+          fi      
 
       - name: Set up Java
         uses: actions/setup-java@v3
