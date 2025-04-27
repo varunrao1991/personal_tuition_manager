@@ -138,21 +138,27 @@ jobs:
             --build-name="${VERSION_NAME}" \
             --build-number=${GITHUB_RUN_NUMBER}
 
-      - name: Sign the AAB
-        run: |
-          UNSIGNED_AAB="${BUILD_BASE_DIR}/app/outputs/bundle/release/app-release.aab"
-          SIGNED_AAB="${BUILD_BASE_DIR}/app/outputs/bundle/release/${APK_NAME}-${VERSION_NAME}-${ENVIRONMENT}-signed.aab"
-
-          jarsigner -verbose \
-                    -sigalg SHA256withRSA \
-                    -digestalg SHA-256 \
-                    -keystore "$KEYSTORE_PATH" \
-                    -storepass "${{ secrets.KEY_PASSWORD }}" \
-                    -keypass "${{ secrets.KEY_PASSWORD }}" \
-                    "$UNSIGNED_AAB" "${{ secrets.KEY_ALIAS }}"
-
-          mv "$UNSIGNED_AAB" "$SIGNED_AAB"
-          echo "SIGNED_AAB_PATH=$SIGNED_AAB" >> $GITHUB_ENV
+            - name: Sign the AAB
+            run: |
+              UNSIGNED_AAB="${BUILD_BASE_DIR}/app/outputs/bundle/release/app-release.aab"
+              SIGNED_AAB="${BUILD_BASE_DIR}/app/outputs/bundle/release/${APK_NAME}-${VERSION_NAME}-${ENVIRONMENT}-signed.aab"
+          
+              # Decode password and alias
+              DECODED_KEY_PASSWORD=$(echo "${{ secrets.KEY_PASSWORD }}" | base64 -d)
+              DECODED_KEY_ALIAS=$(echo "${{ secrets.KEY_ALIAS }}" | base64 -d)
+          
+              # Sign the AAB
+              jarsigner -verbose \
+                        -sigalg SHA256withRSA \
+                        -digestalg SHA-256 \
+                        -keystore "$KEYSTORE_PATH" \
+                        -storepass "$DECODED_KEY_PASSWORD" \
+                        -keypass "$DECODED_KEY_PASSWORD" \
+                        "$UNSIGNED_AAB" "$DECODED_KEY_ALIAS"
+          
+              # Move signed AAB
+              mv "$UNSIGNED_AAB" "$SIGNED_AAB"
+              echo "SIGNED_AAB_PATH=$SIGNED_AAB" >> $GITHUB_ENV          
 
       - name: Upload Release Artifacts
         uses: actions/upload-artifact@v4
