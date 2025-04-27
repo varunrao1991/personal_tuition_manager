@@ -28,141 +28,138 @@ jobs:
       KEYSTORE_PATH: /tmp/keystore/key_store_file.jks
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
-      with:
-        ref: main
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Set up Java
-      uses: actions/setup-java@v3
-      with:
-        distribution: 'zulu'
-        java-version: '17'
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
 
-    - name: Set up Flutter
-      uses: subosito/flutter-action@v2
-      with:
-        flutter-version: '3.29.3'
-        channel: 'stable'
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.29.3'
+          channel: 'stable'
 
-    - name: Verify Flutter Installation
-      run: |
-        flutter --version
-        flutter doctor
+      - name: Verify Flutter Installation
+        run: |
+          flutter --version
+          flutter doctor
 
-    - name: Install Fastlane
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y ruby-full
-        sudo gem install fastlane
+      - name: Install Fastlane
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ruby-full
+          sudo gem install bundler fastlane
 
-    - name: Verify Keystore
-      id: verify_keystore
-      run: |
-        mkdir -p $(dirname "$KEYSTORE_PATH")
-        echo "${{ secrets.KEYSTORE_FILE }}" | base64 -d > "$KEYSTORE_PATH"
+      - name: Setup Keystore
+        id: setup_keystore
+        run: |
+          mkdir -p "$(dirname "$KEYSTORE_PATH")"
+          echo "${{ secrets.KEYSTORE_FILE }}" | base64 -d > "$KEYSTORE_PATH"
 
-        echo "::group::Keystore Verification"
-        file "$KEYSTORE_PATH"
-        echo "Size: $(wc -c <"$KEYSTORE_PATH") bytes"
-        echo "::endgroup::"
+          echo "::group::Keystore Verification"
+          file "$KEYSTORE_PATH"
+          echo "Size: $(wc -c <"$KEYSTORE_PATH") bytes"
+          echo "::endgroup::"
 
-        if ! keytool -list -keystore "$KEYSTORE_PATH" -storepass "${{ secrets.KEY_PASSWORD }}" -alias "${{ secrets.KEY_ALIAS }}" >/dev/null 2>&1; then
-          echo "::error::Keystore verification failed!"
-          exit 1
-        fi
+          if ! keytool -list -keystore "$KEYSTORE_PATH" -storepass "${{ secrets.KEY_PASSWORD }}" -alias "${{ secrets.KEY_ALIAS }}" >/dev/null 2>&1; then
+            echo "::error::Keystore verification failed!"
+            exit 1
+          fi
 
-    - name: Cache Flutter dependencies
-      uses: actions/cache@v3
-      with:
-        path: ~/.pub-cache
-        key: ${{ runner.os }}-flutter-${{ hashFiles('**/pubspec.yaml') }}
-        restore-keys: |
-          ${{ runner.os }}-flutter-
+      - name: Cache Flutter dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-flutter-${{ hashFiles('**/pubspec.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-flutter-
 
-    - name: Cache Android dependencies
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/.gradle/caches
-          ~/.gradle/wrapper
-        key: ${{ runner.os }}-android-${{ hashFiles('**/*.gradle*') }}
-        restore-keys: |
-          ${{ runner.os }}-android-
+      - name: Cache Android Gradle
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
 
-    - name: Install Flutter Dependencies
-      run: |
-        flutter pub get
+      - name: Install Flutter Dependencies
+        run: flutter pub get
 
-    - name: Generate Env File
-      run: |
-        echo "DB_NAME=app.db" > .env.production
-        echo 'APP_NAME="Personal Tuition Manager"' >> .env.production
+      - name: Generate Env File
+        run: |
+          echo "DB_NAME=app.db" > .env.production
+          echo 'APP_NAME="Personal Tuition Manager"' >> .env.production
 
-    - name: Extract Version from pubspec.yaml
-      id: extract_version
-      run: |
-        VERSION_NAME=$(grep '^version:' pubspec.yaml | cut -d ':' -f2 | tr -d '[:space:]')
-        VERSION_NAME="${VERSION_NAME}-${GITHUB_RUN_NUMBER}"
-        echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
-        echo "VERSION_NAME set to: $VERSION_NAME"
+      - name: Extract Version from pubspec.yaml
+        id: extract_version
+        run: |
+          VERSION_NAME=$(grep '^version:' pubspec.yaml | cut -d ':' -f2 | tr -d '[:space:]')
+          VERSION_NAME="${VERSION_NAME}-${GITHUB_RUN_NUMBER}"
+          echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
+          echo "VERSION_NAME set to: $VERSION_NAME"
 
-    - name: Create Debug Info Directory
-      run: |
-        mkdir -p "${BUILD_BASE_DIR}/${DEBUG_INFO_DIR}"
+      - name: Create Debug Info Directory
+        run: mkdir -p "${BUILD_BASE_DIR}/${DEBUG_INFO_DIR}"
 
-    - name: Build App Bundle
-      run: |
-        flutter build appbundle --release \
-          --obfuscate \
-          --split-debug-info="${BUILD_BASE_DIR}/${DEBUG_INFO_DIR}" \
-          --dart-define=ENV=${ENVIRONMENT} \
-          --build-name="${VERSION_NAME}" \
-          --build-number=${GITHUB_RUN_NUMBER}
+      - name: Build App Bundle (.aab)
+        run: |
+          flutter build appbundle --release \
+            --obfuscate \
+            --split-debug-info="${BUILD_BASE_DIR}/${DEBUG_INFO_DIR}" \
+            --dart-define=ENV=${ENVIRONMENT} \
+            --build-name="${VERSION_NAME}" \
+            --build-number=${GITHUB_RUN_NUMBER}
 
-    - name: Sign App Bundle
-      run: |
-        UNSIGNED_AAB="${BUILD_BASE_DIR}/app/outputs/bundle/release/app-release.aab"
-        SIGNED_AAB="${BUILD_BASE_DIR}/app/outputs/bundle/release/${APK_NAME}-${VERSION_NAME}-${ENVIRONMENT}-signed.aab"
+      - name: Sign the AAB
+        run: |
+          UNSIGNED_AAB="${BUILD_BASE_DIR}/app/outputs/bundle/release/app-release.aab"
+          SIGNED_AAB="${BUILD_BASE_DIR}/app/outputs/bundle/release/${APK_NAME}-${VERSION_NAME}-${ENVIRONMENT}-signed.aab"
 
-        jarsigner -verbose \
-                  -sigalg SHA256withRSA \
-                  -digestalg SHA-256 \
-                  -keystore "$KEYSTORE_PATH" \
-                  -storepass "${{ secrets.KEY_PASSWORD }}" \
-                  -keypass "${{ secrets.KEY_PASSWORD }}" \
-                  "$UNSIGNED_AAB" "${{ secrets.KEY_ALIAS }}"
-        
-        mv "$UNSIGNED_AAB" "$SIGNED_AAB"
-        echo "SIGNED_AAB_PATH=$SIGNED_AAB" >> $GITHUB_ENV
+          jarsigner -verbose \
+                    -sigalg SHA256withRSA \
+                    -digestalg SHA-256 \
+                    -keystore "$KEYSTORE_PATH" \
+                    -storepass "${{ secrets.KEY_PASSWORD }}" \
+                    -keypass "${{ secrets.KEY_PASSWORD }}" \
+                    "$UNSIGNED_AAB" "${{ secrets.KEY_ALIAS }}"
 
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: release-artifacts
-        path: |
-          ${{ env.BUILD_BASE_DIR }}/app/outputs/bundle/release/*.aab
-          ${{ env.BUILD_BASE_DIR }}/${{ env.DEBUG_INFO_DIR }}/*
+          mv "$UNSIGNED_AAB" "$SIGNED_AAB"
+          echo "SIGNED_AAB_PATH=$SIGNED_AAB" >> $GITHUB_ENV
 
-    - name: Upload to Play Store
-      if: ${{ github.event.inputs.UPLOAD_TO_PLAYSTORE == 'true' }}
-      run: |
-        echo "Uploading AAB to Play Store using Fastlane..."
-        echo "${{ secrets.PLAY_STORE_JSON_KEY }}" | base64 --decode > play_store_json_key.json
-        cd android
-        bundle exec fastlane run validate_play_store_json_key json_key:play_store_json_key.json
-        bundle exec fastlane deploy json_key:play_store_json_key.json
+      - name: Upload Release Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: release-artifacts
+          path: |
+            ${{ env.SIGNED_AAB_PATH }}
+            ${{ env.BUILD_BASE_DIR }}/${{ env.DEBUG_INFO_DIR }}/*
 
-    - name: Cleanup Keystore
-      if: always()
-      run: |
-        echo "Cleaning up keystore..."
-        rm -f "$KEYSTORE_PATH"
+      - name: Upload to Play Store
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.UPLOAD_TO_PLAYSTORE == 'true' }}
+        run: |
+          echo "Preparing for Play Store upload..."
+          echo "${{ secrets.PLAY_STORE_JSON_KEY }}" | base64 -d > play_store_json_key.json
 
-    - name: Final Status
-      run: |
-        if [ "${{ job.status }}" == "success" ]; then
-          echo "::notice::Build completed successfully!"
-        else
-          echo "::error::Build failed!"
-        fi
+          cd android
+          bundle install
+          bundle exec fastlane run validate_play_store_json_key json_key:../play_store_json_key.json
+          bundle exec fastlane deploy json_key:../play_store_json_key.json
+
+      - name: Cleanup Keystore
+        if: always()
+        run: rm -f "$KEYSTORE_PATH"
+
+      - name: Final Status
+        if: always()
+        run: |
+          if [[ "${{ job.status }}" == "success" ]]; then
+            echo "::notice::✅ Build completed successfully!"
+          else
+            echo "::error::❌ Build failed!"
+          fi
