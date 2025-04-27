@@ -25,25 +25,41 @@ jobs:
       with:
         ref: main
 
-    - name: Verify Keystore Password
+    - name: Verify Keystore Password (with debug)
       id: verify_keystore
       run: |
-        if [ -z "${{ secrets.KEYSTORE_FILE }}" ]; then
-          echo "Keystore file is not provided, exiting the workflow."
-          exit 1
-        fi
+        # Debug: Print first 2 chars of password (avoid full exposure)
+        echo "::debug::First 2 chars of KEY_PASSWORD: ${KEY_PASSWORD:0:2}**"
         
-        # Decode keystore from the secrets and create directory
-        mkdir -p $HOME/.keystore
-        echo "${{ secrets.KEYSTORE_FILE }}" | base64 --decode > $HOME/.keystore/key_store_file.jks
+        # Debug: Print first 3 lines of base64 keystore (head only)
+        echo "::debug::First 3 lines of KEYSTORE_FILE:"
+        echo "${{ secrets.KEYSTORE_FILE }}" | head -n 3
     
-        # Validate the keystore password using keytool
-        keytool -list -keystore $HOME/.keystore/key_store_file.jks -storepass "${{ secrets.KEY_PASSWORD }}"
-        if [ $? -ne 0 ]; then
-          echo "Invalid keystore password. Please verify your password and try again."
+        # Create keystore directory
+        mkdir -p "$HOME/.keystore"
+        KEYSTORE_PATH="$HOME/.keystore/key_store_file.jks"
+    
+        # Decode keystore (Ubuntu uses `base64 -d`)
+        echo "${{ secrets.KEYSTORE_FILE }}" | base64 -d > "$KEYSTORE_PATH"
+    
+        # Debug: Verify file exists and print its type/size
+        echo "::debug::Keystore file info:"
+        ls -la "$HOME/.keystore/"
+        file "$KEYSTORE_PATH"
+        echo "::debug::Keystore size: $(wc -c <"$KEYSTORE_PATH") bytes"
+    
+        # Debug: Print first 100 bytes of keystore (hexdump for safety)
+        echo "::debug::Keystore hexdump (first 100 bytes):"
+        head -c 100 "$KEYSTORE_PATH" | hexdump -C
+    
+        # Verify password (suppress output to avoid leaks)
+        if ! keytool -list \
+          -keystore "$KEYSTORE_PATH" \
+          -storepass "${{ secrets.KEY_PASSWORD }}" >/dev/null 2>&1; then
+          echo "::error::Keystore password verification failed!"
           exit 1
         else
-          echo "Keystore password is valid. Proceeding with the build."
+          echo "Keystore password is valid."
         fi
       
     - name: Cache Flutter dependencies
