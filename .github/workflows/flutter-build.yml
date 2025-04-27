@@ -29,25 +29,24 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-
-      - name: Verify Keystore Password (with enhanced debug)
+      
+      - name: Verify Keystore Password (with enhanced debug and base64 password support)
         id: verify_keystore
         run: |
-          # Make sure /tmp/keystore exists
+          # Create keystore directory
           mkdir -p "$(dirname "$KEYSTORE_PATH")"
       
-          # Debug checksums
-          echo "::debug::Password checksum (SHA-256): $(echo -n "${{ secrets.KEY_PASSWORD }}" | shasum -a 256 | cut -d' ' -f1)"
-          echo "::debug::Alias checksum (SHA-256): $(echo -n "${{ secrets.KEY_ALIAS }}" | shasum -a 256 | cut -d' ' -f1)"
-          
-          echo "::debug::First 2 chars of KEY_PASSWORD: ${KEY_PASSWORD:0:2}**"
-          echo "::debug::First 3 lines of KEYSTORE_FILE:"
-          echo "${{ secrets.KEYSTORE_FILE }}" | head -n 3
-      
-          # Decode and save keystore
+          # Decode and save the keystore file
           echo "${{ secrets.KEYSTORE_FILE }}" | base64 -d > "$KEYSTORE_PATH"
       
-          # Verify keystore file
+          # Decode the KEY_PASSWORD (which was stored base64-encoded)
+          DECODED_KEY_PASSWORD=$(echo "${{ secrets.KEY_PASSWORD }}" | base64 -d)
+          DECODED_KEY_ALIAS=$(echo "${{ secrets.KEY_ALIAS }}" | base64 -d)
+      
+          echo "::debug::Decoded password: >>${DECODED_KEY_PASSWORD}<<"
+          echo "::debug::Decoded alias: >>${DECODED_KEY_ALIAS}<<"
+      
+          # Debug file verification
           echo "::debug::Keystore file verification:"
           ls -la "$(dirname "$KEYSTORE_PATH")"
           file "$KEYSTORE_PATH"
@@ -60,17 +59,15 @@ jobs:
           # Verify password and alias
           if ! keytool -list \
             -keystore "$KEYSTORE_PATH" \
-            -storepass "${{ secrets.KEY_PASSWORD }}" \
-            -alias "${{ secrets.KEY_ALIAS }}" >/dev/null 2>&1; then
+            -storepass "$DECODED_KEY_PASSWORD" \
+            -alias "$DECODED_KEY_ALIAS" >/dev/null 2>&1; then
             echo "::error::Keystore verification failed! Possible issues:"
-            echo "::error::- Invalid password/alias (compare checksums above)"
+            echo "::error::- Invalid password/alias (compare decoded values)"
             echo "::error::- Corrupted keystore (verify file headers above)"
             exit 1
           else
-            echo "Keystore verification successful. Checksums:"
-            echo "Password: $(echo -n "${{ secrets.KEY_PASSWORD }}" | shasum -a 256 | cut -d' ' -f1)"
-            echo "Alias: $(echo -n "${{ secrets.KEY_ALIAS }}" | shasum -a 256 | cut -d' ' -f1)"
-          fi      
+            echo "✅ Keystore verification successful."
+          fi            
 
       - name: Set up Java
         uses: actions/setup-java@v3
