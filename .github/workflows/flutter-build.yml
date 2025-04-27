@@ -8,6 +8,11 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      UPLOAD_TO_PLAYSTORE:
+        description: 'Upload to Play Store?'
+        required: false
+        default: 'false'
 
 env:
   APK_NAME: TeacherApp
@@ -18,51 +23,21 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     env:
-      KEYSTORE_PATH: /tmp/keystore/key_store_file.jks  # Using Linux /tmp directory
+      KEYSTORE_PATH: /tmp/keystore/key_store_file.jks
 
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
+      with:
+        ref: main
 
-    - name: Setup Java
+    - name: Set up Java
       uses: actions/setup-java@v3
       with:
         distribution: 'zulu'
         java-version: '17'
-
-    - name: Verify Keystore
-      id: verify_keystore
-      run: |
-        # Create secure keystore directory
-        mkdir -p $(dirname "$KEYSTORE_PATH")
-        
-        # Decode keystore
-        echo "${{ secrets.KEYSTORE_FILE }}" | base64 -d > "$KEYSTORE_PATH"
-        
-        # Basic file verification
-        echo "::group::Keystore Verification"
-        file "$KEYSTORE_PATH"
-        echo "Keystore size: $(wc -c <"$KEYSTORE_PATH") bytes"
-        echo "::endgroup::"
-        
-        # Verify password and alias
-        if ! keytool -list \
-          -keystore "$KEYSTORE_PATH" \
-          -storepass "${{ secrets.KEY_PASSWORD }}" \
-          -alias "${{ secrets.KEY_ALIAS }}" >/dev/null 2>&1; then
-          echo "::error::Keystore verification failed!"
-          exit 1
-        fi
-
-    - name: Cache Flutter dependencies
-      uses: actions/cache@v3
-      with:
-        path: ~/.pub-cache
-        key: ${{ runner.os }}-flutter-${{ hashFiles('**/pubspec.yaml') }}
-        restore-keys: |
-          ${{ runner.os }}-flutter-
 
     - name: Set up Flutter
       uses: subosito/flutter-action@v2
@@ -75,6 +50,55 @@ jobs:
         flutter --version
         flutter doctor
 
+    - name: Install Fastlane
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ruby-full
+        sudo gem install fastlane
+
+    - name: Verify Keystore
+      id: verify_keystore
+      run: |
+        mkdir -p $(dirname "$KEYSTORE_PATH")
+        echo "${{ secrets.KEYSTORE_FILE }}" | base64 -d > "$KEYSTORE_PATH"
+
+        echo "::group::Keystore Verification"
+        file "$KEYSTORE_PATH"
+        echo "Size: $(wc -c <"$KEYSTORE_PATH") bytes"
+        echo "::endgroup::"
+
+        if ! keytool -list -keystore "$KEYSTORE_PATH" -storepass "${{ secrets.KEY_PASSWORD }}" -alias "${{ secrets.KEY_ALIAS }}" >/dev/null 2>&1; then
+          echo "::error::Keystore verification failed!"
+          exit 1
+        fi
+
+    - name: Cache Flutter dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.pub-cache
+        key: ${{ runner.os }}-flutter-${{ hashFiles('**/pubspec.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-flutter-
+
+    - name: Cache Android dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-android-${{ hashFiles('**/*.gradle*') }}
+        restore-keys: |
+          ${{ runner.os }}-android-
+
+    - name: Install Flutter Dependencies
+      run: |
+        flutter pub get
+
+    - name: Generate Env File
+      run: |
+        echo "DB_NAME=app.db" > .env.production
+        echo 'APP_NAME="Personal Tuition Manager"' >> .env.production
+
     - name: Extract Version from pubspec.yaml
       id: extract_version
       run: |
@@ -86,25 +110,6 @@ jobs:
     - name: Create Debug Info Directory
       run: |
         mkdir -p "${BUILD_BASE_DIR}/${DEBUG_INFO_DIR}"
-
-    - name: Generate Env File
-      run: |
-        echo "DB_NAME=app.db" > .env.production
-        echo 'APP_NAME="Personal Tuition Manager"' >> .env.production
-
-    - name: Install Dependencies
-      run: |
-        flutter pub get
-
-    - name: Cache Android dependencies
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/.gradle/caches
-          ~/.gradle/wrapper
-        key: ${{ runner.os }}-android-${{ hashFiles('**/*.gradle*') }}
-        restore-keys: |
-          ${{ runner.os }}-android-
 
     - name: Build App Bundle
       run: |
@@ -139,18 +144,22 @@ jobs:
           ${{ env.BUILD_BASE_DIR }}/app/outputs/bundle/release/*.aab
           ${{ env.BUILD_BASE_DIR }}/${{ env.DEBUG_INFO_DIR }}/*
 
+    - name: Upload to Play Store
+      if: ${{ github.event.inputs.UPLOAD_TO_PLAYSTORE == 'true' }}
+      run: |
+        echo "Uploading AAB to Play Store using Fastlane..."
+        echo "${{ secrets.PLAY_STORE_JSON_KEY }}" | base64 --decode > play_store_json_key.json
+        cd android
+        bundle exec fastlane run validate_play_store_json_key json_key:play_store_json_key.json
+        bundle exec fastlane deploy json_key:play_store_json_key.json
+
     - name: Cleanup Keystore
-      if: always()  # Runs even if previous steps fail
+      if: always()
       run: |
         echo "Cleaning up keystore..."
         rm -f "$KEYSTORE_PATH"
-        if [ -f "$KEYSTORE_PATH" ]; then
-          echo "::warning::Failed to remove keystore!"
-        else
-          echo "Keystore removed successfully"
-        fi
 
-    - name: Build Status
+    - name: Final Status
       run: |
         if [ "${{ job.status }}" == "success" ]; then
           echo "::notice::Build completed successfully!"
