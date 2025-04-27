@@ -44,7 +44,6 @@ jobs:
       
           # Create keystore directory
           mkdir -p "$HOME/.keystore"
-          KEYSTORE_PATH="$HOME/.keystore/key_store_file.jks"
       
           # Decode keystore (Ubuntu uses `base64 -d`)
           echo "${{ secrets.KEYSTORE_FILE }}" | base64 -d > "$KEYSTORE_PATH"
