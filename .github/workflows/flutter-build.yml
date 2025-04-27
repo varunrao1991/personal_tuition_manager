@@ -23,7 +23,6 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     env:
       KEYSTORE_PATH: /tmp/keystore/key_store_file.jks
 
@@ -133,11 +132,11 @@ jobs:
           echo "SIGNED_AAB_PATH=$SIGNED_AAB" >> $GITHUB_ENV
 
       - name: Upload Release Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: release-artifacts
           path: |
-            ${{ env.SIGNED_AAB_PATH }}
+            ${{ env.BUILD_BASE_DIR }}/app/outputs/bundle/release/*-signed.aab
             ${{ env.BUILD_BASE_DIR }}/${{ env.DEBUG_INFO_DIR }}/*
 
       - name: Upload to Play Store
