@@ -29,6 +29,7 @@ env:
   ENVIRONMENT: production
   BUILD_BASE_DIR: build
   DEBUG_INFO_DIR: debug_info
+  PACKAGE_NAME: "com.padma.yoglog"  # Hardcoded package name
 
 jobs:
   build-and-upload:
@@ -185,10 +186,6 @@ jobs:
 
       - name: Create Fastlane Configuration
         run: |
-          # Get package name from AndroidManifest.xml
-          PACKAGE_NAME=$(grep -oP 'package="\K[^"]+' android/app/src/main/AndroidManifest.xml)
-          echo "Package name: $PACKAGE_NAME"
-          
           # Create Fastfile in android/fastlane directory
           mkdir -p android/fastlane
           cat > android/fastlane/Fastfile << EOF
@@ -201,15 +198,14 @@ jobs:
               json_key_path = ENV["PLAY_STORE_JSON_PATH"]
               track = ENV["FASTFILE_TRACK"] || "internal"
               release_status = ENV["FASTFILE_RELEASE_STATUS"] || "draft"
-              package_name = "$PACKAGE_NAME"
               
               puts "Using AAB: #{aab_path}"
               puts "Track: #{track}"
               puts "Release status: #{release_status}"
-              puts "Package name: #{package_name}"
+              puts "Package name: #{"$PACKAGE_NAME"}"
               
               upload_to_play_store(
-                package_name: package_name,
+                package_name: "$PACKAGE_NAME",
                 track: track,
                 release_status: release_status,
                 aab: aab_path,
@@ -266,6 +262,7 @@ jobs:
           echo "Using JSON key: $PLAY_STORE_JSON_PATH"
           echo "Track: $FASTFILE_TRACK"
           echo "Release status: $FASTFILE_RELEASE_STATUS"
+          echo "Package name: $PACKAGE_NAME"
 
           bundle exec fastlane deploy
 

@@ -3,6 +3,7 @@ lane :deploy do
   upload_to_play_store(
     aab: ENV["AAB_FILE_PATH"],
     json_key: ENV["PLAY_STORE_JSON_PATH"],
+    package_name: "com.padma.yoglog",
     track:  ENV["FASTFILE_TRACK"],
     release_status: ENV["FASTFILE_RELEASE_STATUS"]
   )  
