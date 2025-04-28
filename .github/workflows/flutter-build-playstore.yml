@@ -96,6 +96,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ruby-full
           sudo gem install bundler fastlane
+          # Fix permissions for Bundler cache
+          sudo chmod -R 777 /var/lib/gems/3.2.0/cache  # Grant write access to the gem cache
 
       - name: Verify Flutter Installation
         run: |
