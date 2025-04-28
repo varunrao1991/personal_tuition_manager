@@ -28,7 +28,7 @@ on:
       AUTO_GENERATE_NOTES:
         description: 'Auto-generate release notes from commits?'
         required: false
-        default: 'true'
+        default: true
         type: boolean
 
 env:
