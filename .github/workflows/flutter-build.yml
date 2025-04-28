@@ -13,6 +13,14 @@ on:
         description: 'Upload to Play Store?'
         required: false
         default: 'false'
+      TRACK:
+        description: 'Track for Play Store release (default: internal)'
+        required: false
+        default: 'internal'
+      STATUS:
+        description: 'Release status for Play Store (default: draft)'
+        required: false
+        default: 'draft'
 
 env:
   APK_NAME: TeacherApp
@@ -29,23 +37,23 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-      
+
       - name: Verify Keystore Password (with enhanced debug and base64 password support)
         id: verify_keystore
         run: |
           # Create keystore directory
           mkdir -p "$(dirname "$KEYSTORE_PATH")"
-      
+
           # Decode and save the keystore file
           echo "${{ secrets.KEYSTORE_FILE }}" | base64 -d > "$KEYSTORE_PATH"
-      
+
           # Decode the KEY_PASSWORD (which was stored base64-encoded)
           DECODED_KEY_PASSWORD=$(echo "${{ secrets.KEY_PASSWORD }}" | base64 -d)
           DECODED_KEY_ALIAS=$(echo "${{ secrets.KEY_ALIAS }}" | base64 -d)
-      
+
           echo "::debug::Decoded password: >>${DECODED_KEY_PASSWORD}<<"
           echo "::debug::Decoded alias: >>${DECODED_KEY_ALIAS}<<"
-      
+
           # Debug file verification
           echo "::debug::Keystore file verification:"
           ls -la "$(dirname "$KEYSTORE_PATH")"
@@ -55,7 +63,7 @@ jobs:
           head -c 100 "$KEYSTORE_PATH" | hexdump -C
           echo "::debug::First 100 bytes (raw base64):"
           head -c 100 "$KEYSTORE_PATH" | base64 -w0
-      
+
           # Verify password and alias
           if ! keytool -list \
             -keystore "$KEYSTORE_PATH" \
@@ -194,8 +202,8 @@ jobs:
           # Set required environment variables for fastlane deploy
           export AAB_FILE_PATH="../${{ env.BUILD_BASE_DIR }}/app/outputs/bundle/release/${{ env.APK_NAME }}-${{ env.VERSION_NAME }}-${{ env.ENVIRONMENT }}-signed.aab"
           export PLAY_STORE_JSON_PATH="../play_store_json_key.json"
-          export FASTFILE_TRACK="production" # or change to "beta", "internal", etc if needed
-          export FASTFILE_RELEASE_STATUS="completed" # or "draft", "inProgress", etc
+          export FASTFILE_TRACK="${{ github.event.inputs.TRACK }}"
+          export FASTFILE_RELEASE_STATUS="${{ github.event.inputs.STATUS }}"
 
           echo "Using AAB file: $AAB_FILE_PATH"
           echo "Using JSON key: $PLAY_STORE_JSON_PATH"
