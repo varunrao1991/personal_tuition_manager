@@ -1,0 +1,242 @@
+name: Build and Create GitHub Release
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      CREATE_GITHUB_RELEASE:
+        description: 'Create GitHub Release?'
+        required: false
+        default: 'false'
+      RELEASE_TITLE:
+        description: 'Release title (if creating release)'
+        required: false
+        default: ''
+      RELEASE_NOTES:
+        description: 'Release notes (markdown supported)'
+        required: false
+        default: ''
+      CHANGELOG:
+        description: 'What changed in this release?'
+        required: false
+        default: ''
+      AUTO_GENERATE_NOTES:
+        description: 'Auto-generate release notes from commits?'
+        required: false
+        default: 'true'
+        type: boolean
+
+env:
+  APK_NAME: TeacherApp
+  ENVIRONMENT: production
+  BUILD_BASE_DIR: build
+  DEBUG_INFO_DIR: debug_info
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      KEYSTORE_PATH: /tmp/keystore/key_store_file.jks
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for changelog generation
+
+      - name: Verify Keystore Password
+        id: verify_keystore
+        run: |
+          # Create keystore directory
+          mkdir -p "$(dirname "$KEYSTORE_PATH")"
+
+          # Decode and save the keystore file
+          echo "${{ secrets.KEYSTORE_FILE }}" | base64 -d > "$KEYSTORE_PATH"
+
+          # Decode the KEY_PASSWORD (which was stored base64-encoded)
+          DECODED_KEY_PASSWORD=$(echo "${{ secrets.KEY_PASSWORD }}" | base64 -d)
+          DECODED_KEY_ALIAS=$(echo "${{ secrets.KEY_ALIAS }}" | base64 -d)
+
+          echo "::debug::Decoded password: >>${DECODED_KEY_PASSWORD}<<"
+          echo "::debug::Decoded alias: >>${DECODED_KEY_ALIAS}<<"
+
+          # Debug file verification
+          echo "::debug::Keystore file verification:"
+          ls -la "$(dirname "$KEYSTORE_PATH")"
+          file "$KEYSTORE_PATH"
+          echo "::debug::Keystore size: $(wc -c <"$KEYSTORE_PATH") bytes"
+          echo "::debug::First 100 bytes (hexdump):"
+          head -c 100 "$KEYSTORE_PATH" | hexdump -C
+          echo "::debug::First 100 bytes (raw base64):"
+          head -c 100 "$KEYSTORE_PATH" | base64 -w0
+
+          # Verify password and alias
+          if ! keytool -list \
+            -keystore "$KEYSTORE_PATH" \
+            -storepass "$DECODED_KEY_PASSWORD" \
+            -alias "$DECODED_KEY_ALIAS" >/dev/null 2>&1; then
+            echo "::error::Keystore verification failed! Possible issues:"
+            echo "::error::- Invalid password/alias (compare decoded values)"
+            echo "::error::- Corrupted keystore (verify file headers above)"
+            exit 1
+          else
+            echo "✅ Keystore verification successful."
+          fi            
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.29.3'
+          channel: 'stable'
+
+      - name: Verify Flutter Installation
+        run: |
+          flutter --version
+          flutter doctor
+
+      - name: Cache Flutter dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-flutter-${{ hashFiles('**/pubspec.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-flutter-
+
+      - name: Cache Android Gradle
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Install Flutter Dependencies
+        run: flutter pub get
+
+      - name: Generate Env File
+        run: |
+          echo "DB_NAME=app.db" > .env.production
+          echo 'APP_NAME="Personal Tuition Manager"' >> .env.production
+
+      - name: Extract Version from pubspec.yaml
+        id: extract_version
+        run: |
+          VERSION_NAME=$(grep '^version:' pubspec.yaml | cut -d ':' -f2 | tr -d '[:space:]')
+          VERSION_NAME="${VERSION_NAME}-${GITHUB_RUN_NUMBER}"
+          echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
+          echo "VERSION_NAME set to: $VERSION_NAME"
+
+      - name: Create Debug Info Directory
+        run: mkdir -p "${BUILD_BASE_DIR}/${DEBUG_INFO_DIR}"
+
+      - name: Build APK
+        run: |
+          flutter build apk --release \
+            --obfuscate \
+            --split-debug-info="${BUILD_BASE_DIR}/${DEBUG_INFO_DIR}" \
+            --dart-define=ENV=${ENVIRONMENT} \
+            --build-name="${VERSION_NAME}" \
+            --build-number=${GITHUB_RUN_NUMBER}
+
+      - name: Sign the APK
+        run: |
+          UNSIGNED_APK="${BUILD_BASE_DIR}/app/outputs/flutter-apk/app-release.apk"
+          SIGNED_APK="${BUILD_BASE_DIR}/app/outputs/flutter-apk/${APK_NAME}-${VERSION_NAME}-${ENVIRONMENT}-signed.apk"
+      
+          # Decode password and alias
+          DECODED_KEY_PASSWORD=$(echo "${{ secrets.KEY_PASSWORD }}" | base64 -d)
+          DECODED_KEY_ALIAS=$(echo "${{ secrets.KEY_ALIAS }}" | base64 -d)
+      
+          # Sign the APK
+          jarsigner -verbose \
+                    -sigalg SHA256withRSA \
+                    -digestalg SHA-256 \
+                    -keystore "$KEYSTORE_PATH" \
+                    -storepass "$DECODED_KEY_PASSWORD" \
+                    -keypass "$DECODED_KEY_PASSWORD" \
+                    "$UNSIGNED_APK" "$DECODED_KEY_ALIAS"
+      
+          # Move signed APK
+          mv "$UNSIGNED_APK" "$SIGNED_APK"
+          echo "SIGNED_APK_PATH=$SIGNED_APK" >> $GITHUB_ENV
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts
+          path: |
+            ${{ env.BUILD_BASE_DIR }}/app/outputs/flutter-apk/*-signed.apk
+            ${{ env.BUILD_BASE_DIR }}/${{ env.DEBUG_INFO_DIR }}/*
+
+      - name: Generate Changelog
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.CREATE_GITHUB_RELEASE == 'true' }}
+        id: changelog
+        run: |
+          # Create a combined release notes file
+          RELEASE_NOTES_FILE="release_notes.md"
+          
+          echo "# Release v${{ env.VERSION_NAME }}" > $RELEASE_NOTES_FILE
+          echo "" >> $RELEASE_NOTES_FILE
+          
+          # Add user-provided release notes if available
+          if [ ! -z "${{ github.event.inputs.RELEASE_NOTES }}" ]; then
+            echo "${{ github.event.inputs.RELEASE_NOTES }}" >> $RELEASE_NOTES_FILE
+            echo "" >> $RELEASE_NOTES_FILE
+          fi
+          
+          # Add user-provided changelog if available
+          if [ ! -z "${{ github.event.inputs.CHANGELOG }}" ]; then
+            echo "## What's Changed" >> $RELEASE_NOTES_FILE
+            echo "${{ github.event.inputs.CHANGELOG }}" >> $RELEASE_NOTES_FILE
+            echo "" >> $RELEASE_NOTES_FILE
+          fi
+          
+          # Get the previous tag
+          PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          
+          if [ ! -z "$PREV_TAG" ] && [ "${{ github.event.inputs.AUTO_GENERATE_NOTES }}" == "true" ]; then
+            echo "## Commits since $PREV_TAG" >> $RELEASE_NOTES_FILE
+            git log --pretty=format:"* %s (%h)" $PREV_TAG..HEAD >> $RELEASE_NOTES_FILE
+          fi
+          
+          echo "::set-output name=release_notes_file::$RELEASE_NOTES_FILE"
+
+      - name: Create GitHub Release
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.CREATE_GITHUB_RELEASE == 'true' }}
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ env.BUILD_BASE_DIR }}/app/outputs/flutter-apk/*-signed.apk
+          name: ${{ github.event.inputs.RELEASE_TITLE != '' && github.event.inputs.RELEASE_TITLE || format('Release v{0}', env.VERSION_NAME) }}
+          tag_name: v${{ env.VERSION_NAME }}
+          body_path: ${{ steps.changelog.outputs.release_notes_file }}
+          draft: true
+          prerelease: false
+          generate_release_notes: ${{ github.event.inputs.AUTO_GENERATE_NOTES }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cleanup Keystore
+        if: always()
+        run: rm -f "$KEYSTORE_PATH"
+
+      - name: Final Status
+        if: always()
+        run: |
+          if [[ "${{ job.status }}" == "success" ]]; then
+            echo "::notice::✅ Build completed successfully!"
+          else
+            echo "::error::❌ Build failed!"
+          fi

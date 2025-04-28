@@ -1,26 +1,28 @@
-name: Build and Deploy Flutter App
+name: Upload to Google Play Store
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
   workflow_dispatch:
     inputs:
-      UPLOAD_TO_PLAYSTORE:
-        description: 'Upload to Play Store?'
-        required: false
-        default: 'false'
       TRACK:
-        description: 'Track for Play Store release (default: internal)'
-        required: false
+        description: 'Track for Play Store release'
+        required: true
         default: 'internal'
+        type: choice
+        options:
+          - internal
+          - alpha
+          - beta
+          - production
       STATUS:
-        description: 'Release status for Play Store (default: draft)'
-        required: false
+        description: 'Release status for Play Store'
+        required: true
         default: 'draft'
+        type: choice
+        options:
+          - draft
+          - completed
+          - inProgress
+          - halted
 
 env:
   APK_NAME: TeacherApp
@@ -29,7 +31,7 @@ env:
   DEBUG_INFO_DIR: debug_info
 
 jobs:
-  build:
+  build-and-upload:
     runs-on: ubuntu-latest
     env:
       KEYSTORE_PATH: /tmp/keystore/key_store_file.jks
@@ -38,7 +40,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Verify Keystore Password (with enhanced debug and base64 password support)
+      - name: Verify Keystore Password
         id: verify_keystore
         run: |
           # Create keystore directory
@@ -89,16 +91,16 @@ jobs:
           flutter-version: '3.29.3'
           channel: 'stable'
 
-      - name: Verify Flutter Installation
-        run: |
-          flutter --version
-          flutter doctor
-
       - name: Install Fastlane
         run: |
           sudo apt-get update
           sudo apt-get install -y ruby-full
           sudo gem install bundler fastlane
+
+      - name: Verify Flutter Installation
+        run: |
+          flutter --version
+          flutter doctor
 
       - name: Cache Flutter dependencies
         uses: actions/cache@v3
@@ -168,7 +170,7 @@ jobs:
           mv "$UNSIGNED_AAB" "$SIGNED_AAB"
           echo "SIGNED_AAB_PATH=$SIGNED_AAB" >> $GITHUB_ENV          
 
-      - name: Upload Release Artifacts
+      - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: release-artifacts
@@ -177,7 +179,6 @@ jobs:
             ${{ env.BUILD_BASE_DIR }}/${{ env.DEBUG_INFO_DIR }}/*
 
       - name: Upload to Play Store
-        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.UPLOAD_TO_PLAYSTORE == 'true' }}
         run: |
           echo "Preparing for Play Store upload..."
 
@@ -224,7 +225,7 @@ jobs:
         if: always()
         run: |
           if [[ "${{ job.status }}" == "success" ]]; then
-            echo "::notice::✅ Build completed successfully!"
+            echo "::notice::✅ Build completed successfully and uploaded to Play Store!"
           else
-            echo "::error::❌ Build failed!"
+            echo "::error::❌ Build or upload failed!"
           fi
