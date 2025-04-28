@@ -97,8 +97,9 @@ jobs:
           ruby-version: '3.2'
           bundler-cache: true
 
-      - name: Install Fastlane
+      - name: Install Fastlane and Bundler
         run: |
+          gem install bundler
           gem install fastlane -N
 
       - name: Verify Flutter Installation
@@ -184,9 +185,13 @@ jobs:
 
       - name: Create Fastlane Configuration
         run: |
+          # Get package name from AndroidManifest.xml
+          PACKAGE_NAME=$(grep -oP 'package="\K[^"]+' android/app/src/main/AndroidManifest.xml)
+          echo "Package name: $PACKAGE_NAME"
+          
           # Create Fastfile in android/fastlane directory
           mkdir -p android/fastlane
-          cat > android/fastlane/Fastfile << 'EOF'
+          cat > android/fastlane/Fastfile << EOF
           default_platform(:android)
 
           platform :android do
@@ -196,12 +201,15 @@ jobs:
               json_key_path = ENV["PLAY_STORE_JSON_PATH"]
               track = ENV["FASTFILE_TRACK"] || "internal"
               release_status = ENV["FASTFILE_RELEASE_STATUS"] || "draft"
+              package_name = "$PACKAGE_NAME"
               
               puts "Using AAB: #{aab_path}"
               puts "Track: #{track}"
               puts "Release status: #{release_status}"
+              puts "Package name: #{package_name}"
               
               upload_to_play_store(
+                package_name: package_name,
                 track: track,
                 release_status: release_status,
                 aab: aab_path,
@@ -216,10 +224,16 @@ jobs:
           EOF
           
           # Create Gemfile
-          cat > android/Gemfile << 'EOF'
+          cat > android/Gemfile << EOF
           source "https://rubygems.org"
           gem "fastlane"
           EOF
+
+      - name: Install Fastlane Dependencies
+        run: |
+          cd android
+          bundle install
+          cd ..
 
       - name: Upload to Play Store
         run: |
@@ -247,14 +261,13 @@ jobs:
           export PLAY_STORE_JSON_PATH="../play_store_json_key.json"
           export FASTFILE_TRACK="${{ github.event.inputs.TRACK }}"
           export FASTFILE_RELEASE_STATUS="${{ github.event.inputs.STATUS }}"
-          export PACKAGE_NAME="com.padma.yoglog"
 
           echo "Using AAB file: $AAB_FILE_PATH"
           echo "Using JSON key: $PLAY_STORE_JSON_PATH"
           echo "Track: $FASTFILE_TRACK"
           echo "Release status: $FASTFILE_RELEASE_STATUS"
 
-          fastlane deploy
+          bundle exec fastlane deploy
 
           # Cleanup: Delete the JSON key after use
           cd ..
