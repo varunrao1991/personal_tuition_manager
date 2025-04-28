@@ -247,6 +247,7 @@ jobs:
           export PLAY_STORE_JSON_PATH="../play_store_json_key.json"
           export FASTFILE_TRACK="${{ github.event.inputs.TRACK }}"
           export FASTFILE_RELEASE_STATUS="${{ github.event.inputs.STATUS }}"
+          export PACKAGE_NAME="com.padma.yoglog"
 
           echo "Using AAB file: $AAB_FILE_PATH"
           echo "Using JSON key: $PLAY_STORE_JSON_PATH"
