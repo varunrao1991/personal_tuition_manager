@@ -172,12 +172,41 @@ jobs:
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.UPLOAD_TO_PLAYSTORE == 'true' }}
         run: |
           echo "Preparing for Play Store upload..."
+
+          # Check if PLAY_STORE_JSON_KEY exists
+          if [ -z "${{ secrets.PLAY_STORE_JSON_KEY }}" ]; then
+            echo "::error::PLAY_STORE_JSON_KEY secret is missing!"
+            exit 1
+          fi
+
+          # Decode and save the JSON key to a file
           echo "${{ secrets.PLAY_STORE_JSON_KEY }}" | base64 -d > play_store_json_key.json
+
+          # Ensure the file was created
+          if [ ! -f play_store_json_key.json ]; then
+            echo "::error::Failed to create play_store_json_key.json!"
+            exit 1
+          fi
 
           cd android
           bundle install
-          bundle exec fastlane run validate_play_store_json_key json_key:../play_store_json_key.json
-          bundle exec fastlane deploy json_key:../play_store_json_key.json
+
+          # Set required environment variables for fastlane deploy
+          export AAB_FILE_PATH="../${{ env.BUILD_BASE_DIR }}/app/outputs/bundle/release/${{ env.APK_NAME }}-${{ env.VERSION_NAME }}-${{ env.ENVIRONMENT }}-signed.aab"
+          export PLAY_STORE_JSON_PATH="../play_store_json_key.json"
+          export FASTFILE_TRACK="production" # or change to "beta", "internal", etc if needed
+          export FASTFILE_RELEASE_STATUS="completed" # or "draft", "inProgress", etc
+
+          echo "Using AAB file: $AAB_FILE_PATH"
+          echo "Using JSON key: $PLAY_STORE_JSON_PATH"
+          echo "Track: $FASTFILE_TRACK"
+          echo "Release status: $FASTFILE_RELEASE_STATUS"
+
+          bundle exec fastlane deploy
+
+          # Cleanup: Delete the JSON key after use
+          rm -f play_store_json_key.json
+          echo "::notice::Cleaned up play_store_json_key.json file"
 
       - name: Cleanup Keystore
         if: always()
