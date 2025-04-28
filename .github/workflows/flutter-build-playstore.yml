@@ -91,13 +91,15 @@ jobs:
           flutter-version: '3.29.3'
           channel: 'stable'
 
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+
       - name: Install Fastlane
         run: |
-          sudo apt-get update
-          sudo apt-get install -y ruby-full
-          sudo gem install bundler fastlane
-          # Fix permissions for Bundler cache
-          sudo chmod -R 777 /var/lib/gems/3.2.0/cache  # Grant write access to the gem cache
+          gem install fastlane -N
 
       - name: Verify Flutter Installation
         run: |
@@ -180,6 +182,45 @@ jobs:
             ${{ env.BUILD_BASE_DIR }}/app/outputs/bundle/release/*-signed.aab
             ${{ env.BUILD_BASE_DIR }}/${{ env.DEBUG_INFO_DIR }}/*
 
+      - name: Create Fastlane Configuration
+        run: |
+          # Create Fastfile in android/fastlane directory
+          mkdir -p android/fastlane
+          cat > android/fastlane/Fastfile << 'EOF'
+          default_platform(:android)
+
+          platform :android do
+            desc "Deploy a new version to the Google Play"
+            lane :deploy do
+              aab_path = ENV["AAB_FILE_PATH"]
+              json_key_path = ENV["PLAY_STORE_JSON_PATH"]
+              track = ENV["FASTFILE_TRACK"] || "internal"
+              release_status = ENV["FASTFILE_RELEASE_STATUS"] || "draft"
+              
+              puts "Using AAB: #{aab_path}"
+              puts "Track: #{track}"
+              puts "Release status: #{release_status}"
+              
+              upload_to_play_store(
+                track: track,
+                release_status: release_status,
+                aab: aab_path,
+                json_key: json_key_path,
+                skip_upload_metadata: true,
+                skip_upload_images: true,
+                skip_upload_screenshots: true,
+                skip_upload_changelogs: true
+              )
+            end
+          end
+          EOF
+          
+          # Create Gemfile
+          cat > android/Gemfile << 'EOF'
+          source "https://rubygems.org"
+          gem "fastlane"
+          EOF
+
       - name: Upload to Play Store
         run: |
           echo "Preparing for Play Store upload..."
@@ -200,8 +241,7 @@ jobs:
           fi
 
           cd android
-          bundle install
-
+          
           # Set required environment variables for fastlane deploy
           export AAB_FILE_PATH="../${{ env.BUILD_BASE_DIR }}/app/outputs/bundle/release/${{ env.APK_NAME }}-${{ env.VERSION_NAME }}-${{ env.ENVIRONMENT }}-signed.aab"
           export PLAY_STORE_JSON_PATH="../play_store_json_key.json"
@@ -213,9 +253,10 @@ jobs:
           echo "Track: $FASTFILE_TRACK"
           echo "Release status: $FASTFILE_RELEASE_STATUS"
 
-          bundle exec fastlane deploy
+          fastlane deploy
 
           # Cleanup: Delete the JSON key after use
+          cd ..
           rm -f play_store_json_key.json
           echo "::notice::Cleaned up play_store_json_key.json file"
 

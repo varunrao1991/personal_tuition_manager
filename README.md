@@ -107,54 +107,54 @@ Courses are payment-linked with strict limits:
 ## 🔐 Security & Setup
 | Feature | Screenshot |
 |---------|------------|
-| PIN Lock Screen | ![Lock Screen](./screenshots/lock_pin_screen.jpg) |
-| First-Time PIN Setup | ![PIN Setup](./screenshots/setup_pin_with_question_first_time.jpg) |
-| Logout Confirmation | ![Logout](./screenshots/log_out_prompt.jpg) |
+| PIN Lock Screen | <img src="./screenshots/lock_pin_screen.jpg" width="200"/> |
+| First-Time PIN Setup | <img src="./screenshots/setup_pin_with_question_first_time.jpg" width="200"/> |
+| Logout Confirmation | <img src="./screenshots/log_out_prompt.jpg" width="200"/> |
 
 ## 👨‍🎓 Student Management
 | Feature | Screenshot |
 |---------|------------|
-| Student List | ![Students View](./screenshots/students_view.jpg) |
-| Add New Student | ![Add Student](./screenshots/add_student.jpg) |
-| Sort Students | ![Sort Students](./screenshots/sort_students.jpg) |
+| Student List | <img src="./screenshots/students_view.jpg" width="200"/> |
+| Add New Student | <img src="./screenshots/add_student.jpg" width="200"/> |
+| Sort Students | <img src="./screenshots/sort_students.jpg" width="200"/> |
 
 ## 📅 Attendance Tracking
 | Feature | Screenshot |
 |---------|------------|
-| Attendance Calendar | ![Attendance View](./screenshots/attendance_view.jpg) |
-| Mark Attendance | ![Select Students](./screenshots/select_student_to_mark_attendance.jpg) |
+| Attendance Calendar | <img src="./screenshots/attendance_view.jpg" width="200"/> |
+| Mark Attendance | <img src="./screenshots/select_student_to_mark_attendance.jpg" width="200"/> |
 
 ## 💸 Payment Management
 | Feature | Screenshot |
 |---------|------------|
-| Payment Dashboard | ![Payments View](./screenshots/payments_view.jpg) |
-| Add Payment | ![Select Student](./screenshots/select_student_for_add_payment.jpg) |
+| Payment Dashboard | <img src="./screenshots/payments_view.jpg" width="200"/> |
+| Add Payment | <img src="./screenshots/select_student_for_add_payment.jpg" width="200"/> |
 
 ## 📚 Course Management
 | Feature | Screenshot |
 |---------|------------|
-| Course Overview | ![Course View](./screenshots/course_view.jpg) |
-| Sort Courses | ![Sort Courses](./screenshots/sort_courses.jpg) |
-| Edit Course | ![Edit Course](./screenshots/edit_course.jpg) |
-| Swipe to Edit | ![Swipe Right](./screenshots/swipe_right_edit_course.jpg) |
-| Swipe to Delete | ![Swipe Left](./screenshots/swipe_left_delete_course.jpg) |
+| Course Overview | <img src="./screenshots/course_view.jpg" width="200"/> |
+| Sort Courses | <img src="./screenshots/sort_courses.jpg" width="200"/> |
+| Edit Course | <img src="./screenshots/edit_course.jpg" width="200"/> |
+| Swipe to Edit | <img src="./screenshots/swipe_right_edit_course.jpg" width="200"/> |
+| Swipe to Delete | <img src="./screenshots/swipe_left_delete_course.jpg" width="200"/> |
 
 ## 🏖️ Holiday Management
 | Feature | Screenshot |
 |---------|------------|
-| My Holidays | ![Holidays](./screenshots/my_holidays.jpg) |
-| Set Weekly Off | ![Weekdays](./screenshots/select_weekdays.jpg) |
+| My Holidays | <img src="./screenshots/my_holidays.jpg" width="200"/> |
+| Set Weekly Off | <img src="./screenshots/select_weekdays.jpg" width="200"/> |
 
 ## 🎨 UI Customization
 | Feature | Screenshot |
 |---------|------------|
-| Light Theme | ![Light UI](./screenshots/light_ui.jpg) |
-| Dark Theme | ![Dark UI](./screenshots/dark_ui.jpg) |
+| Light Theme | <img src="./screenshots/light_ui.jpg" width="200"/> |
+| Dark Theme | <img src="./screenshots/dark_ui.jpg" width="200"/> |
 
 ## ℹ️ About
 | Feature | Screenshot |
 |---------|------------|
-| About Screen | ![About Us](./screenshots/about_us.jpg) |
+| About Screen | <img src="./screenshots/about_us.jpg" width="200"/> |
 
 ---
 
