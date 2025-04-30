@@ -26,9 +26,7 @@ class PaymentCard extends StatelessWidget {
         return Colors.red;
       case CourseStatus.closed:
         return Colors.grey;
-      default:
-        return Colors.black;
-    }
+      }
   }
 
   @override
@@ -148,8 +146,6 @@ class PaymentCard extends StatelessWidget {
         return 'Ongoing';
       case CourseStatus.closed:
         return 'Completed';
-      default:
-        return 'Unknown';
-    }
+      }
   }
 }

@@ -3,6 +3,7 @@ import '../constants/app_constants.dart';
 import 'custom_elevated_button.dart';
 
 class ConfirmationDialog extends StatelessWidget {
+  final String title;
   final String message;
   final String confirmButtonText;
   final String cancelButtonText;
@@ -11,6 +12,7 @@ class ConfirmationDialog extends StatelessWidget {
 
   const ConfirmationDialog({
     super.key,
+    this.title = 'Confirmation',
     required this.message,
     required this.confirmButtonText,
     this.cancelButtonText = 'Cancel',
@@ -29,7 +31,7 @@ class ConfirmationDialog extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'Confirmation',
+            title,
             style: theme.textTheme.titleLarge,
             textAlign: TextAlign.center,
           ),

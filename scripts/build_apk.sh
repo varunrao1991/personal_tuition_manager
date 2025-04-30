@@ -3,7 +3,7 @@
 # Configuration
 debugInfoDir="debug_info"
 buildBaseDir="build"
-buildNumber=1
+buildNumber=0
 apkName="TeacherApp"
 versionName="1.0.$buildNumber"
 environment="production"  # Change to "development" or "staging" as needed
