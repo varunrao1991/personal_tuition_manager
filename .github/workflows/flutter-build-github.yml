@@ -2,11 +2,9 @@ name: Build and Create GitHub Release
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
     inputs:
       CREATE_GITHUB_RELEASE:
@@ -47,46 +45,31 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetch all history for changelog generation
+          fetch-depth: 0
+
+      - name: Cache Android SDK
+        uses: actions/cache@v3
+        with:
+          path: /usr/local/lib/android/sdk
+          key: android-sdk-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            android-sdk-${{ runner.os }}-
 
       - name: Verify Keystore Password
         id: verify_keystore
         run: |
-          # Create keystore directory
           mkdir -p "$(dirname "$KEYSTORE_PATH")"
-
-          # Decode and save the keystore file
           echo "${{ secrets.KEYSTORE_FILE }}" | base64 -d > "$KEYSTORE_PATH"
-
-          # Decode the KEY_PASSWORD (which was stored base64-encoded)
           DECODED_KEY_PASSWORD=$(echo "${{ secrets.KEY_PASSWORD }}" | base64 -d)
           DECODED_KEY_ALIAS=$(echo "${{ secrets.KEY_ALIAS }}" | base64 -d)
 
-          echo "::debug::Decoded password: >>${DECODED_KEY_PASSWORD}<<"
-          echo "::debug::Decoded alias: >>${DECODED_KEY_ALIAS}<<"
-
-          # Debug file verification
-          echo "::debug::Keystore file verification:"
-          ls -la "$(dirname "$KEYSTORE_PATH")"
-          file "$KEYSTORE_PATH"
-          echo "::debug::Keystore size: $(wc -c <"$KEYSTORE_PATH") bytes"
-          echo "::debug::First 100 bytes (hexdump):"
-          head -c 100 "$KEYSTORE_PATH" | hexdump -C
-          echo "::debug::First 100 bytes (raw base64):"
-          head -c 100 "$KEYSTORE_PATH" | base64 -w0
-
-          # Verify password and alias
           if ! keytool -list \
             -keystore "$KEYSTORE_PATH" \
             -storepass "$DECODED_KEY_PASSWORD" \
             -alias "$DECODED_KEY_ALIAS" >/dev/null 2>&1; then
-            echo "::error::Keystore verification failed! Possible issues:"
-            echo "::error::- Invalid password/alias (compare decoded values)"
-            echo "::error::- Corrupted keystore (verify file headers above)"
+            echo "::error::Keystore verification failed!"
             exit 1
-          else
-            echo "✅ Keystore verification successful."
-          fi            
+          fi
 
       - name: Set up Java
         uses: actions/setup-java@v3
@@ -109,9 +92,9 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.pub-cache
-          key: ${{ runner.os }}-flutter-${{ hashFiles('**/pubspec.yaml') }}
+          key: flutter-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
           restore-keys: |
-            ${{ runner.os }}-flutter-
+            flutter-${{ runner.os }}-
 
       - name: Cache Android Gradle
         uses: actions/cache@v3
@@ -119,9 +102,9 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
-            ${{ runner.os }}-gradle-
+            gradle-${{ runner.os }}-
 
       - name: Install Flutter Dependencies
         run: flutter pub get
@@ -155,12 +138,9 @@ jobs:
         run: |
           UNSIGNED_APK="${BUILD_BASE_DIR}/app/outputs/flutter-apk/app-release.apk"
           SIGNED_APK="${BUILD_BASE_DIR}/app/outputs/flutter-apk/${APK_NAME}-${VERSION_NAME}-${ENVIRONMENT}-signed.apk"
-      
-          # Decode password and alias
           DECODED_KEY_PASSWORD=$(echo "${{ secrets.KEY_PASSWORD }}" | base64 -d)
           DECODED_KEY_ALIAS=$(echo "${{ secrets.KEY_ALIAS }}" | base64 -d)
-      
-          # Sign the APK
+
           jarsigner -verbose \
                     -sigalg SHA256withRSA \
                     -digestalg SHA-256 \
@@ -168,8 +148,6 @@ jobs:
                     -storepass "$DECODED_KEY_PASSWORD" \
                     -keypass "$DECODED_KEY_PASSWORD" \
                     "$UNSIGNED_APK" "$DECODED_KEY_ALIAS"
-      
-          # Move signed APK
           mv "$UNSIGNED_APK" "$SIGNED_APK"
           echo "SIGNED_APK_PATH=$SIGNED_APK" >> $GITHUB_ENV
 
@@ -185,33 +163,23 @@ jobs:
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.CREATE_GITHUB_RELEASE == 'true' }}
         id: changelog
         run: |
-          # Create a combined release notes file
           RELEASE_NOTES_FILE="release_notes.md"
-          
           echo "# Release v${{ env.VERSION_NAME }}" > $RELEASE_NOTES_FILE
           echo "" >> $RELEASE_NOTES_FILE
-          
-          # Add user-provided release notes if available
           if [ ! -z "${{ github.event.inputs.RELEASE_NOTES }}" ]; then
             echo "${{ github.event.inputs.RELEASE_NOTES }}" >> $RELEASE_NOTES_FILE
             echo "" >> $RELEASE_NOTES_FILE
           fi
-          
-          # Add user-provided changelog if available
           if [ ! -z "${{ github.event.inputs.CHANGELOG }}" ]; then
             echo "## What's Changed" >> $RELEASE_NOTES_FILE
             echo "${{ github.event.inputs.CHANGELOG }}" >> $RELEASE_NOTES_FILE
             echo "" >> $RELEASE_NOTES_FILE
           fi
-          
-          # Get the previous tag
           PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          
           if [ ! -z "$PREV_TAG" ] && [ "${{ github.event.inputs.AUTO_GENERATE_NOTES }}" == "true" ]; then
             echo "## Commits since $PREV_TAG" >> $RELEASE_NOTES_FILE
             git log --pretty=format:"* %s (%h)" $PREV_TAG..HEAD >> $RELEASE_NOTES_FILE
           fi
-          
           echo "::set-output name=release_notes_file::$RELEASE_NOTES_FILE"
 
       - name: Create GitHub Release
@@ -239,4 +207,3 @@ jobs:
             echo "::notice::✅ Build completed successfully!"
           else
             echo "::error::❌ Build failed!"
-          fi

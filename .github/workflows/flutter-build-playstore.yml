@@ -41,6 +41,14 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Cache Android SDK
+        uses: actions/cache@v3
+        with:
+          path: /usr/local/lib/android/sdk
+          key: android-sdk-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            android-sdk-${{ runner.os }}-
+
       - name: Verify Keystore Password
         id: verify_keystore
         run: |
