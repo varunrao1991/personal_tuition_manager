@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../teacher/widgets/custom_drawer.dart';
+import '../widgets/custom_drawer.dart';
 
 class AppScaffold extends StatelessWidget {
   final String title;

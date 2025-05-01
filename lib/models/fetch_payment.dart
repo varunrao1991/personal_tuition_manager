@@ -1,4 +1,4 @@
-import '../services/teacher/course_service.dart';
+import '../services/course_service.dart';
 import 'owned_by.dart';
 
 class Payment {

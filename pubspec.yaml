@@ -30,19 +30,11 @@ dependencies:
 
   # File picking & permissions
   file_picker: ^10.1.2
-  permission_handler: ^12.0.0+1
-  external_path:  ^2.2.0
-
-  # Media
-  image:          ^4.0.19
-  image_cropper: ^9.1.0
-  image_picker: ^1.1.2
 
   # UI & charts
   cupertino_icons: ^1.0.8
   fl_chart:       ^0.71.0
   table_calendar: ^3.1.0
-  share_plus: ^11.0.0
 
 dev_dependencies:
   flutter_test:
