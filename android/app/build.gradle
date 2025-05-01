@@ -10,7 +10,7 @@ localProperties.load(new FileInputStream(rootProject.file('local.properties')))
 def flutterVersionCode = localProperties.getProperty('flutter.versionCode', '1').toInteger()
 def flutterVersionName = localProperties.getProperty('flutter.versionName', '1.0.0')
 def flutterMinSdkVersion = localProperties.getProperty('flutter.minSdkVersion', '23').toInteger()
-def flutterCompileSdkVersion = localProperties.getProperty('flutter.compileSdk', '34').toInteger()
+def flutterCompileSdkVersion = localProperties.getProperty('flutter.compileSdk', '35').toInteger()
 
 android {
     namespace = 'com.padma.yoglog'
@@ -29,8 +29,8 @@ android {
         applicationId = 'com.padma.yoglog'
         minSdk = flutterMinSdkVersion
         targetSdk = flutterCompileSdkVersion
-        versionCode = flutterVersionCode
-        versionName = flutterVersionName
+        versionCode flutterVersionCode.toInteger()
+        versionName flutterVersionName
     }
 
     // Remove the signingConfigs section
@@ -74,12 +74,6 @@ android {
 dependencies {
     implementation 'com.google.android.play:review:2.0.1'
     implementation 'com.google.android.play:app-update:2.1.0'
-
-    // This dependency is downloaded from the Google’s Maven repository.
-    // Make sure you also include that repository in your project's build.gradle file.
-    implementation("com.google.android.play:app-update:2.1.0")
-
-    // For Kotlin users, also import the Kotlin extensions library for Play In-App Update:
     implementation("com.google.android.play:app-update-ktx:2.1.0")
 }
 
