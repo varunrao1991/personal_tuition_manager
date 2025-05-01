@@ -26,6 +26,7 @@ dependencies:
 
   # Data storage
   sqflite:        ^2.4.0
+  synchronized: ^3.0.0
 
   # File picking & permissions
   file_picker: ^10.1.2

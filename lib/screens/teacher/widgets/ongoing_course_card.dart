@@ -94,7 +94,7 @@ class OngoingCourseCard extends StatelessWidget {
           // Progress indicator
           LinearProgressIndicator(
             value: progress,
-            backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+            backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
             color: isCompleted
                 ? Colors.green
                 : Theme.of(context).colorScheme.primary,

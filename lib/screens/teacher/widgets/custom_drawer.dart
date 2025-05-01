@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/backup_provider.dart';
 import '../../../providers/teacher/attendance_provider.dart';
@@ -53,39 +52,68 @@ class CustomDrawer extends StatelessWidget {
   }
 
   Future<void> _handleExport(BuildContext context) async {
-    final backupProvider = Provider.of<BackupProvider>(context, listen: false);
-    final jsonData = await backupProvider.exportData();
-
-    if (jsonData == null) {
-      showCustomSnackBar(context, 'No data available to export');
-      return;
-    }
-
-    final exportedFilePath = await FilePickerHelper.saveJsonToFile(
-      jsonData,
-      fileName: 'tuition_manager_backup.json',
+    showDialog(
       context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
     );
 
-    if (exportedFilePath != null) {
-      showCustomSnackBar(context, 'File is written to $exportedFilePath');
+    try {
+      final backupProvider =
+          Provider.of<BackupProvider>(context, listen: false);
+      final jsonData = await backupProvider.exportData();
+
+      if (jsonData == null) {
+        Navigator.pop(context);
+        showCustomSnackBar(context, 'No data available to export');
+        return;
+      }
+
+      // Save file to app-specific storage
+      final exportedFilePath = await FilePickerHelper.saveJsonToFile(
+        jsonData,
+        fileName: 'tuition_manager_backup.json',
+        context: context,
+      );
+
+      Navigator.pop(context);
+      if (exportedFilePath != null) {
+        showCustomSnackBar(context, 'File exported.');
+      }
+    } catch (e) {
+      Navigator.pop(context);
+      showCustomSnackBar(context, 'Export error: ${e.toString()}');
     }
   }
 
   Future<void> _handleImport(BuildContext context) async {
-    final backupProvider = Provider.of<BackupProvider>(context, listen: false);
-    final json = await FilePickerHelper.importBackupJsonFile(context);
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
 
-    if (json != null) {
-      try {
+    try {
+      final backupProvider = Provider.of<BackupProvider>(context, listen: false);
+      final json = await FilePickerHelper.pickAndReadJsonFile(context);
+
+      if (json != null) {
         final success = await backupProvider.importData(json);
+        Navigator.pop(context);
         showCustomSnackBar(
           context,
           success ? 'Data imported successfully' : 'Failed to import data',
         );
-      } catch (e) {
-        showCustomSnackBar(context, 'Import error: ${e.toString()}');
+      } else {
+        Navigator.pop(context);
       }
+    } catch (e) {
+      Navigator.pop(context);
+      showCustomSnackBar(context, 'Import error: ${e.toString()}');
     }
   }
 
@@ -103,24 +131,30 @@ class CustomDrawer extends StatelessWidget {
                 const UserInfoHeader(),
                 ListTile(
                   title: Text('My Holidays', style: theme.textTheme.bodyLarge),
+                  leading: const Icon(Icons.calendar_today),
                   onTap: () =>
                       Navigator.pushNamed(context, '/teacher/holidays'),
                 ),
                 ListTile(
+                  title: Text('About', style: theme.textTheme.bodyLarge),
+                  leading: const Icon(Icons.info),
+                  onTap: () => Navigator.pushNamed(context, '/about'),
+                ),
+                const Divider(),
+                ListTile(
                   title: Text('Export Data', style: theme.textTheme.bodyLarge),
+                  leading: const Icon(Icons.upload_file),
                   onTap: () => _handleExport(context),
                 ),
                 ListTile(
                   title: Text('Import Data', style: theme.textTheme.bodyLarge),
+                  leading: const Icon(Icons.download_rounded),
                   onTap: () => _handleImport(context),
                 ),
                 const Divider(),
                 ListTile(
-                  title: Text('About', style: theme.textTheme.bodyLarge),
-                  onTap: () => Navigator.pushNamed(context, '/about'),
-                ),
-                ListTile(
                   title: Text('Logout', style: theme.textTheme.bodyLarge),
+                  leading: const Icon(Icons.logout),
                   onTap: () => _logout(context),
                 ),
                 const Divider(),

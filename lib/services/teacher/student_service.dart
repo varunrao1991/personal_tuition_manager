@@ -1,8 +1,8 @@
 import 'dart:developer';
 import 'package:sqflite/sqflite.dart';
+import '../../helpers/database_helper.dart';
 import '../../models/teacher/student_model.dart';
 import '../../models/teacher/student_update.dart';
-import '../../helpers/database_helper.dart';
 
 class StudentResponse {
   final List<Student> students;
@@ -19,8 +19,6 @@ class StudentResponse {
 }
 
 class StudentService {
-  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
-
   StudentService();
 
   Future<StudentResponse> getStudents({
@@ -29,7 +27,7 @@ class StudentService {
     String? order,
     String? name,
   }) async {
-    final db = await _dbHelper.database;
+    final db = await DatabaseHelper.instance.database;
 
     const limit = 20;
     final offset = (page - 1) * limit;
@@ -84,7 +82,7 @@ class StudentService {
   Future<void> createStudent({
     required StudentUpdate studentUpdate,
   }) async {
-    final db = await _dbHelper.database;
+    final db = await DatabaseHelper.instance.database;
 
     await db.insert(
       'User',
@@ -99,7 +97,7 @@ class StudentService {
   }
 
   Future<bool> anyUserExists() async {
-    final db = await _dbHelper.database;
+    final db = await DatabaseHelper.instance.database;
 
     final result = await db.rawQuery('SELECT 1 FROM User LIMIT 1');
 
@@ -109,7 +107,7 @@ class StudentService {
   Future<void> updateStudent({
     required StudentUpdate studentUpdate,
   }) async {
-    final db = await _dbHelper.database;
+    final db = await DatabaseHelper.instance.database;
 
     await db.update(
       'User',
@@ -127,7 +125,7 @@ class StudentService {
   Future<void> deleteStudent({
     required int studentId,
   }) async {
-    final db = await _dbHelper.database;
+    final db = await DatabaseHelper.instance.database;
 
     await db.delete(
       'User',
@@ -139,7 +137,7 @@ class StudentService {
   }
 
   Future<Student?> getStudentById(int id) async {
-    final db = await _dbHelper.database;
+    final db = await DatabaseHelper.instance.database;
 
     final rows = await db.query(
       'User',

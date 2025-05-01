@@ -82,7 +82,7 @@ class ClosedCourseCard extends StatelessWidget {
             // Progress indicator (showing 100% completion)
             LinearProgressIndicator(
               value: 1.0,
-              backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+              backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
               color: Colors.green,
               minHeight: 8,
               borderRadius: BorderRadius.circular(4),

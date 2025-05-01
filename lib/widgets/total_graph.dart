@@ -8,13 +8,6 @@ class TotalGraph extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (arrayToDisplay.isEmpty) {
-      return Center(
-          child: Text(
-        'No data available',
-        style: Theme.of(context).textTheme.bodyMedium,
-      ));
-    }
 
     final sortedDailyTotals = arrayToDisplay.entries.toList()
       ..sort((a, b) => a.key.compareTo(b.key));

@@ -207,3 +207,4 @@ jobs:
             echo "::notice::✅ Build completed successfully!"
           else
             echo "::error::❌ Build failed!"
+          fi

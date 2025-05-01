@@ -1,9 +1,9 @@
 import 'dart:developer';
 import 'package:sqflite/sqflite.dart';
+import '../../helpers/database_helper.dart';
 import '../../models/owned_by.dart';
 import '../../models/create_payment.dart';
 import '../../models/fetch_payment.dart';
-import '../../helpers/database_helper.dart';
 import './student_service.dart';
 import './course_service.dart';
 
@@ -22,8 +22,6 @@ class PaymentResponse {
 }
 
 class PaymentService {
-  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
-
   PaymentService();
 
   final StudentService _userService = StudentService();
@@ -36,7 +34,7 @@ class PaymentService {
   DateTime? startDate,
   DateTime? endDate,
 }) async {
-  final db = await _dbHelper.database;
+  final db = await DatabaseHelper.instance.database;
 
   const limit = 20;
   final offset = (page - 1) * limit;
@@ -103,7 +101,7 @@ class PaymentService {
   Future<void> addPayment({
     required CreatePayment createPayment,
   }) async {
-    final db = await _dbHelper.database;
+    final db = await DatabaseHelper.instance.database;
 
     await db.insert(
       'Payment',
@@ -121,7 +119,7 @@ class PaymentService {
     required DateTime startDate,
     required DateTime endDate,
   }) async {
-    final db = await _dbHelper.database;
+    final db = await DatabaseHelper.instance.database;
 
     final result = await db.rawQuery(
       '''
@@ -139,7 +137,7 @@ class PaymentService {
     required DateTime startDate,
     required DateTime endDate,
   }) async {
-    final db = await _dbHelper.database;
+    final db = await DatabaseHelper.instance.database;
 
     final result = await db.rawQuery(
       '''
@@ -164,7 +162,7 @@ class PaymentService {
   Future<void> updatePayment({
     required CreatePayment updatePayment,
   }) async {
-    final db = await _dbHelper.database;
+    final db = await DatabaseHelper.instance.database;
 
     await db.update(
       'Payment',
@@ -183,7 +181,7 @@ class PaymentService {
   Future<void> deletePayment({
     required int paymentId,
   }) async {
-    final db = await _dbHelper.database;
+    final db = await DatabaseHelper.instance.database;
 
     await db.delete(
       'Payment',

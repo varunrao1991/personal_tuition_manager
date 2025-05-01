@@ -14,10 +14,10 @@ class StudentSelector extends StatefulWidget {
   final Student? selectedStudent;
 
   const StudentSelector({
-    Key? key,
+    super.key,
     required this.onStudentSelected,
     this.selectedStudent,
-  }) : super(key: key);
+  });
 
   @override
   _StudentSelectorState createState() => _StudentSelectorState();

@@ -4,7 +4,7 @@ import '../../helpers/database_helper.dart';
 import '../../models/holiday.dart';
 
 class HolidayService {
-  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
+  
 
   HolidayService();
 
@@ -12,7 +12,7 @@ class HolidayService {
     DateTime startDate,
     DateTime endDate,
   ) async {
-    final db = await _dbHelper.database;
+    final db = await DatabaseHelper.instance.database;
 
     final result = await db.query(
       'Holiday',
@@ -31,7 +31,7 @@ class HolidayService {
   }
 
   Future<void> addHoliday(DateTime holidayDate, String reason) async {
-    final db = await _dbHelper.database;
+    final db = await DatabaseHelper.instance.database;
 
     final formattedDate = holidayDate.toIso8601String().split('T').first;
 
@@ -50,7 +50,7 @@ class HolidayService {
   Future<void> deleteHoliday({
     required DateTime holidayDate,
   }) async {
-    final db = await _dbHelper.database;
+    final db = await DatabaseHelper.instance.database;
 
     final formattedDate = holidayDate.toIso8601String().split('T').first;
 

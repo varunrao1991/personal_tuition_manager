@@ -31,6 +31,8 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDatabase({bool forceDelete = false}) async {
+    log('_initDatabase');
+
     final documentsDirectory = await getApplicationDocumentsDirectory();
     final path = join(documentsDirectory.path, _databaseName);
 
@@ -48,6 +50,7 @@ class DatabaseHelper {
   }
 
   Future<void> _onConfigure(Database db) async {
+    log('_onConfigure');
     await db.execute('PRAGMA foreign_keys = ON');
   }
 
@@ -317,6 +320,8 @@ class DatabaseHelper {
       }
 
       log('🎉 Database import completed successfully!');
+      await _database?.close();
+      _database = mainDb;
       return true;
     } catch (e) {
       log('❌ Database import failed: $e');
@@ -325,10 +330,6 @@ class DatabaseHelper {
       if (tempDb != null && tempDb.isOpen) {
         await tempDb.close();
         await deleteDatabase(tempDb.path);
-      }
-
-      if (mainDb != null && !mainDb.isOpen) {
-        _database = null;
       }
     }
   }

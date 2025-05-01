@@ -1,8 +1,9 @@
 import 'package:sqflite/sqflite.dart';
-import '../../models/teacher/course.dart';
+
+import '../../helpers/database_helper.dart';
 import '../../models/owned_by.dart';
 import '../../models/payment_info.dart';
-import '../../helpers/database_helper.dart';
+import '../../models/teacher/course.dart';
 
 class CourseResponse {
   final List<Course> courses;
@@ -40,10 +41,10 @@ enum CourseStatus {
 }
 
 class CourseService {
-  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
+  
 
   Future<Course> createCourse(int totalClasses, int studentId) async {
-    final db = await _dbHelper.database;
+    final db = await DatabaseHelper.instance.database;
 
     final studentResult = await db.query(
       'User',
@@ -124,7 +125,7 @@ class CourseService {
   }
 
 Future<bool> hasEligibleStudents() async {
-    final db = await _dbHelper.database;
+    final db = await DatabaseHelper.instance.database;
 
     final result = await db.rawQuery('''
       SELECT 
@@ -145,7 +146,7 @@ Future<bool> hasEligibleStudents() async {
 
   Future<EligibleStudentResponse> getEligibleStudents(
       {required int page}) async {
-    final db = await _dbHelper.database;
+    final db = await DatabaseHelper.instance.database;
 
     final result = await db.rawQuery('''
       SELECT U.id, U.name
@@ -172,7 +173,7 @@ Future<bool> hasEligibleStudents() async {
 
   Future<Course> startCourseById(
       int courseId, DateTime startDate) async {
-    final db = await _dbHelper.database;
+    final db = await DatabaseHelper.instance.database;
 
     final result = await db.rawQuery('''
       SELECT C.*, P.studentId FROM Course C
@@ -225,7 +226,7 @@ Future<bool> hasEligibleStudents() async {
 
   Future<Course> endCourseById(
       int courseId, DateTime endDate) async {
-    final db = await _dbHelper.database;
+    final db = await DatabaseHelper.instance.database;
 
     final result = await db.rawQuery('''
       SELECT C.* FROM Course C
@@ -264,7 +265,7 @@ Future<bool> hasEligibleStudents() async {
 
   Future<Course> updateCourseById(
       int courseId, int totalClasses) async {
-    final db = await _dbHelper.database;
+    final db = await DatabaseHelper.instance.database;
 
     final result = await db.rawQuery('''
       SELECT C.* FROM Course C
@@ -302,7 +303,7 @@ Future<bool> hasEligibleStudents() async {
   }
 
   Future<void> deleteCourse(int courseId) async {
-    final db = await _dbHelper.database;
+    final db = await DatabaseHelper.instance.database;
 
     final result = await db.rawQuery('''
       SELECT C.* FROM Course C
@@ -347,7 +348,7 @@ Future<bool> hasEligibleStudents() async {
     String? sortOrder = 'DESC',
     String? filterBy,
   }) async {
-    final db = await _dbHelper.database;
+    final db = await DatabaseHelper.instance.database;
     sortBy = sortBy ?? 'totalClasses';
     sortOrder = sortOrder ?? 'DESC';
     // Base query with joins
