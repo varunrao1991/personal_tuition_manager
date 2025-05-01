@@ -287,7 +287,6 @@ jobs:
         if: always()
         run: |
           if [[ "${{ job.status }}" == "success" ]]; then
-            echo "::notice::✅ Build completed successfully and uploaded to Play Store!"
+            echo "::notice::✅ Build completed successfully!"
           else
-            echo "::error::❌ Build or upload failed!"
-          fi
+            echo "::error::❌ Build failed!"
