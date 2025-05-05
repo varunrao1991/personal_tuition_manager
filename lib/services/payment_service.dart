@@ -1,9 +1,9 @@
 import 'dart:developer';
 import 'package:sqflite/sqflite.dart';
 import '../helpers/database_helper.dart';
-import '../models/owned_by.dart';
 import '../models/create_payment.dart';
 import '../models/fetch_payment.dart';
+import '../models/student_from.dart';
 import 'student_service.dart';
 import 'course_service.dart';
 
@@ -85,7 +85,7 @@ class PaymentService {
       id: row['id'] as int,
       amount: row['amount'] as int,
       paymentDate: DateTime.parse(row['paymentDate'] as String),
-      ownedBy: OwnedBy(id: student.id, name: student.name),
+      studentFrom: StudentFrom(id: student.id, name: student.name, mobile: student.mobile),
       courseStatus: courseStatus,
     ));
   }

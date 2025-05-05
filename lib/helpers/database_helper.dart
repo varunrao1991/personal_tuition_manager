@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:typed_data';
 
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
@@ -9,7 +10,7 @@ import '../config/app_config.dart';
 
 class DatabaseHelper {
   final _databaseName = Config().appDb;
-  static const int _databaseVersion = 2;
+  static const int _databaseVersion = 3; // Updated from 2 to 3
 
   static const attendanceTable = 'Attendance';
   static const userTable = 'User';
@@ -17,6 +18,7 @@ class DatabaseHelper {
   static const holidayTable = 'Holiday';
   static const courseTable = 'Course';
   static const weekdayTable = 'Weekday';
+  static const teacherSettingsTable = 'TeacherSettings';
 
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
@@ -40,13 +42,16 @@ class DatabaseHelper {
       await deleteDatabase(path);
     }
 
-    return await openDatabase(
+    final db = await openDatabase(
       path,
       version: _databaseVersion,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
       onConfigure: _onConfigure,
     );
+
+    await _initializeTeacherSettings(db);
+    return db;
   }
 
   Future<void> _onConfigure(Database db) async {
@@ -108,22 +113,53 @@ class DatabaseHelper {
       )
     ''');
 
+    await db.execute('''
+      CREATE TABLE $teacherSettingsTable (
+        id INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+        name TEXT,
+        phone TEXT,
+        email TEXT,
+        address TEXT,
+        logo BLOB,
+        signature BLOB,
+        receiptHeader TEXT DEFAULT 'PAYMENT RECEIPT',
+        receiptFooter TEXT,
+        currencySymbol TEXT DEFAULT '₹',
+        terms TEXT
+      )
+    ''');
+
     await db.execute('PRAGMA foreign_keys = ON');
+    await _insertDefaultWeekdays(db);
+    await _initializeTeacherSettings(db);
+  }
+
+  Future<void> _initializeTeacherSettings(Database db) async {
+    final count = Sqflite.firstIntValue(
+      await db.rawQuery('SELECT COUNT(*) FROM $teacherSettingsTable')
+    ) ?? 0;
+    
+    if (count == 0) {
+      await db.insert(teacherSettingsTable, {
+        'receiptHeader': 'PAYMENT RECEIPT',
+        'currencySymbol': '₹',
+      });
+    }
   }
 
   Future<void> _insertDefaultWeekdays(Database db) async {
     final weekdays = [
-      {'id': 1, 'isEnabled': 1},
-      {'id': 2, 'isEnabled': 1},
-      {'id': 3, 'isEnabled': 1},
-      {'id': 4, 'isEnabled': 1},
-      {'id': 5, 'isEnabled': 1},
-      {'id': 6, 'isEnabled': 1},
-      {'id': 7, 'isEnabled': 1},
+      {'id': 1, 'isEnabled': 1}, // Sunday
+      {'id': 2, 'isEnabled': 1}, // Monday
+      {'id': 3, 'isEnabled': 1}, // Tuesday
+      {'id': 4, 'isEnabled': 1}, // Wednesday
+      {'id': 5, 'isEnabled': 1}, // Thursday
+      {'id': 6, 'isEnabled': 1}, // Friday
+      {'id': 7, 'isEnabled': 1}, // Saturday
     ];
 
     for (final day in weekdays) {
-      await db.insert(weekdayTable, day);
+      await db.insert(weekdayTable, day, conflictAlgorithm: ConflictAlgorithm.ignore);
     }
   }
 
@@ -137,8 +173,67 @@ class DatabaseHelper {
       ''');
       await _insertDefaultWeekdays(db);
     }
+    
+    if (oldVersion < 3) {
+      await db.execute('''
+        CREATE TABLE $teacherSettingsTable (
+          id INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+          name TEXT,
+          phone TEXT,
+          email TEXT,
+          address TEXT,
+          logo BLOB,
+          signature BLOB,
+          receiptHeader TEXT DEFAULT 'PAYMENT RECEIPT',
+          receiptFooter TEXT,
+          currencySymbol TEXT DEFAULT '₹',
+          terms TEXT
+        )
+      ''');
+      await _initializeTeacherSettings(db);
+    }
   }
 
+  // Teacher Settings Methods
+  Future<Map<String, dynamic>> getTeacherSettings() async {
+    final db = await database;
+    final settings = await db.query(
+      teacherSettingsTable,
+      limit: 1,
+    );
+    return settings.isNotEmpty ? settings.first : {};
+  }
+
+  Future<int> updateTeacherSettings(Map<String, dynamic> updates) async {
+    final db = await database;
+    return await db.update(
+      teacherSettingsTable,
+      updates,
+      where: 'id = ?',
+      whereArgs: [1],
+    );
+  }
+
+  Future<int> updateTeacherImage({
+    required Uint8List bytes, 
+    required bool isLogo // false for signature
+  }) async {
+    return await updateTeacherSettings({
+      isLogo ? 'logo' : 'signature': bytes,
+    });
+  }
+
+  Future<Uint8List?> getLogo() async {
+    final settings = await getTeacherSettings();
+    return settings['logo'] as Uint8List?;
+  }
+
+  Future<Uint8List?> getSignature() async {
+    final settings = await getTeacherSettings();
+    return settings['signature'] as Uint8List?;
+  }
+
+  // Original methods remain unchanged below...
   Future<String?> exportDatabaseToJson() async {
     Database? db;
     try {
@@ -152,6 +247,7 @@ class DatabaseHelper {
         courseTable,
         holidayTable,
         weekdayTable,
+        teacherSettingsTable,
       ];
 
       for (final table in tables) {
@@ -210,6 +306,7 @@ class DatabaseHelper {
         courseTable,
         holidayTable,
         weekdayTable,
+        teacherSettingsTable,
       ];
 
       final dateTimeFields = {

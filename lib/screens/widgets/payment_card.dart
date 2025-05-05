@@ -8,12 +8,14 @@ class PaymentCard extends StatelessWidget {
   final Payment payment;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final VoidCallback onLongPress;
 
   const PaymentCard({
     super.key,
     required this.payment,
     required this.onEdit,
     required this.onDelete,
+    required this.onLongPress,
   });
 
   Color _getColorBasedOnStatus(CourseStatus courseStatus) {
@@ -34,6 +36,7 @@ class PaymentCard extends StatelessWidget {
     return CustomSwipeCard(
       onSwipeLeft: onDelete,
       onSwipeRight: onEdit,
+      onLongPress: onLongPress,
       child: Container(
         padding: const EdgeInsets.all(8),
         child: Row(
@@ -120,7 +123,7 @@ class PaymentCard extends StatelessWidget {
 
                   // Student name (with ellipsis for long names)
                   Text(
-                    payment.ownedBy.name,
+                    payment.studentFrom.name,
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                           fontWeight: FontWeight.w500,
                         ),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/major/student_provider.dart';
+import '../../providers/major/teacher_settings_provider.dart';
+import '../../utils/reciept_utils.dart';
 import '../../widgets/custom_fab.dart';
 import '../../constants/app_constants.dart';
 import '../../models/create_payment.dart';
@@ -258,6 +260,19 @@ class _PaymentScreenState extends State<PaymentScreen> {
   Widget _buildPaymentCard(Payment payment) {
     return PaymentCard(
       payment: payment,
+      onLongPress: () async {
+        final teacherProvider = Provider.of<TeacherSettingsProvider>(
+          context,
+          listen: false,
+        );
+
+        if (!teacherProvider.hasDetails) {
+          showCustomSnackBar(context, 'Please set up teacher details first to create reciept.');
+          return;
+        }
+
+        await shareReceiptImage(payment, teacherProvider, context);
+      },
       onEdit: () async {
         final paymentNew = await showCustomModalBottomSheet<CreatePayment>(
           context: context,

@@ -1,18 +1,18 @@
 import '../services/course_service.dart';
-import 'owned_by.dart';
+import 'student_from.dart';
 
 class Payment {
   final int id;
   final int amount;
   final DateTime paymentDate;
-  final OwnedBy ownedBy;
+  final StudentFrom studentFrom;
   final CourseStatus courseStatus;
 
   Payment({
     required this.id,
     required this.amount,
     required this.paymentDate,
-    required this.ownedBy,
+    required this.studentFrom,
     required this.courseStatus,
   });
 
@@ -21,7 +21,7 @@ class Payment {
       id: json['id'],
       amount: json['amount'],
       paymentDate: DateTime.parse(json['paymentDate']),
-      ownedBy: OwnedBy.fromJson(json['student']),
+      studentFrom: StudentFrom.fromJson(json['student']),
       courseStatus: CourseStatus.noCourse,
     );
   }

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:personal_tuition_manager/providers/major/teacher_settings_provider.dart';
+import 'package:personal_tuition_manager/services/teacher_settings_service.dart';
 import 'config/app_config.dart';
 import 'providers/auth_provider.dart';
 import 'providers/backup_provider.dart';
@@ -36,6 +38,14 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(
           create: (context) => AuthProvider(AuthService()),
+        ),
+        ChangeNotifierProvider<TeacherSettingsProvider>(
+          create: (context) {
+            final provider = TeacherSettingsProvider(TeacherSettingsService());
+            // Load settings immediately after the provider is created
+            provider.loadSettings();
+            return provider;
+          },
         ),
         ChangeNotifierProvider(
           create: (context) => StudentProvider(StudentService()),

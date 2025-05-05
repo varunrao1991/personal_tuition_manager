@@ -17,10 +17,10 @@ class CreatePayment {
   factory CreatePayment.fromPayment(Payment payment) {
     return CreatePayment(
       id: payment.id,
-      studentId: payment.ownedBy.id,
+      studentId: payment.studentFrom.id,
       amount: payment.amount,
       paymentDate: payment.paymentDate,
-      studentName: payment.ownedBy.name,
+      studentName: payment.studentFrom.name,
     );
   }
 
