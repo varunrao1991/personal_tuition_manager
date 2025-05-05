@@ -13,7 +13,7 @@ import '../../providers/major/teacher_settings_provider.dart';
 class ReceiptWidget extends StatelessWidget {
   final Payment payment;
   final TeacherSettingsProvider teacher;
-  final GlobalKey receiptKey = GlobalKey(); // Add a GlobalKey to the widget
+  final GlobalKey receiptKey = GlobalKey();
 
   ReceiptWidget({
     super.key,
@@ -25,33 +25,30 @@ class ReceiptWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final dateFormat = DateFormat('dd-MM-yyyy HH:mm');
+    final isDark = theme.brightness == Brightness.dark;
 
     return LayoutBuilder(
-      // Use LayoutBuilder to get the available width
       builder: (BuildContext context, BoxConstraints constraints) {
         return SingleChildScrollView(
-          // Make the entire receipt scrollable vertically
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Material(
-              color: Colors.white,
+              color: isDark ? theme.colorScheme.surface : Colors.white,
               borderRadius: BorderRadius.circular(8.0),
+              elevation: 2,
               child: Padding(
                 padding: const EdgeInsets.all(24),
                 child: ConstrainedBox(
-                  // Constrain the maximum width of the content
                   constraints: BoxConstraints(maxWidth: constraints.maxWidth),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment
-                        .stretch, // Use stretch for maximum width
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       // Header Section
                       Column(
-                        crossAxisAlignment: CrossAxisAlignment
-                            .stretch, // Make children take full width
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // Receipt Title at the top, centered
+                          // Receipt Title
                           Text(
                             teacher.receiptHeader.isNotEmpty
                                 ? teacher.receiptHeader.toUpperCase()
@@ -66,21 +63,23 @@ class ReceiptWidget extends StatelessWidget {
                           ),
                           const SizedBox(height: 8),
 
-                          // Logo below the title, centered
+                          // Logo
                           if (teacher.logo != null)
                             Center(
                               child: Padding(
                                 padding: const EdgeInsets.only(bottom: 8.0),
                                 child: SizedBox(
                                   height: 60,
-                                  child: Image.memory(teacher.logo!,
-                                      fit: BoxFit.contain),
+                                  child: Image.memory(
+                                    teacher.logo!,
+                                    fit: BoxFit.contain,
+                                  ),
                                 ),
                               ),
                             ),
                           const SizedBox(height: 8),
 
-                          // Business Info (Name, Address, Phone, Email)
+                          // Business Info
                           if (teacher.teacherName.isNotEmpty)
                             Text(
                               teacher.teacherName,
@@ -117,7 +116,10 @@ class ReceiptWidget extends StatelessWidget {
                               softWrap: true,
                             ),
                           const SizedBox(height: 16),
-                          const Divider(thickness: 1.5),
+                          Divider(
+                            thickness: 1.5,
+                            color: theme.dividerColor,
+                          ),
                           const SizedBox(height: 16),
                         ],
                       ),
@@ -126,13 +128,15 @@ class ReceiptWidget extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Receipt ID:',
-                              style: theme.textTheme.titleMedium),
+                          Text('Receipt ID:', style: theme.textTheme.titleMedium),
                           Flexible(
-                              child: Text('#${payment.id}',
-                                  style: theme.textTheme.titleMedium,
-                                  textAlign: TextAlign.end,
-                                  overflow: TextOverflow.ellipsis)),
+                            child: Text(
+                              '#${payment.id}',
+                              style: theme.textTheme.titleMedium,
+                              textAlign: TextAlign.end,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 8),
@@ -141,36 +145,36 @@ class ReceiptWidget extends StatelessWidget {
                         children: [
                           Text('Date:', style: theme.textTheme.bodyLarge),
                           Flexible(
-                              child: Text(
-                                  dateFormat
-                                      .format(payment.paymentDate.toLocal()),
-                                  style: theme.textTheme.bodyLarge,
-                                  textAlign: TextAlign.end,
-                                  overflow: TextOverflow.ellipsis)),
+                            child: Text(
+                              dateFormat.format(payment.paymentDate.toLocal()),
+                              style: theme.textTheme.bodyLarge,
+                              textAlign: TextAlign.end,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 16),
                       Text(
                         'Payment Details',
-                        style: theme.textTheme.titleMedium!
-                            .copyWith(fontWeight: FontWeight.bold),
+                        style: theme.textTheme.titleMedium!.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start, // Align top for wrapping
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
-                              child: Text('Student:',
-                                  style: theme.textTheme.bodyLarge)),
+                            child: Text('Student:', style: theme.textTheme.bodyLarge),
+                          ),
                           Expanded(
                             child: Text(
                               payment.studentFrom.name,
                               style: theme.textTheme.bodyLarge,
                               textAlign: TextAlign.end,
-                              overflow: TextOverflow
-                                  .ellipsis, // Handle long student names
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
@@ -192,7 +196,10 @@ class ReceiptWidget extends StatelessWidget {
                       ),
 
                       const SizedBox(height: 24),
-                      const Divider(thickness: 1.5),
+                      Divider(
+                        thickness: 1.5,
+                        color: theme.dividerColor,
+                      ),
                       const SizedBox(height: 12),
 
                       // Footer Section
@@ -200,8 +207,10 @@ class ReceiptWidget extends StatelessWidget {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Terms & Conditions:',
-                                style: theme.textTheme.bodySmall),
+                            Text(
+                              'Terms & Conditions:',
+                              style: theme.textTheme.bodySmall,
+                            ),
                             Text(
                               teacher.terms,
                               style: theme.textTheme.bodySmall,
@@ -216,8 +225,10 @@ class ReceiptWidget extends StatelessWidget {
                           alignment: Alignment.bottomRight,
                           child: SizedBox(
                             height: 40,
-                            child: Image.memory(teacher.signature!,
-                                fit: BoxFit.contain),
+                            child: Image.memory(
+                              teacher.signature!,
+                              fit: BoxFit.contain,
+                            ),
                           ),
                         ),
                       if (teacher.receiptFooter.isNotEmpty)
@@ -228,7 +239,9 @@ class ReceiptWidget extends StatelessWidget {
                               teacher.receiptFooter,
                               style: theme.textTheme.bodySmall!.copyWith(
                                 fontStyle: FontStyle.italic,
-                                color: Colors.grey[600],
+                                color: isDark 
+                                    ? theme.colorScheme.onSurface.withOpacity(0.7)
+                                    : Colors.grey[600],
                               ),
                               textAlign: TextAlign.center,
                               overflow: TextOverflow.ellipsis,
