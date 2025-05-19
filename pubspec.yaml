@@ -32,6 +32,7 @@ dependencies:
   file_picker: ^10.1.2
   image_picker: ^1.1.2
   share_plus: ^11.0.0
+  permission_handler: ^12.0.0+1
 
   # UI & charts
   cupertino_icons: ^1.0.8

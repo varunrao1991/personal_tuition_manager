@@ -130,7 +130,6 @@ class DatabaseHelper {
     ''');
 
     await db.execute('PRAGMA foreign_keys = ON');
-    await _insertDefaultWeekdays(db);
     await _initializeTeacherSettings(db);
   }
 
