@@ -10,10 +10,12 @@ class AttendanceService {
   }) async {
     final db = await DatabaseHelper.instance.database;
 
+    final formattedDate = "${attendanceDate.year.toString().padLeft(4, '0')}-${attendanceDate.month.toString().padLeft(2, '0')}-${attendanceDate.day.toString().padLeft(2, '0')}";
+
     await db.delete(
       DatabaseHelper.attendanceTable,
       where: 'attendanceDate = ? AND studentId = ?',
-      whereArgs: [attendanceDate.toIso8601String(), studentId],
+      whereArgs: [formattedDate, studentId],
     );
   }
 
@@ -26,20 +28,25 @@ class AttendanceService {
     String? where;
     List<String>? whereArgs;
 
+    String formatDate(DateTime? date) {
+      if (date == null) return '';
+      return "${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+    }
+
     if (startDate != null && endDate != null) {
       where = 'A.attendanceDate BETWEEN ? AND ?';
       whereArgs = [
-        startDate.toIso8601String(),
-        endDate.toIso8601String(),
+        formatDate(startDate),
+        formatDate(endDate),
       ];
     }
 
     final result = await db.rawQuery('''
-    SELECT A.attendanceDate, U.id, U.name
-    FROM ${DatabaseHelper.attendanceTable} A
-    JOIN ${DatabaseHelper.userTable} U ON A.studentId = U.id
-    ${where != null ? 'WHERE $where' : ''}
-  ''', whereArgs);
+      SELECT A.attendanceDate, U.id, U.name
+      FROM ${DatabaseHelper.attendanceTable} A
+      JOIN ${DatabaseHelper.userTable} U ON A.studentId = U.id
+      ${where != null ? 'WHERE $where' : ''}
+    ''', whereArgs);
 
     return result.map((row) {
       return Attendance(
@@ -54,11 +61,12 @@ class AttendanceService {
     required int studentId,
   }) async {
     final db = await DatabaseHelper.instance.database;
+    final formattedDate = "${attendanceDate.year.toString().padLeft(4, '0')}-${attendanceDate.month.toString().padLeft(2, '0')}-${attendanceDate.day.toString().padLeft(2, '0')}";
 
     await db.insert(
       DatabaseHelper.attendanceTable,
       {
-        'attendanceDate': attendanceDate.toIso8601String(),
+        'attendanceDate': formattedDate,
         'studentId': studentId,
       },
       conflictAlgorithm: ConflictAlgorithm.ignore,
@@ -72,14 +80,19 @@ class AttendanceService {
   }) async {
     final db = await DatabaseHelper.instance.database;
 
+    String formatDate(DateTime? date) {
+      if (date == null) return '';
+      return "${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+    }
+
     final result = await db.query(
       DatabaseHelper.attendanceTable,
       columns: ['attendanceDate'],
       where: 'studentId = ? AND attendanceDate BETWEEN ? AND ?',
       whereArgs: [
         studentId,
-        startDate.toIso8601String(),
-        endDate.toIso8601String(),
+        formatDate(startDate),
+        formatDate(endDate),
       ],
     );
 
@@ -93,11 +106,12 @@ class AttendanceService {
     required int studentId,
   }) async {
     final db = await DatabaseHelper.instance.database;
+    final formattedDate = "${attendanceDate.year.toString().padLeft(4, '0')}-${attendanceDate.month.toString().padLeft(2, '0')}-${attendanceDate.day.toString().padLeft(2, '0')}";
 
     final result = await db.query(
       DatabaseHelper.attendanceTable,
       where: 'attendanceDate = ? AND studentId = ?',
-      whereArgs: [attendanceDate.toIso8601String(), studentId],
+      whereArgs: [formattedDate, studentId],
     );
 
     return result.isNotEmpty;

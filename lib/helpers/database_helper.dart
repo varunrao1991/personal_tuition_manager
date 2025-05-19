@@ -362,7 +362,10 @@ class DatabaseHelper {
               }
 
               try {
-                await tempDb.insert(table, row);
+                await tempDb.insert(table, row,
+                    conflictAlgorithm: table == teacherSettingsTable
+                        ? ConflictAlgorithm.replace
+                        : ConflictAlgorithm.abort);
               } catch (e) {
                 log('❌ Error inserting record #${i + 1} into $table:');
                 log('   Record data: $row');
@@ -393,7 +396,10 @@ class DatabaseHelper {
             final batch = mainDb.batch();
 
             for (int i = batchStart; i < batchEnd; i++) {
-              batch.insert(table, tableData[i] as Map<String, dynamic>);
+              batch.insert(table, tableData[i] as Map<String, dynamic>,
+                  conflictAlgorithm: table == teacherSettingsTable
+                      ? ConflictAlgorithm.replace
+                      : ConflictAlgorithm.abort);
             }
 
             try {
@@ -403,10 +409,13 @@ class DatabaseHelper {
               for (int i = batchStart; i < batchEnd; i++) {
                 try {
                   await mainDb.insert(
-                      table, tableData[i] as Map<String, dynamic>);
+                      table, tableData[i] as Map<String, dynamic>,
+                      conflictAlgorithm: table == teacherSettingsTable
+                          ? ConflictAlgorithm.replace
+                          : ConflictAlgorithm.abort);
                 } catch (e) {
-                  log('   Failed record #${i + 1}: ${tableData[i]}');
-                  log('   Error: $e');
+                  log('  Failed record #${i + 1}: ${tableData[i]}');
+                  log('  Error: $e');
                 }
               }
               rethrow;
