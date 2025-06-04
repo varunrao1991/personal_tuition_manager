@@ -30,9 +30,10 @@ class _StudentScreenState extends State<StudentScreen> {
     'name': 'Name',
     'mobile': 'Mobile Number',
     'createdAt': 'Joining Date',
+    'lastAttendedDate': 'Last attended',
   };
 
-  String _selectedSortField = 'name';
+  String _selectedSortField = 'lastAttendedDate';
   String? _selectedName;
   bool _isAscending = true;
 

@@ -37,8 +37,8 @@ class StudentProvider with ChangeNotifier {
 
   Future<void> fetchStudents({
     int? page,
-    String? sort,
-    String? order,
+    required String sort,
+    required String order,
     String? name,
   }) async {
     _setLoading(true);
@@ -71,7 +71,7 @@ class StudentProvider with ChangeNotifier {
     String? name,
   }) async {
     _currentPage = 1;
-    await fetchStudents(page: 1, sort: sort, order: order, name: name);
+    await fetchStudents(page: 1, sort: 'name', order: 'ASC', name: name);
   }
 
   Future<void> createStudent(StudentUpdate studentUpdate) async {

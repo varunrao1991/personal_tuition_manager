@@ -26,7 +26,7 @@ class StudentSelector extends StatefulWidget {
 class _StudentSelectorState extends State<StudentSelector> {
   final TextEditingController _searchController = TextEditingController();
   String? _selectedName;
-  String _selectedSortField = 'name';
+  String _selectedSortField = 'lastAttendedDate';
   bool _isAscending = true;
   late ScrollController _scrollController;
   Student? _selectedStudent;

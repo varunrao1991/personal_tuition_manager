@@ -23,8 +23,8 @@ class StudentService {
 
   Future<StudentResponse> getStudents({
     required int page,
-    String? sort,
-    String? order,
+    required String sort,
+    required String order,
     String? name,
   }) async {
     final db = await DatabaseHelper.instance.database;
@@ -40,9 +40,7 @@ class StudentService {
       whereArgs = ['%$name%'];
     }
 
-    final orderClause = (sort != null && order != null)
-        ? '$sort ${order.toUpperCase()}'
-        : 'name ASC';
+    final orderClause = '$sort ${order.toUpperCase()}';
 
     final totalQuery = await db.rawQuery(
       'SELECT COUNT(*) as count FROM User ${whereClause.isNotEmpty ? "WHERE $whereClause" : ""}',

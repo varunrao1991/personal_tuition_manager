@@ -10,7 +10,7 @@ import '../config/app_config.dart';
 
 class DatabaseHelper {
   final _databaseName = Config().appDb;
-  static const int _databaseVersion = 3; // Updated from 2 to 3
+  static const int _databaseVersion = 4; // Updated from 3 to 4
 
   static const attendanceTable = 'Attendance';
   static const userTable = 'User';
@@ -66,7 +66,8 @@ class DatabaseHelper {
         name TEXT,
         mobile TEXT,
         email TEXT,
-        createdAt TEXT
+        createdAt TEXT,
+        lastAttendedDate TEXT
       )
     ''');
 
@@ -135,9 +136,9 @@ class DatabaseHelper {
 
   Future<void> _initializeTeacherSettings(Database db) async {
     final count = Sqflite.firstIntValue(
-      await db.rawQuery('SELECT COUNT(*) FROM $teacherSettingsTable')
-    ) ?? 0;
-    
+            await db.rawQuery('SELECT COUNT(*) FROM $teacherSettingsTable')) ??
+        0;
+
     if (count == 0) {
       await db.insert(teacherSettingsTable, {
         'receiptHeader': 'PAYMENT RECEIPT',
@@ -158,7 +159,8 @@ class DatabaseHelper {
     ];
 
     for (final day in weekdays) {
-      await db.insert(weekdayTable, day, conflictAlgorithm: ConflictAlgorithm.ignore);
+      await db.insert(weekdayTable, day,
+          conflictAlgorithm: ConflictAlgorithm.ignore);
     }
   }
 
@@ -172,7 +174,7 @@ class DatabaseHelper {
       ''');
       await _insertDefaultWeekdays(db);
     }
-    
+
     if (oldVersion < 3) {
       await db.execute('''
         CREATE TABLE $teacherSettingsTable (
@@ -191,6 +193,91 @@ class DatabaseHelper {
       ''');
       await _initializeTeacherSettings(db);
     }
+
+    // New migration for version 4 - Add lastAttendedDate column
+    if (oldVersion < 4) {
+      await db.execute('''
+          ALTER TABLE $userTable ADD COLUMN lastAttendedDate TEXT DEFAULT NULL
+      ''');
+
+      // Populate lastAttendedDate for existing users based on their latest attendance
+      await _populateLastAttendedDates(db);
+    }
+  }
+
+  // Helper method to populate lastAttendedDate for existing users
+  Future<void> _populateLastAttendedDates(Database db) async {
+    try {
+      log('Populating lastAttendedDate for existing users...');
+
+      // Get all users with their latest attendance date
+      final result = await db.rawQuery('''
+        SELECT u.id, MAX(a.attendanceDate) as lastAttended
+        FROM $userTable u
+        LEFT JOIN $attendanceTable a ON u.id = a.studentId
+        GROUP BY u.id
+      ''');
+
+      // Update each user's lastAttendedDate
+      for (final row in result) {
+        final userId = row['id'] as int;
+        final lastAttended = row['lastAttended'] as String?;
+
+        if (lastAttended != null) {
+          await db.update(
+            userTable,
+            {'lastAttendedDate': lastAttended},
+            where: 'id = ?',
+            whereArgs: [userId],
+          );
+        }
+      }
+
+      log('Successfully populated lastAttendedDate for ${result.length} users');
+    } catch (e) {
+      log('Error populating lastAttendedDate: $e');
+    }
+  }
+
+  // New method to update last attended date when attendance is marked
+  Future<void> updateLastAttendedDate(
+      int studentId, String? attendanceDate) async {
+    if (attendanceDate != null) {
+      // Validate date format
+      try {
+        DateTime.parse(attendanceDate);
+      } catch (e) {
+        throw FormatException('Invalid date format: $attendanceDate');
+      }
+    }
+
+    final db = await database;
+    await db.update(
+      userTable,
+      {'lastAttendedDate': attendanceDate},
+      where: 'id = ?',
+      whereArgs: [studentId],
+    );
+  }
+
+  // Method to get users with their last attended date
+  Future<List<Map<String, dynamic>>> getUsersWithLastAttendance() async {
+    final db = await database;
+    return await db.query(userTable);
+  }
+
+  // Method to get users who haven't attended for a specific number of days
+  Future<List<Map<String, dynamic>>> getUsersNotAttendedSince(int days) async {
+    final db = await database;
+    final cutoffDate = DateTime.now().subtract(Duration(days: days));
+    final cutoffDateString =
+        cutoffDate.toIso8601String().split('T')[0]; // YYYY-MM-DD format
+
+    return await db.query(
+      userTable,
+      where: 'lastAttendedDate IS NULL OR lastAttendedDate < ?',
+      whereArgs: [cutoffDateString],
+    );
   }
 
   // Teacher Settings Methods
@@ -213,10 +300,9 @@ class DatabaseHelper {
     );
   }
 
-  Future<int> updateTeacherImage({
-    required Uint8List bytes, 
-    required bool isLogo // false for signature
-  }) async {
+  Future<int> updateTeacherImage(
+      {required Uint8List bytes, required bool isLogo // false for signature
+      }) async {
     return await updateTeacherSettings({
       isLogo ? 'logo' : 'signature': bytes,
     });
@@ -288,7 +374,9 @@ class DatabaseHelper {
 
       final dynamic versionData = jsonData['version'];
       final int importedVersion = versionData is int ? versionData : 0;
-      if (importedVersion != _databaseVersion) {
+
+      // Allow importing from version 3 or 4 (backward compatibility)
+      if (importedVersion < 3 || importedVersion > _databaseVersion) {
         log('❌ Database version mismatch. Current: $_databaseVersion, Imported: $importedVersion');
         return false;
       }
@@ -317,6 +405,7 @@ class DatabaseHelper {
         courseTable: ['startDate', 'endDate'],
         paymentTable: ['paymentDate'],
         holidayTable: ['holidayDate'],
+        userTable: ['lastAttendedDate'], // Add lastAttendedDate as a date field
       };
 
       bool isValidDate(dynamic value) {
@@ -346,13 +435,20 @@ class DatabaseHelper {
           for (int i = 0; i < tableData.length; i++) {
             final row = tableData[i];
             if (row is Map<String, dynamic>) {
-              for (final field in (dateFields[table] ?? [])) {
-                final value = row[field];
-                if (value != null && !isValidDate(value)) {
-                  throw FormatException(
-                      'Invalid date format for $field in table $table: $value');
+              // Handle backward compatibility - if importing from version 3,
+              // lastAttendedDate column won't exist in the data
+              if (table == userTable && importedVersion < 4) {
+                // Don't validate lastAttendedDate for older versions
+              } else {
+                for (final field in (dateFields[table] ?? [])) {
+                  final value = row[field];
+                  if (value != null && !isValidDate(value)) {
+                    throw FormatException(
+                        'Invalid date format for $field in table $table: $value');
+                  }
                 }
               }
+
               for (final field in (dateTimeFields[table] ?? [])) {
                 final value = row[field];
                 if (value != null && !isValidDateTime(value)) {
@@ -422,6 +518,11 @@ class DatabaseHelper {
             }
           }
         }
+      }
+
+      // If imported from version 3, populate lastAttendedDate for existing users
+      if (importedVersion < 4) {
+        await _populateLastAttendedDates(mainDb);
       }
 
       log('🎉 Database import completed successfully!');

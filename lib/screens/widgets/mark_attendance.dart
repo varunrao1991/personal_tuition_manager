@@ -35,13 +35,14 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
   final TextEditingController _searchController = TextEditingController();
   String? _selectedName;
 
-  String _selectedSortField = 'name';
-  bool _isAscending = true;
+  String _selectedSortField = 'lastAttendedDate';
+  bool _isAscending = false;
 
   static const Map<String, String> _sortFieldLabels = {
     'name': 'Name',
     'mobile': 'Mobile Number',
     'createdAt': 'Joining Date',
+    'lastAttendedDate': 'Last attended',
   };
 
   @override
@@ -100,7 +101,7 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
 
     _page++;
     await studentProvider.fetchStudents(
-        name: _searchQuery, page: _page, sort: 'name', order: 'ASC');
+        name: _searchQuery, page: _page, sort: _selectedSortField, order: _isAscending?'ASC':'DESC');
 
     setState(() {
       _isLoadingMore = false;
@@ -261,7 +262,7 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
 
   Widget _buildStudentGrid(List<OwnedBy> students) {
     return SizedBox(
-      height: 200,
+      height: 150,
       child: GridView.builder(
         controller: _scrollController,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
