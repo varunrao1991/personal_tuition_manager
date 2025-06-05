@@ -1,3 +1,5 @@
+![App Overview](docs/social-preview.png)
+
 # 📘 Personal Tuition Manager (Offline)  
 
 **Your private, secure, and powerful assistant for managing tuition students.**  
