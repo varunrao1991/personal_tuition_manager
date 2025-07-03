@@ -122,13 +122,14 @@ class CourseProvider with ChangeNotifier {
     }
   }
 
-  Future<void> addCourse(int studentId, int totalClasses) async {
+  Future<void> addCourse(int studentId, int totalClasses, int? subjectId) async {
     _setLoading(true);
 
     try {
       await _courseService.createCourse(
         totalClasses,
         studentId,
+        subjectId
       );
       log('Course successfully added.');
       await resetAndFetch(filterBy: 'waitlist');
@@ -169,7 +170,8 @@ class CourseProvider with ChangeNotifier {
 
   Future<void> updateCourse(
     int courseId,
-    int totalClasses,
+    int totalClasses, 
+    int? subjectId
   ) async {
     _setLoading(true);
 
@@ -177,6 +179,7 @@ class CourseProvider with ChangeNotifier {
       await _courseService.updateCourseById(
         courseId,
         totalClasses,
+        subjectId
       );
       log('Course successfully updated.');
 

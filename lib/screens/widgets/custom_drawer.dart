@@ -136,6 +136,12 @@ class CustomDrawer extends StatelessWidget {
                       Navigator.pushNamed(context, '/teacher/holidays'),
                 ),
                 ListTile(
+                  title: Text('Subjects', style: theme.textTheme.bodyLarge),
+                  leading: const Icon(Icons.subject),
+                  onTap: () =>
+                      Navigator.pushNamed(context, '/teacher/subjects'),
+                ),
+                ListTile(
                   title: Text('About', style: theme.textTheme.bodyLarge),
                   leading: const Icon(Icons.info),
                   onTap: () => Navigator.pushNamed(context, '/about'),

@@ -5,6 +5,7 @@ import '../../widgets/custom_swipe_card.dart';
 
 class WaitlistCourseCard extends StatelessWidget {
   final String studentName;
+  final String? subjectName;
   final int paymentId;
   final int totalClasses;
   final DateTime paymentDate;
@@ -20,6 +21,7 @@ class WaitlistCourseCard extends StatelessWidget {
     required this.paymentId,
     required this.totalClasses,
     required this.paymentDate,
+    this.subjectName,
     required this.canStart,
     required this.onEdit,
     required this.onDelete,
@@ -52,11 +54,24 @@ class WaitlistCourseCard extends StatelessWidget {
                     maxLines: 2,
                   ),
                 ),
+                if (subjectName != null)
+                  Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      child: Text(
+                        subjectName!,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                      )),
+                if (subjectName != null) const SizedBox(height: 4),
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                    color:
+                        Theme.of(context).colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(

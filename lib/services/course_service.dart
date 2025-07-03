@@ -1,3 +1,4 @@
+import 'package:personal_tuition_manager/models/subject.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../helpers/database_helper.dart';
@@ -43,7 +44,7 @@ enum CourseStatus {
 class CourseService {
   
 
-  Future<Course> createCourse(int totalClasses, int studentId) async {
+  Future<Course> createCourse(int totalClasses, int studentId, int? subjectId) async {
     final db = await DatabaseHelper.instance.database;
 
     final studentResult = await db.query(
@@ -63,8 +64,7 @@ class CourseService {
     ''', [studentId]);
 
     if (existingNotStarted.isNotEmpty) {
-      throw Exception(
-          'A course is already in a waitlist state for this student.');
+      throw Exception('A course is already in a waitlist state for this student.');
     }
 
     final paymentResult = await db.rawQuery('''
@@ -84,15 +84,20 @@ class CourseService {
     await db.insert('Course', {
       'paymentId': paymentId,
       'totalClasses': totalClasses,
+      'subjectId': subjectId,
     });
 
     final paymentInfo = await _getPaymentInfo(db, paymentId);
+    final subject = subjectId != null ? await _getSubject(db, subjectId) : null;
+
     return Course(
-        paymentId: paymentId,
-        totalClasses: totalClasses,
-        payment: paymentInfo,
-        startDate: null,
-        endDate: null);
+      paymentId: paymentId,
+      totalClasses: totalClasses,
+      payment: paymentInfo,
+      startDate: null,
+      endDate: null,
+      subject: subject,
+    );
   }
 
   Future<CourseStatus> getCourseStatus(int paymentId) async {
@@ -171,8 +176,7 @@ Future<bool> hasEligibleStudents() async {
     );
   }
 
-  Future<Course> startCourseById(
-      int courseId, DateTime startDate) async {
+  Future<Course> startCourseById(int courseId, DateTime startDate) async {
     final db = await DatabaseHelper.instance.database;
 
     final result = await db.rawQuery('''
@@ -188,6 +192,7 @@ Future<bool> hasEligibleStudents() async {
     final studentId = row['studentId'] as int;
     final existingStart = row['startDate'];
     final existingEnd = row['endDate'];
+    final subjectId = row['subjectId'] as int?;
 
     if (existingStart != null && existingEnd != null) {
       throw Exception('Course is already closed.');
@@ -210,22 +215,23 @@ Future<bool> hasEligibleStudents() async {
       whereArgs: [courseId],
     );
 
-    final courseRow =
-        await db.query('Course', where: 'paymentId = ?', whereArgs: [courseId]);
+    final courseRow = await db.query('Course', where: 'paymentId = ?', whereArgs: [courseId]);
     final courseData = courseRow.first;
 
     final paymentInfo = await _getPaymentInfo(db, courseId);
+    final subject = subjectId != null ? await _getSubject(db, subjectId) : null;
 
     return Course(
-        paymentId: courseId,
-        startDate: startDate,
-        totalClasses: courseData['totalClasses'] as int,
-        payment: paymentInfo,
-        endDate: null);
+      paymentId: courseId,
+      startDate: startDate,
+      totalClasses: courseData['totalClasses'] as int,
+      payment: paymentInfo,
+      endDate: null,
+      subject: subject,
+    );
   }
 
-  Future<Course> endCourseById(
-      int courseId, DateTime endDate) async {
+  Future<Course> endCourseById(int courseId, DateTime endDate) async {
     final db = await DatabaseHelper.instance.database;
 
     final result = await db.rawQuery('''
@@ -246,11 +252,12 @@ Future<bool> hasEligibleStudents() async {
       whereArgs: [courseId],
     );
 
-    final courseRow =
-        await db.query('Course', where: 'paymentId = ?', whereArgs: [courseId]);
+    final courseRow = await db.query('Course', where: 'paymentId = ?', whereArgs: [courseId]);
     final courseData = courseRow.first;
+    final subjectId = courseData['subjectId'] as int?;
 
     final paymentInfo = await _getPaymentInfo(db, courseId);
+    final subject = subjectId != null ? await _getSubject(db, subjectId) : null;
 
     return Course(
       paymentId: courseId,
@@ -260,11 +267,11 @@ Future<bool> hasEligibleStudents() async {
           ? DateTime.parse(courseData['startDate'] as String)
           : null,
       endDate: endDate,
+      subject: subject,
     );
   }
 
-  Future<Course> updateCourseById(
-      int courseId, int totalClasses) async {
+  Future<Course> updateCourseById(int courseId, int totalClasses, int? subjectId) async {
     final db = await DatabaseHelper.instance.database;
 
     final result = await db.rawQuery('''
@@ -278,16 +285,20 @@ Future<bool> hasEligibleStudents() async {
 
     await db.update(
       'Course',
-      {'totalClasses': totalClasses},
+      {
+        'totalClasses': totalClasses,
+        'subjectId': subjectId,
+      },
       where: 'paymentId = ?',
       whereArgs: [courseId],
     );
 
-    final courseRow =
-        await db.query('Course', where: 'paymentId = ?', whereArgs: [courseId]);
+    final courseRow = await db.query('Course', where: 'paymentId = ?', whereArgs: [courseId]);
     final courseData = courseRow.first;
+    final updatedSubjectId = courseData['subjectId'] as int?;
 
     final paymentInfo = await _getPaymentInfo(db, courseId);
+    final subject = updatedSubjectId != null ? await _getSubject(db, updatedSubjectId) : null;
 
     return Course(
       paymentId: courseId,
@@ -299,6 +310,7 @@ Future<bool> hasEligibleStudents() async {
       endDate: courseData['endDate'] != null
           ? DateTime.parse(courseData['endDate'] as String)
           : null,
+      subject: subject,
     );
   }
 
@@ -351,27 +363,31 @@ Future<bool> hasEligibleStudents() async {
     final db = await DatabaseHelper.instance.database;
     sortBy = sortBy ?? 'totalClasses';
     sortOrder = sortOrder ?? 'DESC';
-    // Base query with joins
+    
     var query = '''
       SELECT 
         C.paymentId,
         C.totalClasses,
         C.startDate,
         C.endDate,
+        C.subjectId,
         P.id as paymentId,
         P.amount,
         P.paymentDate,
         U.id as studentId,
-        U.name as studentName
+        U.name as studentName,
+        S.id as subjectId,
+        S.name as subjectName,
+        S.description as subjectDescription
       FROM Course C
       JOIN Payment P ON C.paymentId = P.id
       JOIN User U ON P.studentId = U.id
+      LEFT JOIN Subject S ON C.subjectId = S.id
     ''';
 
     final List<Object?> whereArgs = [];
     final List<String> whereClauses = [];
 
-    // Apply filters
     if (filterBy != null) {
       switch (filterBy) {
         case 'ongoing':
@@ -390,33 +406,26 @@ Future<bool> hasEligibleStudents() async {
     }
 
     if (whereClauses.isNotEmpty) {
-      query += ' AND ${whereClauses.join(' AND ')}';
+      query += ' WHERE ${whereClauses.join(' AND ')}';
     }
 
-    // Apply sorting
     query += ' ORDER BY C.$sortBy $sortOrder';
-
-    // Apply pagination
     query += ' LIMIT ? OFFSET ?';
     whereArgs.addAll([limit, (page - 1) * limit]);
 
-    // Execute main query
-    final List<Map<String, dynamic>> results =
-        await db.rawQuery(query, whereArgs);
+    final List<Map<String, dynamic>> results = await db.rawQuery(query, whereArgs);
 
-    // Get total count for pagination
     final countQuery = '''
       SELECT COUNT(*) as total
       FROM Course C
       JOIN Payment P ON C.paymentId = P.id
       JOIN User U ON P.studentId = U.id
-      ${whereClauses.isNotEmpty ? 'AND ${whereClauses.join(' AND ')}' : ''}
+      ${whereClauses.isNotEmpty ? 'WHERE ${whereClauses.join(' AND ')}' : ''}
     ''';
     final countResult = await db.rawQuery(countQuery, []);
     final totalRecords = countResult.first['total'] as int;
     final totalPages = (totalRecords / limit).ceil();
 
-    // Process results
     final courses = results.map((e) {
       final student = OwnedBy(
         id: e['studentId'] as int,
@@ -429,6 +438,15 @@ Future<bool> hasEligibleStudents() async {
         student: student,
       );
 
+      final subject = e['subjectId'] != null 
+          ? Subject(
+              id: e['subjectId'] as int,
+              name: e['subjectName'] as String,
+              description: e['subjectDescription'] as String?,
+              createdAt: DateTime.now()
+            )
+          : null;
+
       return Course(
         paymentId: e['paymentId'] as int,
         startDate: e['startDate'] != null
@@ -439,27 +457,23 @@ Future<bool> hasEligibleStudents() async {
             : null,
         totalClasses: e['totalClasses'] as int,
         payment: payment,
+        subject: subject,
       );
     }).toList();
 
-    // Additional logic for waitlist and ongoing filters
     if (filterBy == 'waitlist') {
-      final studentIds =
-          courses.map((c) => c.payment.student.id).toSet().toList();
+      final studentIds = courses.map((c) => c.payment.student.id).toSet().toList();
       final ongoingStudentIds = await _getOngoingCourseStudents(db, studentIds);
 
       for (final course in courses) {
-        course.canStart =
-            !ongoingStudentIds.contains(course.payment.student.id);
+        course.canStart = !ongoingStudentIds.contains(course.payment.student.id);
       }
     } else if (filterBy == 'ongoing') {
-      final studentIds =
-          courses.map((c) => c.payment.student.id).toSet().toList();
+      final studentIds = courses.map((c) => c.payment.student.id).toSet().toList();
       final nonStartedStudentIds = await _getNonStartedStudents(db, studentIds);
 
       for (final course in courses) {
-        course.noCredit =
-            !nonStartedStudentIds.contains(course.payment.student.id);
+        course.noCredit = !nonStartedStudentIds.contains(course.payment.student.id);
       }
     }
 
@@ -468,6 +482,25 @@ Future<bool> hasEligibleStudents() async {
       totalPages: totalPages,
       totalRecords: totalRecords,
       currentPage: page,
+    );
+  }
+
+  Future<Subject?> _getSubject(Database db, int subjectId) async {
+    final result = await db.query(
+      'Subject',
+      where: 'id = ?',
+      whereArgs: [subjectId],
+      limit: 1,
+    );
+
+    if (result.isEmpty) return null;
+
+    final row = result.first;
+    return Subject(
+      id: row['id'] as int,
+      name: row['name'] as String,
+      description: row['description'] as String?,
+      createdAt: DateTime.now()
     );
   }
 

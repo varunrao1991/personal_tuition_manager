@@ -5,6 +5,7 @@ import '../../widgets/custom_card.dart';
 
 class ClosedCourseCard extends StatelessWidget {
   final bool isSelected;
+  final String? subjectName;
   final String name;
   final int totalClasses;
   final DateTime paymentDate;
@@ -17,6 +18,7 @@ class ClosedCourseCard extends StatelessWidget {
     this.isSelected = false,
     required this.totalClasses,
     required this.name,
+    this.subjectName,
     required this.paymentDate,
     required this.startDate,
     required this.endDate,
@@ -26,7 +28,7 @@ class ClosedCourseCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final durationDays = endDate.difference(startDate).inDays + 1;
-    
+
     return CustomCard(
       onTap: onTap,
       isSelected: isSelected,
@@ -50,8 +52,21 @@ class ClosedCourseCard extends StatelessWidget {
                     maxLines: 2,
                   ),
                 ),
+                if (subjectName != null)
+                  Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      child: Text(
+                        subjectName!,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                      )),
+                if (subjectName != null) const SizedBox(height: 4),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.green.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(12),
@@ -73,7 +88,10 @@ class ClosedCourseCard extends StatelessWidget {
             Text(
               'Completed ${timeAgoString(endDate)}',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withOpacity(0.6),
                   ),
             ),
 
@@ -82,7 +100,8 @@ class ClosedCourseCard extends StatelessWidget {
             // Progress indicator (showing 100% completion)
             LinearProgressIndicator(
               value: 1.0,
-              backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+              backgroundColor:
+                  Theme.of(context).colorScheme.surfaceContainerHighest,
               color: Colors.green,
               minHeight: 8,
               borderRadius: BorderRadius.circular(4),
@@ -120,7 +139,8 @@ class ClosedCourseCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStatItem(BuildContext context, {
+  Widget _buildStatItem(
+    BuildContext context, {
     required String value,
     required String label,
     required Color color,

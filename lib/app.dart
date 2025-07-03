@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:personal_tuition_manager/providers/major/subject_provider.dart';
 import 'package:personal_tuition_manager/providers/major/teacher_settings_provider.dart';
+import 'package:personal_tuition_manager/services/subject_service.dart';
 import 'package:personal_tuition_manager/services/teacher_settings_service.dart';
 import 'config/app_config.dart';
 import 'providers/auth_provider.dart';
@@ -49,6 +51,9 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(
           create: (context) => StudentProvider(StudentService()),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => SubjectProvider(SubjectService()),
         ),
         ChangeNotifierProvider(
           create: (context) => PaymentProvider(PaymentService()),

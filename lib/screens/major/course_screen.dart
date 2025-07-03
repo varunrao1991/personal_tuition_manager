@@ -308,6 +308,7 @@ class _CourseScreenState extends State<CourseScreen>
             calculateDaysPassedSinceStartToTodayExcludeOffs(course.startDate!);
         return OngoingCourseCard(
           name: course.payment.student.name,
+          subjectName: course.subject?.name,
           startDate: course.startDate!,
           completedDays: completedDays,
           paymentDate: course.payment.paymentDate,
@@ -332,6 +333,7 @@ class _CourseScreenState extends State<CourseScreen>
       case 'closed':
         return ClosedCourseCard(
           name: course.payment.student.name,
+          subjectName: course.subject?.name,
           totalClasses: course.totalClasses,
           paymentDate: course.payment.paymentDate,
           startDate: course.startDate!,
@@ -350,6 +352,7 @@ class _CourseScreenState extends State<CourseScreen>
       default: // 'waitlist'
         return WaitlistCourseCard(
           paymentId: course.paymentId,
+          subjectName: course.subject?.name,
           studentName: course.payment.student.name,
           totalClasses: course.totalClasses,
           paymentDate: course.payment.paymentDate,
@@ -484,7 +487,7 @@ class _CourseScreenState extends State<CourseScreen>
 
       if (course != null) {
         await Provider.of<CourseProvider>(context, listen: false)
-            .addCourse(course.paymentId, course.totalClasses);
+            .addCourse(course.paymentId, course.totalClasses, course.subjectId);
         _fetchCourses(_tabController.index);
       }
     } catch (e) {
@@ -494,16 +497,24 @@ class _CourseScreenState extends State<CourseScreen>
 
   Future<void> _editCourseForm(Course course) async {
     try {
-      final totalClasses = await showCustomModalBottomSheet<int>(
+      final result = await showCustomModalBottomSheet<Map<String, dynamic>>(
         context: context,
-        child: EditCourseWidget(totalClasses: course.totalClasses),
+        child: EditCourseWidget(
+          totalClasses: course.totalClasses,
+          currentSubjectId: course.subject?.id,
+        ),
       );
-      if (totalClasses != null) {
+
+      if (result != null) {
         final courseProvider =
             Provider.of<CourseProvider>(context, listen: false);
-        await courseProvider.updateCourse(course.paymentId, totalClasses);
+        await courseProvider.updateCourse(
+          course.paymentId,
+          result['totalClasses'],
+          result['subjectId'],
+        );
+        _fetchCourses(_tabController.index);
       }
-      _fetchCourses(_tabController.index);
     } catch (e) {
       handleErrors(context, e);
     }

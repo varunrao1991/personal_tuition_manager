@@ -9,6 +9,7 @@ class OngoingCourseCard extends StatelessWidget {
   final DateTime paymentDate;
   final int totalClasses;
   final int completedDays;
+  final String? subjectName;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
   final VoidCallback onUpdate;
@@ -23,6 +24,7 @@ class OngoingCourseCard extends StatelessWidget {
     required this.paymentDate,
     required this.totalClasses,
     required this.completedDays,
+    this.subjectName,
     required this.onEdit,
     required this.onDelete,
     required this.onUpdate,
@@ -45,9 +47,10 @@ class OngoingCourseCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(8),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          // Header row with name and status
+          // Header row with name and subject/credit
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: Text(
@@ -59,22 +62,38 @@ class OngoingCourseCard extends StatelessWidget {
                   maxLines: 2,
                 ),
               ),
-              if (noCredit == false)
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    'Credit',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: Colors.green,
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                ),
+              const SizedBox(width: 8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if (subjectName != null)
+                    Text(
+                      subjectName!,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                    ),
+                  if (subjectName != null && noCredit == false)
+                    const SizedBox(height: 4),
+                  if (noCredit == false)
+                    Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        'Credit',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              color: Colors.green,
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                    ),
+                ],
+              ),
             ],
           ),
 

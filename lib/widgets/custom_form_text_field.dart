@@ -6,6 +6,7 @@ class CustomFormTextField extends StatelessWidget {
   final IconData prefixIcon;
   final bool readOnly;
   final bool obscureText;
+  final int? maxLines;
   final String? Function(String?)? validator;
   final TextInputType keyboardType;
   final Future<void> Function()? onTap;
@@ -19,6 +20,7 @@ class CustomFormTextField extends StatelessWidget {
     this.validator,
     this.onTap,
     this.readOnly = false,
+    this.maxLines = 3,
     this.keyboardType = TextInputType.text,
   });
 
@@ -29,6 +31,7 @@ class CustomFormTextField extends StatelessWidget {
       readOnly: readOnly,
       obscureText: obscureText,
       validator: validator,
+      maxLines: maxLines,
       keyboardType: keyboardType,
       onTap: onTap,
       decoration: InputDecoration(

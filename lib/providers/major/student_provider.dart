@@ -71,7 +71,8 @@ class StudentProvider with ChangeNotifier {
     String? name,
   }) async {
     _currentPage = 1;
-    await fetchStudents(page: 1, sort: 'name', order: 'ASC', name: name);
+    await fetchStudents(
+        page: 1, sort: sort ?? 'name', order: order ?? 'ASC', name: name);
   }
 
   Future<void> createStudent(StudentUpdate studentUpdate) async {

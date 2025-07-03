@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:personal_tuition_manager/screens/major/subject_screen.dart';
 import 'package:personal_tuition_manager/screens/major/teacher_settings_screen.dart';
 import '../screens/major/attendance_screen.dart';
 import '../screens/major/course_screen.dart';
@@ -13,6 +14,7 @@ Map<String, WidgetBuilder> teacherRoutes = {
   '/home': (context) => const TeacherHomeScreen(),
   '/teacher/edit_settings': (context) => const TeacherSettingsScreen(),
   '/teacher/holidays': (context) => const HolidayScreen(),
+  '/teacher/subjects': (context) => const SubjectScreen(),
   '/teacher/attendances': (context) => const AttendanceScreen(),
   '/teacher/students': (context) => const StudentScreen(),
   '/teacher/payments': (context) => const PaymentScreen(),

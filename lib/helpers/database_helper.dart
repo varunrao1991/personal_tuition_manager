@@ -10,7 +10,7 @@ import '../config/app_config.dart';
 
 class DatabaseHelper {
   final _databaseName = Config().appDb;
-  static const int _databaseVersion = 4; // Updated from 3 to 4
+  static const int _databaseVersion = 5; // Updated from 4 to 5
 
   static const attendanceTable = 'Attendance';
   static const userTable = 'User';
@@ -19,6 +19,7 @@ class DatabaseHelper {
   static const courseTable = 'Course';
   static const weekdayTable = 'Weekday';
   static const teacherSettingsTable = 'TeacherSettings';
+  static const subjectTable = 'Subject'; // New table
 
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
@@ -90,13 +91,26 @@ class DatabaseHelper {
       )
     ''');
 
+    // Create subjects table
+    await db.execute('''
+      CREATE TABLE $subjectTable (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        description TEXT,
+        createdAt TEXT DEFAULT CURRENT_TIMESTAMP
+      )
+    ''');
+
+    // Update course table to include subject foreign key
     await db.execute('''
       CREATE TABLE $courseTable (
         paymentId INTEGER PRIMARY KEY,
         startDate TEXT,
         endDate TEXT,
         totalClasses INTEGER NOT NULL DEFAULT 0,
-        FOREIGN KEY (paymentId) REFERENCES $paymentTable(id) ON DELETE CASCADE
+        subjectId INTEGER,
+        FOREIGN KEY (paymentId) REFERENCES $paymentTable(id) ON DELETE CASCADE,
+        FOREIGN KEY (subjectId) REFERENCES $subjectTable(id) ON DELETE SET NULL
       )
     ''');
 
@@ -194,14 +208,32 @@ class DatabaseHelper {
       await _initializeTeacherSettings(db);
     }
 
-    // New migration for version 4 - Add lastAttendedDate column
+    // Migration for version 4 - Add lastAttendedDate column
     if (oldVersion < 4) {
       await db.execute('''
           ALTER TABLE $userTable ADD COLUMN lastAttendedDate TEXT DEFAULT NULL
       ''');
-
-      // Populate lastAttendedDate for existing users based on their latest attendance
       await _populateLastAttendedDates(db);
+    }
+
+    // Migration for version 5 - Add subjects table and update course table
+    if (oldVersion < 5) {
+      // Create subjects table
+      await db.execute('''
+        CREATE TABLE $subjectTable (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          description TEXT,
+          createdAt TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+      ''');
+
+      // Add subjectId column to course table
+      await db.execute('''
+        ALTER TABLE $courseTable ADD COLUMN subjectId INTEGER REFERENCES $subjectTable(id) ON DELETE SET NULL
+      ''');
+
+      log('Successfully added subjects table and updated course table');
     }
   }
 
@@ -237,6 +269,89 @@ class DatabaseHelper {
     } catch (e) {
       log('Error populating lastAttendedDate: $e');
     }
+  }
+
+  // Subject CRUD Methods
+  Future<int> insertSubject(Map<String, dynamic> subject) async {
+    final db = await database;
+    return await db.insert(subjectTable, {
+      ...subject,
+      'createdAt': DateTime.now().toIso8601String(),
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> getAllSubjects() async {
+    final db = await database;
+    return await db.query(subjectTable, orderBy: 'name ASC');
+  }
+
+  Future<Map<String, dynamic>?> getSubjectById(int id) async {
+    final db = await database;
+    final result = await db.query(
+      subjectTable,
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    return result.isNotEmpty ? result.first : null;
+  }
+
+  Future<int> updateSubject(int id, Map<String, dynamic> updates) async {
+    final db = await database;
+    return await db.update(
+      subjectTable,
+      updates,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<int> deleteSubject(int id) async {
+    final db = await database;
+    // This will set subjectId to NULL in related courses due to ON DELETE SET NULL
+    return await db.delete(
+      subjectTable,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  // Course methods with subject support
+  Future<int> insertCourse(Map<String, dynamic> course) async {
+    final db = await database;
+    return await db.insert(courseTable, course);
+  }
+
+  Future<List<Map<String, dynamic>>> getCoursesWithSubjects() async {
+    final db = await database;
+    return await db.rawQuery('''
+      SELECT c.*, s.name as subjectName, s.description as subjectDescription
+      FROM $courseTable c
+      LEFT JOIN $subjectTable s ON c.subjectId = s.id
+      ORDER BY c.paymentId DESC
+    ''');
+  }
+
+  Future<Map<String, dynamic>?> getCourseWithSubject(int paymentId) async {
+    final db = await database;
+    final result = await db.rawQuery('''
+      SELECT c.*, s.name as subjectName, s.description as subjectDescription
+      FROM $courseTable c
+      LEFT JOIN $subjectTable s ON c.subjectId = s.id
+      WHERE c.paymentId = ?
+      LIMIT 1
+    ''', [paymentId]);
+    return result.isNotEmpty ? result.first : null;
+  }
+
+  Future<int> updateCourse(int paymentId, Map<String, dynamic> updates) async {
+    final db = await database;
+    return await db.update(
+      courseTable,
+      updates,
+      where: 'paymentId = ?',
+      whereArgs: [paymentId],
+    );
   }
 
   // New method to update last attended date when attendance is marked
@@ -318,7 +433,7 @@ class DatabaseHelper {
     return settings['signature'] as Uint8List?;
   }
 
-  // Original methods remain unchanged below...
+  // Export/Import methods updated to include subjects table
   Future<String?> exportDatabaseToJson() async {
     Database? db;
     try {
@@ -329,6 +444,7 @@ class DatabaseHelper {
         userTable,
         attendanceTable,
         paymentTable,
+        subjectTable, // Add subjects table to export
         courseTable,
         holidayTable,
         weekdayTable,
@@ -375,7 +491,7 @@ class DatabaseHelper {
       final dynamic versionData = jsonData['version'];
       final int importedVersion = versionData is int ? versionData : 0;
 
-      // Allow importing from version 3 or 4 (backward compatibility)
+      // Allow importing from version 3, 4, or 5 (backward compatibility)
       if (importedVersion < 3 || importedVersion > _databaseVersion) {
         log('❌ Database version mismatch. Current: $_databaseVersion, Imported: $importedVersion');
         return false;
@@ -389,6 +505,7 @@ class DatabaseHelper {
       final importOrder = [
         userTable,
         paymentTable,
+        subjectTable, // Import subjects before courses
         attendanceTable,
         courseTable,
         holidayTable,
@@ -398,6 +515,7 @@ class DatabaseHelper {
 
       final dateTimeFields = {
         userTable: ['createdAt'],
+        subjectTable: ['createdAt'], // Add subjects datetime fields
       };
 
       final dateFields = {
@@ -405,7 +523,7 @@ class DatabaseHelper {
         courseTable: ['startDate', 'endDate'],
         paymentTable: ['paymentDate'],
         holidayTable: ['holidayDate'],
-        userTable: ['lastAttendedDate'], // Add lastAttendedDate as a date field
+        userTable: ['lastAttendedDate'],
       };
 
       bool isValidDate(dynamic value) {
@@ -435,10 +553,15 @@ class DatabaseHelper {
           for (int i = 0; i < tableData.length; i++) {
             final row = tableData[i];
             if (row is Map<String, dynamic>) {
-              // Handle backward compatibility - if importing from version 3,
-              // lastAttendedDate column won't exist in the data
+              // Handle backward compatibility for older versions
               if (table == userTable && importedVersion < 4) {
                 // Don't validate lastAttendedDate for older versions
+              } else if (table == subjectTable && importedVersion < 5) {
+                // Skip subjects table for older versions
+                continue;
+              } else if (table == courseTable && importedVersion < 5) {
+                // Remove subjectId from course data for older versions
+                row.remove('subjectId');
               } else {
                 for (final field in (dateFields[table] ?? [])) {
                   final value = row[field];
@@ -492,7 +615,14 @@ class DatabaseHelper {
             final batch = mainDb.batch();
 
             for (int i = batchStart; i < batchEnd; i++) {
-              batch.insert(table, tableData[i] as Map<String, dynamic>,
+              final rowData = tableData[i] as Map<String, dynamic>;
+              
+              // Handle backward compatibility for course table
+              if (table == courseTable && importedVersion < 5) {
+                rowData.remove('subjectId');
+              }
+
+              batch.insert(table, rowData,
                   conflictAlgorithm: table == teacherSettingsTable
                       ? ConflictAlgorithm.replace
                       : ConflictAlgorithm.abort);
@@ -504,8 +634,11 @@ class DatabaseHelper {
               log('❌ Batch insert failed for table $table between records ${batchStart + 1}-$batchEnd');
               for (int i = batchStart; i < batchEnd; i++) {
                 try {
-                  await mainDb.insert(
-                      table, tableData[i] as Map<String, dynamic>,
+                  final rowData = tableData[i] as Map<String, dynamic>;
+                  if (table == courseTable && importedVersion < 5) {
+                    rowData.remove('subjectId');
+                  }
+                  await mainDb.insert(table, rowData,
                       conflictAlgorithm: table == teacherSettingsTable
                           ? ConflictAlgorithm.replace
                           : ConflictAlgorithm.abort);
@@ -520,7 +653,7 @@ class DatabaseHelper {
         }
       }
 
-      // If imported from version 3, populate lastAttendedDate for existing users
+      // Handle backward compatibility migrations
       if (importedVersion < 4) {
         await _populateLastAttendedDates(mainDb);
       }
