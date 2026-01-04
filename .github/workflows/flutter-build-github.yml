@@ -101,6 +101,12 @@ jobs:
       - name: Create Debug Info Directory
         run: mkdir -p "${BUILD_BASE_DIR}/${DEBUG_INFO_DIR}"
 
+        
+      - name: Upgrade Gradle Wrapper
+        run: |
+          cd android
+          ./gradlew wrapper --gradle-version 8.11.1 --distribution-type all
+
       - name: Build APK
         run: |
           flutter build apk --release \
