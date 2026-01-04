@@ -27,7 +27,7 @@ on:
 env:
   APK_NAME: TeacherApp
   ENVIRONMENT: production
-  BUILD_BASE_DIR: build
+  BUILD_BASE_DIR: android/build
   DEBUG_INFO_DIR: debug_info
   PACKAGE_NAME: com.padma.yoglog
 
@@ -38,10 +38,9 @@ jobs:
       KEYSTORE_PATH: /tmp/keystore/key_store_file.jks
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Java (JDK 17)
+      - name: Set up Java
         uses: actions/setup-java@v3
         with:
           distribution: zulu
@@ -53,52 +52,28 @@ jobs:
           flutter-version: '3.29.3'
           channel: stable
 
-      # ---------------------------
-      # Ruby / Bundler / Fastlane
-      # ---------------------------
-      - name: Set up Ruby (disable auto Bundler)
+      - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.2'
-          bundler: none
-          bundler-cache: false
 
-      - name: Install Bundler 2.7.2 (Fastlane compatible)
-        run: |
-          gem uninstall bundler -a -x || true
-          gem install bundler -v 2.7.2
+      - name: Install Bundler 2.7.2
+        run: gem install bundler -v 2.7.2
 
-      - name: Install Gems (Fastlane)
-        run: |
-          bundle _2.7.2_ install
+      - name: Install Gems
+        run: bundle _2.7.2_ install
+        working-directory: android
 
-      - name: Verify Tooling
-        run: |
-          flutter --version
-          flutter doctor
-          bundle _2.7.2_ exec fastlane --version
-
-      # ---------------------------
-      # Flutter Build
-      # ---------------------------
-      - name: Install Flutter Dependencies
+      - name: Flutter Pub Get
         run: flutter pub get
 
-      - name: Create Debug Info Directory
-        run: mkdir -p "${BUILD_BASE_DIR}/${DEBUG_INFO_DIR}"
-
-      - name: Build App Bundle (.aab)
+      - name: Build App Bundle
         run: |
           flutter build appbundle --release \
             --obfuscate \
             --split-debug-info="${BUILD_BASE_DIR}/${DEBUG_INFO_DIR}" \
-            --dart-define=ENV=${ENVIRONMENT} \
-            --build-name="${GITHUB_RUN_NUMBER}" \
-            --build-number=${GITHUB_RUN_NUMBER}
-
-      # ---------------------------
-      # Signing
-      # ---------------------------
+            --dart-define=ENV=${ENVIRONMENT}
+      
       - name: Prepare Keystore
         run: |
           mkdir -p "$(dirname "$KEYSTORE_PATH")"
@@ -109,43 +84,31 @@ jobs:
           UNSIGNED_AAB="${BUILD_BASE_DIR}/app/outputs/bundle/release/app-release.aab"
           SIGNED_AAB="${BUILD_BASE_DIR}/app/outputs/bundle/release/${APK_NAME}-${GITHUB_RUN_NUMBER}-${ENVIRONMENT}-signed.aab"
 
-          DECODED_KEY_PASSWORD=$(echo "${{ secrets.KEY_PASSWORD }}" | base64 -d)
-          DECODED_KEY_ALIAS=$(echo "${{ secrets.KEY_ALIAS }}" | base64 -d)
+          KEY_PASS=$(echo "${{ secrets.KEY_PASSWORD }}" | base64 -d)
+          KEY_ALIAS=$(echo "${{ secrets.KEY_ALIAS }}" | base64 -d)
 
-          jarsigner \
-            -sigalg SHA256withRSA \
+          jarsigner -sigalg SHA256withRSA \
             -digestalg SHA-256 \
             -keystore "$KEYSTORE_PATH" \
-            -storepass "$DECODED_KEY_PASSWORD" \
-            -keypass "$DECODED_KEY_PASSWORD" \
-            "$UNSIGNED_AAB" "$DECODED_KEY_ALIAS"
+            -storepass "$KEY_PASS" \
+            -keypass "$KEY_PASS" \
+            "$UNSIGNED_AAB" "$KEY_ALIAS"
 
           mv "$UNSIGNED_AAB" "$SIGNED_AAB"
-          echo "SIGNED_AAB_PATH=$(pwd)/$SIGNED_AAB" >> $GITHUB_ENV
+          echo "AAB_FILE_PATH=$(pwd)/$SIGNED_AAB" >> $GITHUB_ENV
 
-      # ---------------------------
-      # Play Store Upload
-      # ---------------------------
-      - name: Prepare Play Store JSON Key
+      - name: Prepare Play Store Key
         run: |
           echo "${{ secrets.PLAY_STORE_JSON_KEY }}" | base64 -d > play_store_key.json
           echo "PLAY_STORE_JSON_PATH=$(pwd)/play_store_key.json" >> $GITHUB_ENV
 
-      - name: Upload to Play Store (Fastlane)
+      - name: Upload to Play Store
+        working-directory: android
         run: |
-          export AAB_FILE_PATH="$SIGNED_AAB_PATH"
-          export PLAY_STORE_JSON_PATH="$PLAY_STORE_JSON_PATH"
           export FASTFILE_TRACK="${{ github.event.inputs.TRACK }}"
           export FASTFILE_RELEASE_STATUS="${{ github.event.inputs.STATUS }}"
-          export PACKAGE_NAME="${PACKAGE_NAME}"
+          bundle _2.7.2_ exec fastlane android deploy
 
-          bundle _2.7.2_ exec fastlane deploy
-
-      # ---------------------------
-      # Cleanup
-      # ---------------------------
-      - name: Cleanup Secrets
+      - name: Cleanup
         if: always()
-        run: |
-          rm -f "$KEYSTORE_PATH"
-          rm -f play_store_key.json
+        run: rm -f "$KEYSTORE_PATH" play_store_key.json
