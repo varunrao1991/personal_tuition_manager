@@ -27,6 +27,7 @@ on:
 env:
   APK_NAME: TeacherApp
   ENVIRONMENT: production
+  BUILD_BASE_DIR: android/build
   DEBUG_INFO_DIR: debug_info
   PACKAGE_NAME: com.padma.yoglog
   KEYSTORE_PATH: /tmp/keystore/key_store_file.jks
@@ -53,24 +54,16 @@ jobs:
           flutter-version: '3.29.3'
           channel: 'stable'
 
-      - name: Set up Ruby (Bundler + Fastlane)
+      - name: Set up Ruby (for Bundler + Fastlane)
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.2'
-          bundler-cache: false
 
-      - name: Install Bundler and Gems
-        working-directory: android
+      - name: Install Bundler and gems
         run: |
           gem install bundler -v 2.7.2
           bundle _2.7.2_ install
-
-      - name: Verify environment
-        run: |
-          flutter --version
-          flutter doctor -v
-          cd android
-          bundle _2.7.2_ exec fastlane --version
+        working-directory: android
 
       - name: Install Flutter dependencies
         run: flutter pub get
@@ -81,14 +74,13 @@ jobs:
           echo 'APP_NAME="Personal Tuition Manager"' >> .env.production
 
       - name: Create Debug Info Directory
-        run: mkdir -p "android/build/${DEBUG_INFO_DIR}"
+        run: mkdir -p "${BUILD_BASE_DIR}/${DEBUG_INFO_DIR}"
 
       - name: Build App Bundle (.aab)
-        working-directory: android
         run: |
           flutter build appbundle --release \
             --obfuscate \
-            --split-debug-info="build/${DEBUG_INFO_DIR}" \
+            --split-debug-info="${BUILD_BASE_DIR}/${DEBUG_INFO_DIR}" \
             --dart-define=ENV=${ENVIRONMENT} \
             --build-name="${GITHUB_RUN_NUMBER}" \
             --build-number=${GITHUB_RUN_NUMBER}
@@ -110,16 +102,18 @@ jobs:
           ls -la android/fastlane/play_store_json_key.json
 
       - name: Upload to Play Store (Fastlane)
-        working-directory: android
-        env:
-          AAB_FILE_PATH: android/build/app/outputs/bundle/release/app-release.aab
-          PLAY_STORE_JSON_PATH: ${{ env.PLAY_STORE_JSON_PATH }}
-          FASTFILE_TRACK: ${{ github.event.inputs.TRACK }}
-          FASTFILE_RELEASE_STATUS: ${{ github.event.inputs.STATUS }}
-          PACKAGE_NAME: ${{ env.PACKAGE_NAME }}
+        working-directory: android   # <--- important
         run: |
+          export AAB_FILE_PATH="$(pwd)/${BUILD_BASE_DIR}/app/outputs/bundle/release/app-release.aab"
+          export PLAY_STORE_JSON_PATH="${PLAY_STORE_JSON_PATH}"
+          export FASTFILE_TRACK="${{ github.event.inputs.TRACK }}"
+          export FASTFILE_RELEASE_STATUS="${{ github.event.inputs.STATUS }}"
+          export PACKAGE_NAME="${PACKAGE_NAME}"
+
           echo "Uploading $AAB_FILE_PATH to Play Store track $FASTFILE_TRACK (status: $FASTFILE_RELEASE_STATUS)"
+
           bundle _2.7.2_ exec fastlane deploy
+
           rm -f fastlane/play_store_json_key.json
           echo "::notice::Cleaned up Play Store JSON key"
 
