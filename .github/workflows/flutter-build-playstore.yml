@@ -59,11 +59,10 @@ jobs:
           ruby-version: '3.2'
           bundler-cache: false
 
-      - name: Install Fastlane dependencies
-        working-directory: .
+      - name: Install Bundler 2.x and Fastlane
         run: |
-          gem install bundler
-          bundle install
+          gem install bundler -v 2.7.2
+          bundle _2.7.2_ install
 
       - name: Verify Flutter Installation
         run: |
