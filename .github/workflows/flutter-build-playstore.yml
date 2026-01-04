@@ -120,6 +120,7 @@ jobs:
           export FASTFILE_TRACK="${{ github.event.inputs.TRACK }}"
           export FASTFILE_RELEASE_STATUS="${{ github.event.inputs.STATUS }}"
           export PACKAGE_NAME="${PACKAGE_NAME}"
+          export FASTLANE_DIR=android/fastlane
 
           echo "Uploading $AAB_FILE_PATH to Play Store track $FASTFILE_TRACK (status: $FASTFILE_RELEASE_STATUS)"
 
