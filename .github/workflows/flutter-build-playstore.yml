@@ -30,85 +30,114 @@ env:
   BUILD_BASE_DIR: android/build
   DEBUG_INFO_DIR: debug_info
   PACKAGE_NAME: com.padma.yoglog
+  KEYSTORE_PATH: /tmp/keystore/key_store_file.jks
 
 jobs:
   build-and-upload:
     runs-on: ubuntu-latest
-    env:
-      KEYSTORE_PATH: /tmp/keystore/key_store_file.jks
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Set up Java
+      - name: Set up Java (JDK 17)
         uses: actions/setup-java@v3
         with:
-          distribution: zulu
+          distribution: 'zulu'
           java-version: '17'
+
+      - name: Install Gradle CLI
+        uses: gradle/gradle-build-action@v2
+        with:
+          gradle-version: '8.11.1'
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.29.3'
-          channel: stable
+          channel: 'stable'
 
-      - name: Set up Ruby
+      - name: Set up Ruby (for Bundler + Fastlane)
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.2'
+          bundler-cache: false
 
-      - name: Install Bundler 2.7.2
-        run: gem install bundler -v 2.7.2
+      - name: Install Bundler 2.7.2 and gems (Fastlane)
+        run: |
+          gem install bundler -v 2.7.2
+          bundle _2.7.2_ install
+        working-directory: .
 
-      - name: Install Gems
-        run: bundle _2.7.2_ install
-        working-directory: android
+      - name: Verify environment
+        run: |
+          flutter --version
+          flutter doctor -v
+          bundle _2.7.2_ exec fastlane --version
 
-      - name: Flutter Pub Get
+      - name: Install Flutter dependencies
         run: flutter pub get
 
-      - name: Build App Bundle
+      - name: Generate Env File
+        run: |
+          echo "DB_NAME=app.db" > .env.production
+          echo 'APP_NAME="Personal Tuition Manager"' >> .env.production
+
+      - name: Create Debug Info Directory
+        run: mkdir -p "${BUILD_BASE_DIR}/${DEBUG_INFO_DIR}"
+
+      - name: Build App Bundle (.aab)
         run: |
           flutter build appbundle --release \
             --obfuscate \
             --split-debug-info="${BUILD_BASE_DIR}/${DEBUG_INFO_DIR}" \
-            --dart-define=ENV=${ENVIRONMENT}
-      
+            --dart-define=ENV=${ENVIRONMENT} \
+            --build-name="${GITHUB_RUN_NUMBER}" \
+            --build-number=${GITHUB_RUN_NUMBER}
+
       - name: Prepare Keystore
         run: |
           mkdir -p "$(dirname "$KEYSTORE_PATH")"
           echo "${{ secrets.KEYSTORE_FILE }}" | base64 -d > "$KEYSTORE_PATH"
+          ls -la "$(dirname "$KEYSTORE_PATH")"
 
-      - name: Sign AAB
+      - name: Prepare Play Store JSON Key
         run: |
-          UNSIGNED_AAB="${BUILD_BASE_DIR}/app/outputs/bundle/release/app-release.aab"
-          SIGNED_AAB="${BUILD_BASE_DIR}/app/outputs/bundle/release/${APK_NAME}-${GITHUB_RUN_NUMBER}-${ENVIRONMENT}-signed.aab"
+          if [ -z "${{ secrets.PLAY_STORE_JSON_KEY }}" ]; then
+            echo "::error::PLAY_STORE_JSON_KEY secret is missing!"
+            exit 1
+          fi
+          echo "${{ secrets.PLAY_STORE_JSON_KEY }}" | base64 -d > play_store_json_key.json
+          echo "PLAY_STORE_JSON_PATH=$(pwd)/play_store_json_key.json" >> $GITHUB_ENV
+          ls -la play_store_json_key.json
 
-          KEY_PASS=$(echo "${{ secrets.KEY_PASSWORD }}" | base64 -d)
-          KEY_ALIAS=$(echo "${{ secrets.KEY_ALIAS }}" | base64 -d)
-
-          jarsigner -sigalg SHA256withRSA \
-            -digestalg SHA-256 \
-            -keystore "$KEYSTORE_PATH" \
-            -storepass "$KEY_PASS" \
-            -keypass "$KEY_PASS" \
-            "$UNSIGNED_AAB" "$KEY_ALIAS"
-
-          mv "$UNSIGNED_AAB" "$SIGNED_AAB"
-          echo "AAB_FILE_PATH=$(pwd)/$SIGNED_AAB" >> $GITHUB_ENV
-
-      - name: Prepare Play Store Key
+      - name: Upload to Play Store (Fastlane)
         run: |
-          echo "${{ secrets.PLAY_STORE_JSON_KEY }}" | base64 -d > play_store_key.json
-          echo "PLAY_STORE_JSON_PATH=$(pwd)/play_store_key.json" >> $GITHUB_ENV
-
-      - name: Upload to Play Store
-        working-directory: android
-        run: |
+          export AAB_FILE_PATH="${BUILD_BASE_DIR}/app/outputs/bundle/release/app-release.aab"
+          export PLAY_STORE_JSON_PATH="${PLAY_STORE_JSON_PATH}"
           export FASTFILE_TRACK="${{ github.event.inputs.TRACK }}"
           export FASTFILE_RELEASE_STATUS="${{ github.event.inputs.STATUS }}"
-          bundle _2.7.2_ exec fastlane android deploy
+          export PACKAGE_NAME="${PACKAGE_NAME}"
 
-      - name: Cleanup
+          echo "Uploading $AAB_FILE_PATH to Play Store track $FASTFILE_TRACK (status: $FASTFILE_RELEASE_STATUS)"
+
+          bundle _2.7.2_ exec fastlane deploy
+
+          # Cleanup JSON key
+          rm -f play_store_json_key.json
+          echo "::notice::Cleaned up Play Store JSON key"
+
+      - name: Cleanup Keystore
         if: always()
-        run: rm -f "$KEYSTORE_PATH" play_store_key.json
+        run: rm -f "$KEYSTORE_PATH"
+
+      - name: Final Status
+        if: always()
+        run: |
+          if [[ "${{ job.status }}" == "success" ]]; then
+            echo "::notice::✅ Build completed successfully and uploaded to Play Store!"
+          else
+            echo "::error::❌ Build or upload failed!"
+          fi
