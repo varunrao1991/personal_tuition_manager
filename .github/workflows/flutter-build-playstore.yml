@@ -27,9 +27,9 @@ on:
 env:
   APK_NAME: TeacherApp
   ENVIRONMENT: production
-  BUILD_BASE_DIR: build
+  BUILD_BASE_DIR: android/build
   DEBUG_INFO_DIR: debug_info
-  PACKAGE_NAME: "com.padma.yoglog"  # Hardcoded package name
+  PACKAGE_NAME: "com.padma.yoglog"
 
 jobs:
   build-and-upload:
@@ -40,53 +40,6 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-
-      - name: Cache Android SDK
-        uses: actions/cache@v3
-        with:
-          path: /usr/local/lib/android/sdk
-          key: android-sdk-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            android-sdk-${{ runner.os }}-
-
-      - name: Verify Keystore Password
-        id: verify_keystore
-        run: |
-          # Create keystore directory
-          mkdir -p "$(dirname "$KEYSTORE_PATH")"
-
-          # Decode and save the keystore file
-          echo "${{ secrets.KEYSTORE_FILE }}" | base64 -d > "$KEYSTORE_PATH"
-
-          # Decode the KEY_PASSWORD (which was stored base64-encoded)
-          DECODED_KEY_PASSWORD=$(echo "${{ secrets.KEY_PASSWORD }}" | base64 -d)
-          DECODED_KEY_ALIAS=$(echo "${{ secrets.KEY_ALIAS }}" | base64 -d)
-
-          echo "::debug::Decoded password: >>${DECODED_KEY_PASSWORD}<<"
-          echo "::debug::Decoded alias: >>${DECODED_KEY_ALIAS}<<"
-
-          # Debug file verification
-          echo "::debug::Keystore file verification:"
-          ls -la "$(dirname "$KEYSTORE_PATH")"
-          file "$KEYSTORE_PATH"
-          echo "::debug::Keystore size: $(wc -c <"$KEYSTORE_PATH") bytes"
-          echo "::debug::First 100 bytes (hexdump):"
-          head -c 100 "$KEYSTORE_PATH" | hexdump -C
-          echo "::debug::First 100 bytes (raw base64):"
-          head -c 100 "$KEYSTORE_PATH" | base64 -w0
-
-          # Verify password and alias
-          if ! keytool -list \
-            -keystore "$KEYSTORE_PATH" \
-            -storepass "$DECODED_KEY_PASSWORD" \
-            -alias "$DECODED_KEY_ALIAS" >/dev/null 2>&1; then
-            echo "::error::Keystore verification failed! Possible issues:"
-            echo "::error::- Invalid password/alias (compare decoded values)"
-            echo "::error::- Corrupted keystore (verify file headers above)"
-            exit 1
-          else
-            echo "? Keystore verification successful."
-          fi            
 
       - name: Set up Java
         uses: actions/setup-java@v3
@@ -100,58 +53,25 @@ jobs:
           flutter-version: '3.29.3'
           channel: 'stable'
 
-      - name: Set up Ruby
+      - name: Set up Ruby (Bundler + Fastlane)
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.2'
-          bundler-cache: true
+          bundler-cache: false
 
-      - name: Install Fastlane and Bundler
+      - name: Install Fastlane dependencies
+        working-directory: .
         run: |
           gem install bundler
-          gem install fastlane -N
+          bundle install
 
       - name: Verify Flutter Installation
         run: |
           flutter --version
           flutter doctor
 
-      - name: Cache Flutter dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.pub-cache
-          key: ${{ runner.os }}-flutter-${{ hashFiles('**/pubspec.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-flutter-
-
-      - name: Cache Android Gradle
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-
       - name: Install Flutter Dependencies
         run: flutter pub get
-
-      - name: Generate Env File
-        run: |
-          echo "DB_NAME=app.db" > .env.production
-          echo 'APP_NAME="Personal Tuition Manager"' >> .env.production
-
-      - name: Extract Version from pubspec.yaml
-        id: extract_version
-        run: |
-          VERSION_NAME=$(grep '^version:' pubspec.yaml | cut -d ':' -f2 | tr -d '[:space:]')
-          VERSION_NAME="${VERSION_NAME}-${GITHUB_RUN_NUMBER}"
-          echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
-          echo "VERSION_NAME set to: $VERSION_NAME"
-
-      - name: Create Debug Info Directory
-        run: mkdir -p "${BUILD_BASE_DIR}/${DEBUG_INFO_DIR}"
 
       - name: Build App Bundle (.aab)
         run: |
@@ -159,19 +79,23 @@ jobs:
             --obfuscate \
             --split-debug-info="${BUILD_BASE_DIR}/${DEBUG_INFO_DIR}" \
             --dart-define=ENV=${ENVIRONMENT} \
-            --build-name="${VERSION_NAME}" \
+            --build-name="${GITHUB_RUN_NUMBER}" \
             --build-number=${GITHUB_RUN_NUMBER}
+
+      - name: Prepare Keystore
+        run: |
+          mkdir -p "$(dirname "$KEYSTORE_PATH")"
+          echo "${{ secrets.KEYSTORE_FILE }}" | base64 -d > "$KEYSTORE_PATH"
+          echo "Keystore prepared"
 
       - name: Sign the AAB
         run: |
           UNSIGNED_AAB="${BUILD_BASE_DIR}/app/outputs/bundle/release/app-release.aab"
-          SIGNED_AAB="${BUILD_BASE_DIR}/app/outputs/bundle/release/${APK_NAME}-${VERSION_NAME}-${ENVIRONMENT}-signed.aab"
-      
-          # Decode password and alias
+          SIGNED_AAB="${BUILD_BASE_DIR}/app/outputs/bundle/release/${APK_NAME}-${GITHUB_RUN_NUMBER}-${ENVIRONMENT}-signed.aab"
+
           DECODED_KEY_PASSWORD=$(echo "${{ secrets.KEY_PASSWORD }}" | base64 -d)
           DECODED_KEY_ALIAS=$(echo "${{ secrets.KEY_ALIAS }}" | base64 -d)
-      
-          # Sign the AAB
+
           jarsigner -verbose \
                     -sigalg SHA256withRSA \
                     -digestalg SHA-256 \
@@ -179,105 +103,36 @@ jobs:
                     -storepass "$DECODED_KEY_PASSWORD" \
                     -keypass "$DECODED_KEY_PASSWORD" \
                     "$UNSIGNED_AAB" "$DECODED_KEY_ALIAS"
-      
-          # Move signed AAB
+
           mv "$UNSIGNED_AAB" "$SIGNED_AAB"
-          echo "SIGNED_AAB_PATH=$SIGNED_AAB" >> $GITHUB_ENV          
+          echo "SIGNED_AAB_PATH=$SIGNED_AAB" >> $GITHUB_ENV
 
-      - name: Upload Build Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-artifacts
-          path: |
-            ${{ env.BUILD_BASE_DIR }}/app/outputs/bundle/release/*-signed.aab
-            ${{ env.BUILD_BASE_DIR }}/${{ env.DEBUG_INFO_DIR }}/*
-
-      - name: Create Fastlane Configuration
+      - name: Prepare Play Store JSON Key
         run: |
-          # Create Fastfile in android/fastlane directory
-          mkdir -p android/fastlane
-          cat > android/fastlane/Fastfile << EOF
-          default_platform(:android)
-
-          platform :android do
-            desc "Deploy a new version to the Google Play"
-            lane :deploy do
-              aab_path = ENV["AAB_FILE_PATH"]
-              json_key_path = ENV["PLAY_STORE_JSON_PATH"]
-              track = ENV["FASTFILE_TRACK"] || "internal"
-              release_status = ENV["FASTFILE_RELEASE_STATUS"] || "draft"
-              
-              puts "Using AAB: #{aab_path}"
-              puts "Track: #{track}"
-              puts "Release status: #{release_status}"
-              puts "Package name: #{"$PACKAGE_NAME"}"
-              
-              upload_to_play_store(
-                package_name: "$PACKAGE_NAME",
-                track: track,
-                release_status: release_status,
-                aab: aab_path,
-                json_key: json_key_path,
-                skip_upload_metadata: true,
-                skip_upload_images: true,
-                skip_upload_screenshots: true,
-                skip_upload_changelogs: true
-              )
-            end
-          end
-          EOF
-          
-          # Create Gemfile
-          cat > android/Gemfile << EOF
-          source "https://rubygems.org"
-          gem "fastlane"
-          EOF
-
-      - name: Install Fastlane Dependencies
-        run: |
-          cd android
-          bundle install
-          cd ..
-
-      - name: Upload to Play Store
-        run: |
-          echo "Preparing for Play Store upload..."
-
-          # Check if PLAY_STORE_JSON_KEY exists
           if [ -z "${{ secrets.PLAY_STORE_JSON_KEY }}" ]; then
             echo "::error::PLAY_STORE_JSON_KEY secret is missing!"
             exit 1
           fi
-
-          # Decode and save the JSON key to a file
           echo "${{ secrets.PLAY_STORE_JSON_KEY }}" | base64 -d > play_store_json_key.json
+          echo "PLAY_STORE_JSON_PATH=$(pwd)/play_store_json_key.json" >> $GITHUB_ENV
 
-          # Ensure the file was created
-          if [ ! -f play_store_json_key.json ]; then
-            echo "::error::Failed to create play_store_json_key.json!"
-            exit 1
-          fi
-
-          cd android
-          
-          # Set required environment variables for fastlane deploy
-          export AAB_FILE_PATH="../${{ env.BUILD_BASE_DIR }}/app/outputs/bundle/release/${{ env.APK_NAME }}-${{ env.VERSION_NAME }}-${{ env.ENVIRONMENT }}-signed.aab"
-          export PLAY_STORE_JSON_PATH="../play_store_json_key.json"
+      - name: Upload to Play Store
+        run: |
+          export AAB_FILE_PATH="${SIGNED_AAB_PATH}"
           export FASTFILE_TRACK="${{ github.event.inputs.TRACK }}"
           export FASTFILE_RELEASE_STATUS="${{ github.event.inputs.STATUS }}"
+          export PLAY_STORE_JSON_PATH="${PLAY_STORE_JSON_PATH}"
 
           echo "Using AAB file: $AAB_FILE_PATH"
-          echo "Using JSON key: $PLAY_STORE_JSON_PATH"
           echo "Track: $FASTFILE_TRACK"
           echo "Release status: $FASTFILE_RELEASE_STATUS"
           echo "Package name: $PACKAGE_NAME"
 
           bundle exec fastlane deploy
 
-          # Cleanup: Delete the JSON key after use
-          cd ..
+          # Cleanup
           rm -f play_store_json_key.json
-          echo "::notice::Cleaned up play_store_json_key.json file"
+          echo "::notice::Cleaned up Play Store JSON key"
 
       - name: Cleanup Keystore
         if: always()
