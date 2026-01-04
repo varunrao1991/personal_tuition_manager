@@ -27,9 +27,9 @@ on:
 env:
   APK_NAME: TeacherApp
   ENVIRONMENT: production
-  BUILD_BASE_DIR: android/build
+  BUILD_BASE_DIR: build
   DEBUG_INFO_DIR: debug_info
-  PACKAGE_NAME: "com.padma.yoglog"
+  PACKAGE_NAME: com.padma.yoglog
 
 jobs:
   build-and-upload:
@@ -44,39 +44,33 @@ jobs:
       - name: Set up Java (JDK 17)
         uses: actions/setup-java@v3
         with:
-          distribution: 'zulu'
+          distribution: zulu
           java-version: '17'
-
-      - name: Install Gradle CLI (ensures Gradle >= required)
-        uses: gradle/gradle-build-action@v2
-        with:
-          gradle-version: '8.11.1'
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.29.3'
-          channel: 'stable'
+          channel: stable
 
-      - name: Set up Ruby (for Bundler)
+      - name: Set up Ruby (Bundler)
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.2'
           bundler-cache: false
 
-      - name: Install Bundler 2.x and gems (Fastlane via Bundler)
+      - name: Install Bundler 2.7.2 and Gems
         run: |
           gem install bundler -v 2.7.2
           bundle _2.7.2_ install
-        working-directory: .
 
-      - name: Verify environment
+      - name: Verify Environment
         run: |
           flutter --version
           flutter doctor -v
           bundle _2.7.2_ exec fastlane --version
 
-      - name: Install Flutter dependencies
+      - name: Install Flutter Dependencies
         run: flutter pub get
 
       - name: Create Debug Info Directory
@@ -95,8 +89,6 @@ jobs:
         run: |
           mkdir -p "$(dirname "$KEYSTORE_PATH")"
           echo "${{ secrets.KEYSTORE_FILE }}" | base64 -d > "$KEYSTORE_PATH"
-          # Ensure file exists
-          ls -la "$(dirname "$KEYSTORE_PATH")"
 
       - name: Sign the AAB
         run: |
@@ -106,51 +98,34 @@ jobs:
           DECODED_KEY_PASSWORD=$(echo "${{ secrets.KEY_PASSWORD }}" | base64 -d)
           DECODED_KEY_ALIAS=$(echo "${{ secrets.KEY_ALIAS }}" | base64 -d)
 
-          echo "Signing $UNSIGNED_AAB with alias $DECODED_KEY_ALIAS"
-
-          jarsigner -verbose \
-                    -sigalg SHA256withRSA \
-                    -digestalg SHA-256 \
-                    -keystore "$KEYSTORE_PATH" \
-                    -storepass "$DECODED_KEY_PASSWORD" \
-                    -keypass "$DECODED_KEY_PASSWORD" \
-                    "$UNSIGNED_AAB" "$DECODED_KEY_ALIAS"
+          jarsigner \
+            -sigalg SHA256withRSA \
+            -digestalg SHA-256 \
+            -keystore "$KEYSTORE_PATH" \
+            -storepass "$DECODED_KEY_PASSWORD" \
+            -keypass "$DECODED_KEY_PASSWORD" \
+            "$UNSIGNED_AAB" "$DECODED_KEY_ALIAS"
 
           mv "$UNSIGNED_AAB" "$SIGNED_AAB"
           echo "SIGNED_AAB_PATH=$(pwd)/$SIGNED_AAB" >> $GITHUB_ENV
-          echo "Signed AAB written to $SIGNED_AAB"
 
       - name: Prepare Play Store JSON Key
         run: |
-          if [ -z "${{ secrets.PLAY_STORE_JSON_KEY }}" ]; then
-            echo "::error::PLAY_STORE_JSON_KEY secret is missing!"
-            exit 1
-          fi
           echo "${{ secrets.PLAY_STORE_JSON_KEY }}" | base64 -d > play_store_json_key.json
           echo "PLAY_STORE_JSON_PATH=$(pwd)/play_store_json_key.json" >> $GITHUB_ENV
-          ls -la play_store_json_key.json
 
       - name: Upload to Play Store (Fastlane)
         run: |
-          echo "AAB path: $SIGNED_AAB_PATH"
-          echo "PLAY_STORE_JSON_PATH: $PLAY_STORE_JSON_PATH"
-          echo "Track: ${GITHUB_EVENT_INPUTS_TRACK:-${{ github.event.inputs.TRACK }}}"
-          echo "Status: ${GITHUB_EVENT_INPUTS_STATUS:-${{ github.event.inputs.STATUS }}}"
-
-          # Provide environment variables Fastlane expects
           export AAB_FILE_PATH="$SIGNED_AAB_PATH"
           export PLAY_STORE_JSON_PATH="$PLAY_STORE_JSON_PATH"
           export FASTFILE_TRACK="${{ github.event.inputs.TRACK }}"
           export FASTFILE_RELEASE_STATUS="${{ github.event.inputs.STATUS }}"
           export PACKAGE_NAME="${PACKAGE_NAME}"
 
-          # Run Fastlane via Bundler (ensures the bundler-installed fastlane is used)
           bundle _2.7.2_ exec fastlane deploy
 
-          # Cleanup JSON key
-          rm -f ../play_store_json_key.json 2>/dev/null || rm -f play_store_json_key.json
-          echo "::notice::Cleaned up Play Store JSON key"
-        working-directory: .
+          rm -f play_store_json_key.json
+          echo "::notice::Play Store upload completed"
 
       - name: Cleanup Keystore
         if: always()
@@ -160,7 +135,7 @@ jobs:
         if: always()
         run: |
           if [[ "${{ job.status }}" == "success" ]]; then
-            echo "::notice::✅ Build completed successfully and uploaded to Play Store!"
+            echo "::notice::✅ Build and Play Store upload successful"
           else
-            echo "::error::❌ Build or upload failed!"
+            echo "::error::❌ Build or upload failed"
           fi
