@@ -10,7 +10,6 @@ import '../../widgets/search_bar.dart';
 import '../../utils/show_custom_bottom_modal.dart';
 import '../../utils/show_custom_center_modal.dart';
 import '../../widgets/sort_modal.dart';
-import '../common/app_scaffold.dart';
 import '../widgets/subject_card.dart';
 import '../../widgets/confirmation_modal.dart';
 

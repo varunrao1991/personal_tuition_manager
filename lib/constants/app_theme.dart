@@ -140,7 +140,7 @@ class MaterialTheme {
       iconTheme: const IconThemeData(color: Color(0xff17a194)),
     ),
     // Cards
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       color: Colors.white,
       surfaceTintColor: Colors.white,
       elevation: 4,
@@ -259,7 +259,7 @@ class MaterialTheme {
       ),
     ),
     // Tab Bar
-    tabBarTheme: TabBarTheme(
+    tabBarTheme: TabBarThemeData(
       labelColor: const Color(0xff17a194),
       unselectedLabelColor: const Color(0xff444444).withOpacity(0.6),
       labelStyle:
@@ -318,7 +318,7 @@ class MaterialTheme {
       iconTheme: const IconThemeData(color: Color(0xff7d99d7)),
     ),
     // Cards
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       color: const Color(0xff1e1e1e),
       surfaceTintColor: const Color(0xff1e1e1e),
       elevation: 4,
@@ -437,7 +437,7 @@ class MaterialTheme {
       ),
     ),
     // Tab Bar
-    tabBarTheme: TabBarTheme(
+    tabBarTheme: TabBarThemeData(
       labelColor: const Color(0xff7d99d7),
       unselectedLabelColor: const Color(0xffe0e0e0).withOpacity(0.6),
       labelStyle:
