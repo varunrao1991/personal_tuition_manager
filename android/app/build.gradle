@@ -26,9 +26,9 @@ android {
     }
     
     defaultConfig {
-        applicationId = 'com.padma.yoglog'
-        minSdk = flutterMinSdkVersionkljlknjmb
-        targetSdk = flutterCompileSdkVersion
+        applicationId "com.padma.yoglog"
+        minSdkVersion flutter.minSdkVersion
+        targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }
