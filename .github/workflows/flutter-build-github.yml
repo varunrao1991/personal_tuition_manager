@@ -53,6 +53,11 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
+      - name: Install Gradle 8.11.1
+        uses: gradle/gradle-build-action@v2
+        with:
+          gradle-version: 8.11.1
+
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -75,10 +80,8 @@ jobs:
       - name: Cache Android Gradle
         uses: actions/cache@v3
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          path: ~/.gradle
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*') }}
           restore-keys: |
             gradle-${{ runner.os }}-
 
@@ -91,21 +94,13 @@ jobs:
           echo 'APP_NAME="Personal Tuition Manager"' >> .env.production
 
       - name: Extract Version from pubspec.yaml
-        id: extract_version
         run: |
           VERSION_NAME=$(grep '^version:' pubspec.yaml | cut -d ':' -f2 | tr -d '[:space:]')
           VERSION_NAME="${VERSION_NAME}-${GITHUB_RUN_NUMBER}"
           echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
-          echo "VERSION_NAME set to: $VERSION_NAME"
 
       - name: Create Debug Info Directory
         run: mkdir -p "${BUILD_BASE_DIR}/${DEBUG_INFO_DIR}"
-
-        
-      - name: Upgrade Gradle Wrapper
-        run: |
-          cd android
-          ./gradlew wrapper --gradle-version 8.11.1 --distribution-type all
 
       - name: Build APK
         run: |
@@ -128,8 +123,7 @@ jobs:
           DECODED_KEY_PASSWORD=$(echo "${{ secrets.KEY_PASSWORD }}" | base64 -d)
           DECODED_KEY_ALIAS=$(echo "${{ secrets.KEY_ALIAS }}" | base64 -d)
 
-          jarsigner -verbose \
-                    -sigalg SHA256withRSA \
+          jarsigner -sigalg SHA256withRSA \
                     -digestalg SHA-256 \
                     -keystore "$KEYSTORE_PATH" \
                     -storepass "$DECODED_KEY_PASSWORD" \
@@ -137,7 +131,6 @@ jobs:
                     "$UNSIGNED_APK" "$DECODED_KEY_ALIAS"
 
           mv "$UNSIGNED_APK" "$SIGNED_APK"
-          echo "SIGNED_APK_PATH=$SIGNED_APK" >> $GITHUB_ENV
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
@@ -147,52 +140,16 @@ jobs:
             ${{ env.BUILD_BASE_DIR }}/app/outputs/flutter-apk/*-signed.apk
             ${{ env.BUILD_BASE_DIR }}/${{ env.DEBUG_INFO_DIR }}/*
 
-      - name: Generate Changelog
-        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.CREATE_GITHUB_RELEASE == 'true' }}
-        id: changelog
-        run: |
-          RELEASE_NOTES_FILE="release_notes.md"
-          echo "# Release v${{ env.VERSION_NAME }}" > $RELEASE_NOTES_FILE
-          echo "" >> $RELEASE_NOTES_FILE
-          if [ ! -z "${{ github.event.inputs.RELEASE_NOTES }}" ]; then
-            echo "${{ github.event.inputs.RELEASE_NOTES }}" >> $RELEASE_NOTES_FILE
-            echo "" >> $RELEASE_NOTES_FILE
-          fi
-          if [ ! -z "${{ github.event.inputs.CHANGELOG }}" ]; then
-            echo "## What's Changed" >> $RELEASE_NOTES_FILE
-            echo "${{ github.event.inputs.CHANGELOG }}" >> $RELEASE_NOTES_FILE
-            echo "" >> $RELEASE_NOTES_FILE
-          fi
-          PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          if [ ! -z "$PREV_TAG" ] && [ "${{ github.event.inputs.AUTO_GENERATE_NOTES }}" == "true" ]; then
-            echo "## Commits since $PREV_TAG" >> $RELEASE_NOTES_FILE
-            git log --pretty=format:"* %s (%h)" $PREV_TAG..HEAD >> $RELEASE_NOTES_FILE
-          fi
-          echo "::set-output name=release_notes_file::$RELEASE_NOTES_FILE"
-
       - name: Create GitHub Release
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.CREATE_GITHUB_RELEASE == 'true' }}
         uses: softprops/action-gh-release@v1
         with:
           files: ${{ env.BUILD_BASE_DIR }}/app/outputs/flutter-apk/*-signed.apk
-          name: ${{ github.event.inputs.RELEASE_TITLE != '' && github.event.inputs.RELEASE_TITLE || format('Release v{0}', env.VERSION_NAME) }}
           tag_name: v${{ env.VERSION_NAME }}
-          body_path: ${{ steps.changelog.outputs.release_notes_file }}
           draft: true
-          prerelease: false
-          generate_release_notes: ${{ github.event.inputs.AUTO_GENERATE_NOTES }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Cleanup Keystore
         if: always()
         run: rm -f "$KEYSTORE_PATH"
-
-      - name: Final Status
-        if: always()
-        run: |
-          if [[ "${{ job.status }}" == "success" ]]; then
-            echo "::notice::✅ Build completed successfully!"
-          else
-            echo "::error::❌ Build failed!"
-          fi
